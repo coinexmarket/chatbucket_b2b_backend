@@ -1,0 +1,9 @@
+# Versions chosen to ship prebuilt wheels for Python 3.12–3.14.
+fastapi==0.139.0
+uvicorn[standard]==0.34.0
+motor==3.7.1
+pymongo==4.17.0
+pydantic==2.13.4
+pydantic-settings==2.7.1
+email-validator==2.2.0
+PyJWT==2.10.1
