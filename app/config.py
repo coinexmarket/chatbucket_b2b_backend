@@ -106,7 +106,7 @@ class Settings(BaseSettings):
     # operator secret rather than a user session. Unset means it cannot be read.
     ops_secret: str = Field(default="")
     # Allowances, as `engine=amount` pairs in the engine's own unit:
-    #   ENGINE_FREE_QUOTAS=cb_vinu=12000,cb_palukulu=100000
+    #   ENGINE_FREE_QUOTAS=cb_vinu=12000,cb_paluku=100000
     # Ships empty: the size of an allowance is a fact about an arrangement this
     # service cannot observe, and a guessed "remaining" would be read as
     # authoritative. Unset means consumption is counted but `remaining` is null.

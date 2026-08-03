@@ -200,7 +200,7 @@ already trusts this same token to spend credits.
 ### Engine capacity burn
 
 Metered calls are served by ChatBucket engines — **CB Vinu** (Speech to Text),
-**CB Palukulu** (Text to Speech), **CB Vaaradhi** (Translation), **CB Thodu**
+**CB Paluku** (Text to Speech), **CB Vaaradhi** (Translation), **CB Thodu**
 (Chat + Voice Agent). `POST /usage` takes an optional `engine` and
 `engineQuantity` recording what the call burned on **that engine's** meter:
 
@@ -253,7 +253,7 @@ business. Unset ⇒ **503**, like the billing and status secrets.
 ```
 
 > **Allowances ship unset.** Capacity is a fact about an arrangement this
-> service cannot observe, so `ENGINE_FREE_QUOTAS=cb_vinu=12000,cb_palukulu=100000`
+> service cannot observe, so `ENGINE_FREE_QUOTAS=cb_vinu=12000,cb_paluku=100000`
 > configures it. Until then `remaining` and `percent_used` are **null**, not
 > `0` — either number would be a claim about an allowance nobody has stated the
 > size of, and "0 remaining" in particular reads as an outage that is not

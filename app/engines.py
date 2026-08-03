@@ -16,7 +16,7 @@ Two consequences follow from keeping them apart:
   enforced.
 
 Engines are named for the ChatBucket capability they serve — `cb_vinu`,
-`cb_palukulu` — matching the model names the dashboard already shows. Whatever
+`cb_paluku` — matching the model names the dashboard already shows. Whatever
 sits behind an engine is an implementation detail that is **never named here**,
 in an identifier, a comment, a log line or an error message: such a name spreads
 into stored records and API responses, where anyone reading a stack trace or an
@@ -55,7 +55,7 @@ ENGINES: dict[str, Engine] = {
     e.key: e
     for e in [
         Engine("cb_vinu", "CB Vinu", "Speech to Text", "minutes"),
-        Engine("cb_palukulu", "CB Palukulu", "Text to Speech", "characters"),
+        Engine("cb_paluku", "CB Paluku", "Text to Speech", "characters"),
         Engine("cb_vaaradhi", "CB Vaaradhi", "Translation", "tokens"),
         Engine("cb_thodu", "CB Thodu", "Chat + Voice Agent", "tokens"),
     ]

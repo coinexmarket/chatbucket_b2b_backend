@@ -1039,7 +1039,7 @@ def main() -> int:
         # A signed-in customer has a session, not an API key — the key was shown
         # once and stored hashed, so the site cannot produce it server-side.
         r = client.post("/usage", headers=auth, json={
-            "service": "tts_streaming", "quantity": 1000, "engine": "cb_palukulu", "engineQuantity": 1200,
+            "service": "tts_streaming", "quantity": 1000, "engine": "cb_paluku", "engineQuantity": 1200,
         })
         check("usage can be metered with a bearer token", r.status_code == 201, r.text)
         check("token-metered usage bills normally", r.json()["data"]["cost"] == 0.91, r.text)
@@ -1074,8 +1074,8 @@ def main() -> int:
             check("engine view returns 200 with the secret", r.status_code == 200, r.text)
             rows = {row["engine"]: row for row in j["data"]}
             check("cb_vinu burn is counted in ITS unit", rows["cb_vinu"]["consumed"] == 2.4, str(rows))
-            check("cb_palukulu burn is counted separately", rows["cb_palukulu"]["consumed"] == 1200, str(rows))
-            check("burn is reported in the engine's unit", rows["cb_palukulu"]["unit"] == "characters", str(rows))
+            check("cb_paluku burn is counted separately", rows["cb_paluku"]["consumed"] == 1200, str(rows))
+            check("burn is reported in the engine's unit", rows["cb_paluku"]["unit"] == "characters", str(rows))
             check("the burning account is named", rows["cb_vinu"]["top_accounts"][0]["email"] == "engine@acme.io", str(rows))
 
             # Nothing has told us how big the free tier is, so nothing is claimed.
@@ -1084,7 +1084,7 @@ def main() -> int:
             check("and it does not claim to be exhausted", rows["cb_vinu"]["exhausted"] is False, str(rows))
             check("the view says quotas are unconfigured", j["quotas_configured"] is False, r.text)
 
-            os.environ["ENGINE_FREE_QUOTAS"] = "cb_vinu=10,cb_palukulu=1000"
+            os.environ["ENGINE_FREE_QUOTAS"] = "cb_vinu=10,cb_paluku=1000"
             get_settings.cache_clear()
             r = client.get("/engines/usage", headers=ops)
             j = r.json()
@@ -1093,10 +1093,10 @@ def main() -> int:
             check("remaining = quota - consumed", rows["cb_vinu"]["remaining"] == 7.6, str(rows))
             check("percent_used is computed", rows["cb_vinu"]["percent_used"] == 24.0, str(rows))
             check("the view says quotas are configured", j["quotas_configured"] is True, r.text)
-            # CB Palukulu burned 1200 of 1000 - over the allowance.
-            check("an overrun reads exhausted", rows["cb_palukulu"]["exhausted"] is True, str(rows))
-            check("remaining floors at 0, never negative", rows["cb_palukulu"]["remaining"] == 0.0, str(rows))
-            check("percent_used caps at 100", rows["cb_palukulu"]["percent_used"] == 100.0, str(rows))
+            # CB Paluku burned 1200 of 1000 - over the allowance.
+            check("an overrun reads exhausted", rows["cb_paluku"]["exhausted"] is True, str(rows))
+            check("remaining floors at 0, never negative", rows["cb_paluku"]["remaining"] == 0.0, str(rows))
+            check("percent_used caps at 100", rows["cb_paluku"]["percent_used"] == 100.0, str(rows))
 
             # An engine nobody reported for must still be listed: absent and
             # idle look identical otherwise, and one of them is an outage.
@@ -1105,7 +1105,7 @@ def main() -> int:
             r = client.get("/engines/usage", headers=ops)
             check(
                 "every known engine is listed, even with no traffic",
-                {row["engine"] for row in r.json()["data"]} >= {"cb_vinu", "cb_palukulu"},
+                {row["engine"] for row in r.json()["data"]} >= {"cb_vinu", "cb_paluku"},
                 r.text,
             )
         finally:
