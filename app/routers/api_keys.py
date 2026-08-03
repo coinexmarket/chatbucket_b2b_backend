@@ -9,12 +9,14 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
+from .. import credits, money
 from ..config import get_settings
 from ..database import api_keys_collection
-from ..deps import get_current_user
+from ..deps import get_api_user, get_current_user
 from ..models.auth import ApiKeyCreateRequest, ApiKeyRenameRequest
+from ..plans import get_plan
 from ..security import generate_api_key
 from .projects import resolve_project
 
@@ -142,6 +144,54 @@ async def rename_key(
             status_code=status.HTTP_404_NOT_FOUND, detail="Key not found."
         )
     return {"status": True, "message": "API key renamed.", "data": _mask(doc)}
+
+
+@router.post("/verify")
+async def verify_key(
+    caller: dict = Depends(get_api_user),
+    response: Response = None,  # type: ignore[assignment]
+):
+    """Validate an ``X-API-Key`` and say whose it is. For our AI services.
+
+    The STT/TTS/translation/voice services need to answer two questions before
+    doing any work: is this a real customer, and which one. Until now they had
+    neither — they authenticated with one shared secret every customer
+    presented, so the caller's identity was not knowable and usage could not be
+    attributed to anyone. This is the endpoint that makes per-customer metering
+    possible.
+
+    Deliberately a **POST**: the key travels in a header either way, but a GET
+    invites caching by a proxy, and a cached "valid" answer would outlive a
+    revoked key.
+
+    Returns the plan and remaining credits too, so a service can refuse work a
+    customer cannot pay for rather than doing it and discovering that at
+    metering time — the point at which refusing is too late to save the cost.
+    """
+    key_id = caller.get("_api_key_id")
+    account = await credits.get_account(caller["_id"])
+    balance = credits.from_units(int(account.get("balance_units", 0)))
+    plan = get_plan(caller.get("plan"))
+
+    # Answered fresh every time: a revoked key must stop working immediately,
+    # which is the whole reason this is not a cacheable GET.
+    if response is not None:
+        response.headers["Cache-Control"] = "no-store"
+
+    return {
+        "status": True,
+        "data": {
+            "user_id": str(caller["_id"]),
+            "api_key_id": key_id,
+            "project_id": caller.get("_api_key_project_id"),
+            "plan": plan.key,
+            "requests_per_minute": plan.requests_per_minute,
+            "credits": money.to_json(balance),
+            # False means the next metered call will 402. A service can stop
+            # here instead of doing work it will not be paid for.
+            "has_credits": balance > 0,
+        },
+    }
 
 
 @router.delete("/{key_id}")

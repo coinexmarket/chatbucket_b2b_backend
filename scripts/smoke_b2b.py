@@ -221,6 +221,21 @@ def main() -> int:
         r = client.patch(f"/api-keys/{ObjectId()}", headers=auth, json={"name": "x"})
         check("rename unknown key -> 404", r.status_code == 404, r.text)
 
+        # --- key verification (what the AI services call) --------------------
+        # Our STT/TTS/chat services need to know *which* customer is calling
+        # before doing the work, so the usage can be billed to them.
+        r = client.post("/api-keys/verify", headers={"X-API-Key": api_key})
+        j = r.json().get("data", {})
+        check("POST /api-keys/verify accepts a live key", r.status_code == 200, r.text)
+        check("verify names the owning account", j.get("api_key_id") == key_id, r.text)
+        check("verify reports the plan's rate limit", j.get("requests_per_minute") == 60, r.text)
+        check("verify reports the credit balance", "credits" in j and "has_credits" in j, r.text)
+        check("verify is never cached", r.headers.get("Cache-Control") == "no-store", str(r.headers))
+        r = client.post("/api-keys/verify", headers={"X-API-Key": "cb_live_bogus"})
+        check("verify rejects an unknown key -> 401", r.status_code == 401, r.text)
+        r = client.post("/api-keys/verify")
+        check("verify without a key -> 401", r.status_code == 401, r.text)
+
         # Cross-tenant: another customer's key must be untouchable even with a
         # valid id, for rename and revoke alike.
         r = client.post("/auth/register", json={

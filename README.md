@@ -147,6 +147,7 @@ that vanishes in transit is worse than an unfashionable verb.
 | Method | Path | Notes |
 | --- | --- | --- |
 | POST | `/api-keys` | `{name}` → returns plaintext `api_key` **once** (`cb_live_…`) |
+| POST | `/api-keys/verify` | **X-API-Key**, not JWT — see below |
 | GET | `/api-keys` | List, masked as `cb_live_****ABCD`; `?limit=&offset=&include_revoked=` |
 | PATCH | `/api-keys/{id}` | `{name}` → rename the label; the secret is unchanged |
 | DELETE | `/api-keys/{id}` | Revoke |
@@ -179,6 +180,30 @@ bills the customer twice, silently and irreversibly. With it, a retry returns
 the record the first call stored — `{"replayed": true, ...}` with HTTP 200 —
 and the customer is charged once. Keys are scoped per customer, so two
 customers may use the same value.
+
+### Verifying a key (for the AI services)
+
+`POST /api-keys/verify` takes an `X-API-Key` and answers the two questions a
+metered service has before doing any work: **is this a real customer, and which
+one.**
+
+```json
+{"user_id": "…", "api_key_id": "…", "project_id": null, "plan": "starter",
+ "requests_per_minute": 60, "credits": 979.95, "has_credits": true}
+```
+
+Without it a service can only authenticate with a shared secret every customer
+presents, which identifies nobody — so the work it does cannot be billed to
+anyone. This is the endpoint that makes per-customer metering possible.
+
+It is a **POST**: the key travels in a header either way, but a GET invites
+caching by a proxy, and a cached "valid" answer would outlive a revoked key. The
+response carries `Cache-Control: no-store` for the same reason, and revocation
+is asserted to take effect immediately.
+
+`has_credits` lets a service refuse work a customer cannot pay for, rather than
+discovering that at metering time — the point at which refusing is too late to
+save the cost.
 
 ### Metering our own site's traffic
 
