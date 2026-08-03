@@ -26,6 +26,7 @@ app/
   analytics.py       Chart time-bucketing: granularities, ranges, zero-fill
   status.py          Service status registry, staleness, daily rollups
   plans.py           Plan catalogue: rate limits + top-up packs
+  vendors.py         Upstream supplier registry + free-tier quota accounting
   credits.py         Credit balances + append-only ledger (atomic spend guard)
   deps.py            Auth dependencies: get_current_user (JWT) / get_api_user (key)
   responses.py       Blog { status, status_code, message, data, ... } envelope
@@ -45,6 +46,7 @@ app/
     limits.py        plan limits (dashboard Limits page)
     projects.py      projects CRUD (Create API Key modal)
     status.py        service status (API Status page)
+    vendors.py       vendor burn vs free tier (operator-only)
     billing.py       credits, top-ups, ledger, gateway webhook
     demo.py          demo requests (Personal / Business modal)
     blogs.py / subscriptions.py / contest.py   (chatbucket-web site)
@@ -154,7 +156,7 @@ that vanishes in transit is worse than an unfashionable verb.
 | --- | --- | --- | --- |
 | GET | `/pricing` | – | The rate card. |
 | POST | `/usage/estimate` | – | `{service,quantity,model?}` (or `input_quantity`+`output_quantity`) → cost, nothing stored. |
-| POST | `/usage` | **X-API-Key** | Record consumption; computes + stores INR cost and **debits credits** (201). Optional `model` attributes it to the model that served it. **402** when credits are exhausted — the usage is still recorded, with `billed:false`. Send `Idempotency-Key` to make retries safe: a replay returns the original record with 200 and is not charged again. |
+| POST | `/usage` | **X-API-Key** *or* Bearer JWT | Record consumption; computes + stores INR cost and **debits credits** (201). Optional `model` attributes it to the model that served it, and `vendor`+`vendorQuantity` record what it cost us upstream. **402** when credits are exhausted — the usage is still recorded, with `billed:false`. Send `Idempotency-Key` to make retries safe: a replay returns the original record with 200 and is not charged again. |
 | GET | `/usage` | Bearer JWT | History; `?service=&model=&api_key_id=&project_id=&limit=`. |
 | GET | `/usage/summary` | Bearer JWT | `by_service`, `by_model`, `by_api_key`, `by_project` breakdowns + `grand_total`, `billed_total`, `unbilled_total`, `unattributed_cost`. |
 | GET | `/usage/timeseries` | Bearer JWT | Charts; `?granularity=daily\|hourly\|minute&from=&to=` plus the filters above. |
@@ -177,6 +179,89 @@ bills the customer twice, silently and irreversibly. With it, a retry returns
 the record the first call stored — `{"replayed": true, ...}` with HTTP 200 —
 and the customer is charged once. Keys are scoped per customer, so two
 customers may use the same value.
+
+### Metering our own site's traffic
+
+`POST /usage` also accepts a **Bearer JWT**, not just an API key. The site
+serves STT/TTS to signed-in customers through its own internal routes, and what
+those routes hold is the customer's session — the API key was shown once and
+stored only as a hash, so no server can produce it later. Without this, our own
+traffic could not be attributed to the customer who caused it.
+
+The key wins when both are sent: it is the more specific credential, and the
+only one that can attribute usage to a key and a project. Token-metered usage
+records **no `api_key_id`** rather than a made-up one, so the `by_api_key`
+breakdown stays truthful about what it does not know.
+
+A JWT is no weaker here than a key: both belong to the account being charged,
+so the worst either allows is inflating one's own bill — and the dashboard
+already trusts this same token to spend credits.
+
+### Upstream vendor burn
+
+Some services are served by suppliers we hold accounts with — Deepgram for STT,
+Murf for TTS — often on free credit. `POST /usage` takes an optional `vendor`
+and `vendorQuantity` recording what the call burned on **their** meter:
+
+```bash
+-d '{"service":"stt_offline","quantity":2,"vendor":"deepgram","vendorQuantity":2.4}'
+```
+
+This is **cost, not revenue, and the two never mix.** The customer is billed
+₹0.78 by our rate card; the 2.4 Deepgram minutes are ours to absorb. Nothing
+here touches credits, invoices or pricing.
+
+**The vendor's amount is never inferred from ours**, even where the units look
+identical. Deepgram meters the audio it processed, including leading silence a
+customer would not expect to pay for; Murf counts the characters it
+synthesised, markup included. Sending `vendor` without `vendorQuantity` is a
+422 rather than a guess.
+
+**An unknown vendor is rejected (422)** — unlike `model`, which accepts any
+string. The rules differ because the callers do: model names come from
+customers and must never fail a billing call, while `vendor` is set by our own
+code against a fixed list of suppliers. A typo there silently under-reports how
+much free credit we have burned, which is the one thing this field exists to
+prevent.
+
+Customers never see any of it. The fields are projected out of `GET /usage`,
+absent from the `POST /usage` response and from the CSV export. Which supplier
+serves a call, and at what cost, is our margin.
+
+#### The operator view
+
+| Method | Path | Auth |
+| --- | --- | --- |
+| GET | `/vendors/usage` | `X-Ops-Secret` |
+
+Per-vendor consumption for the last `?days=` (default 30), with the accounts
+burning the most named — which is how you find the one customer eating the free
+tier. Gated by `OPS_SECRET` rather than a user session, because every other
+authenticated endpoint answers *about the caller* and this one answers about
+the business. Unset ⇒ **503**, like the billing and status secrets.
+
+```json
+{"vendor": "deepgram", "unit": "minutes", "consumed": 2.4, "events": 1,
+ "free_quota": 10, "remaining": 7.6, "percent_used": 24.0, "exhausted": false,
+ "top_accounts": [{"email": "acme@example.com", "consumed": 2.4, "events": 1}]}
+```
+
+> **Free-tier sizes ship unset.** A quota is a fact about a contract this
+> service cannot observe, so `VENDOR_FREE_QUOTAS=deepgram=12000,murf=100000`
+> configures it. Until then `remaining` and `percent_used` are **null**, not
+> `0` — either number would be a claim about an allowance nobody has stated the
+> size of, and "0 remaining" in particular reads as an outage that is not
+> happening. `quotas_configured` on the response says which case you are in.
+
+Every known vendor is listed even with no traffic: a vendor missing from the
+page is indistinguishable from one nobody reported for, and one of those is an
+outage. `remaining` floors at 0 and `percent_used` caps at 100, so an overrun
+reads as `exhausted: true` rather than a negative balance.
+
+The window is a **rolling period, not the vendor's billing cycle**, which this
+service has no way to know — so `remaining` is only meaningful when the period
+covers the whole life of the allowance. The response states its own period
+rather than implying a balance.
 
 ### Per-model usage
 
@@ -767,6 +852,8 @@ docker run -p 8000:8000 --env-file .env chatbucket-b2b-backend
 | `STATUS_STALE_AFTER_SECONDS` | `300` | Silence beyond this reads `unknown`. |
 | `STATUS_PROBE_URLS` | – | `key=url` pairs to poll. Empty disables probing. |
 | `STATUS_PROBE_INTERVAL_SECONDS` | `60` | How often to poll them. |
+| `OPS_SECRET` | – | Required to read `/vendors/usage`; unset ⇒ 503. |
+| `VENDOR_FREE_QUOTAS` | – | `vendor=amount` pairs in the vendor's unit. Empty ⇒ burn is counted, `remaining` is null. |
 | `CORS_ORIGINS` | localhost + chatbucket domains | Allowed browser origins. |
 | `ENVIRONMENT` | `development` | In `development`, `forgot-password` returns the reset token. **Set this to `production` when deploying** — the default is a dev value, so leaving it unset both exposes reset tokens and skips the `JWT_SECRET` check. |
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |

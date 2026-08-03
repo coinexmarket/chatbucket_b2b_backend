@@ -99,6 +99,35 @@ class Settings(BaseSettings):
                 probes[key.strip().lower()] = url.strip()
         return probes
 
+    # --- Upstream vendors --------------------------------------------------
+    # Shared secret for the vendor-burn view. That view reports our supplier
+    # costs and remaining free credit, which is commercial information about
+    # us, not about the customer — so it is gated by an operator secret rather
+    # than a user session. Unset means it cannot be read at all.
+    ops_secret: str = Field(default="")
+    # Free-tier allowances, as `vendor=amount` pairs in the vendor's own unit:
+    #   VENDOR_FREE_QUOTAS=deepgram=12000,murf=100000
+    # Ships empty: the size of a free tier is a fact about a contract this
+    # service cannot observe, and a guessed "credit remaining" would be read as
+    # authoritative. Unset means consumption is counted but `remaining` is null.
+    vendor_free_quotas: str = Field(default="")
+
+    @property
+    def vendor_quota_map(self) -> dict[str, float]:
+        quotas: dict[str, float] = {}
+        for entry in self.vendor_free_quotas.split(","):
+            key, _, amount = entry.partition("=")
+            if not key.strip() or not amount.strip():
+                continue
+            try:
+                quotas[key.strip().lower()] = float(amount)
+            except ValueError:
+                # A malformed pair is skipped rather than crashing startup: the
+                # quota is a display figure, and refusing to boot over a typo
+                # in it would take the whole API down for a cosmetic setting.
+                continue
+        return quotas
+
     # --- HTTP / CORS -------------------------------------------------------
     cors_origins: str = Field(
         default=(

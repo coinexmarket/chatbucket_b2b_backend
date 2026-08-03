@@ -31,6 +31,7 @@ from .routers import (
     projects,
     subscriptions,
     usage,
+    vendors,
 )
 from .routers import (
     status as status_router,
@@ -175,6 +176,8 @@ app.include_router(limits.router)
 app.include_router(billing.router)
 app.include_router(projects.router)
 app.include_router(status_router.router)
+# Operator-only: what our upstream suppliers cost us, not what we charge.
+app.include_router(vendors.router)
 
 # --- chatbucket-web site endpoints ---------------------------------------
 app.include_router(blogs.router)

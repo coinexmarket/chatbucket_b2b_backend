@@ -29,7 +29,7 @@ from ..database import (
     projects_collection,
     usage_collection,
 )
-from ..deps import get_api_user, get_current_user
+from ..deps import get_current_user, get_metering_user
 from ..models.usage import UsageRequest
 from ..plans import get_plan
 from ..pricing import (
@@ -227,7 +227,7 @@ async def _find_replay(user_id, idempotency_key: str) -> dict | None:
 async def record_usage(
     payload: UsageRequest,
     response: Response,
-    user: dict = Depends(get_api_user),
+    user: dict = Depends(get_metering_user),
     idempotency_key: str | None = Header(
         default=None,
         alias="Idempotency-Key",
@@ -259,6 +259,11 @@ async def record_usage(
         # "bulbul  V3" are one row rather than two.
         "model": payload.model,
         "model_key": normalize_model_key(payload.model) if payload.model else None,
+        # What the call cost *us* upstream. Stored beside the billable figures
+        # but never priced with them: this is COGS, and the customer neither
+        # pays it nor sees it.
+        "vendor": payload.vendor,
+        "vendor_quantity": payload.vendor_quantity,
         "metadata": payload.metadata,
         # Flipped to True once the credits are actually taken, below. Recorded
         # up front so usage is never lost just because it could not be paid for.
@@ -391,7 +396,16 @@ async def usage_history(
     limit: int = Query(default=50, ge=1, le=500),
 ):
     query = _scope(user, service, model, api_key_id, project_id)
-    cursor = usage_collection().find(query).sort("created_at", -1).limit(limit)
+    cursor = (
+        usage_collection()
+        # Which supplier served the call, and what they charged us for it, is
+        # our commercial information — margin, and who we buy from. It is
+        # projected away here rather than filtered in Python so it never
+        # reaches the process boundary at all.
+        .find(query, {"vendor": 0, "vendor_quantity": 0})
+        .sort("created_at", -1)
+        .limit(limit)
+    )
     docs = await cursor.to_list(length=limit)
     return {"status": True, "count": len(docs), "data": serialize_docs(docs)}
 

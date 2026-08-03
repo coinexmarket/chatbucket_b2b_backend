@@ -21,11 +21,13 @@ from decimal import Decimal
 class Plan:
     key: str
     label: str
-    # Rate limits are advertised here and reported by `GET /limits`. Enforcing
-    # them needs a shared counter across workers and is NOT implemented yet —
-    # see the README. Reporting a limit the gateway does not apply is a
-    # deliberate, documented gap, not an oversight.
+    # Advertised here, reported by `GET /limits`, and enforced on `POST /usage`
+    # when `ENFORCE_PLAN_RATE_LIMITS` is on (it is by default), counted per
+    # (account, service) in Mongo so the allowance holds across workers.
     requests_per_minute: int
+    # Advertised and reported, but NOT enforced: nothing counts in-flight
+    # requests. A deliberate, documented gap — see the README — not an
+    # oversight, and stated here so nobody reads the field as a live limit.
     concurrency: int
     support: str
     best_for: str
