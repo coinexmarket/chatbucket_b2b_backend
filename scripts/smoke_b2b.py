@@ -1036,6 +1036,16 @@ def main() -> int:
         })
         check("engine without its quantity -> 422", r.status_code == 422, r.text)
 
+        # A misspelt key must not be dropped in silence: the call would return
+        # 201 having billed the customer correctly while the engine allowance
+        # under-reports, which is the exact failure these fields exist to stop.
+        r = client.post("/usage", headers=headers_key, json={
+            "service": "stt_offline", "quantity": 1,
+            "engine": "cb_vinu", "engineQty": 2.4,
+        })
+        check("misspelt engine field -> 422, not a silent drop", r.status_code == 422, r.text)
+        check("the rejection names the offending key", "engineQty" in r.text, r.text)
+
         # A signed-in customer has a session, not an API key — the key was shown
         # once and stored hashed, so the site cannot produce it server-side.
         r = client.post("/usage", headers=auth, json={

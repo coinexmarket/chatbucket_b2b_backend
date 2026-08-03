@@ -23,8 +23,19 @@ class UsageRequest(BaseModel):
     # camelCase accepted alongside snake_case, as on every other client-facing
     # body. `protected_namespaces` is cleared so the `model` field (which names
     # an AI model, not a Pydantic one) does not collide with `model_*`.
+    #
+    # `extra="forbid"` for the same reason signup uses it: a field this body
+    # does not model is dropped silently otherwise, and the caller gets a 201
+    # saying the whole thing was recorded. On a metering call that is the worst
+    # available outcome — `engine_quantity` misspelt as `engineQty` would bill
+    # the customer correctly while the allowance quietly under-reports, which
+    # is precisely the failure the engine fields exist to prevent. A 422 names
+    # the offending key instead.
     model_config = ConfigDict(
-        populate_by_name=True, alias_generator=to_camel, protected_namespaces=()
+        populate_by_name=True,
+        alias_generator=to_camel,
+        protected_namespaces=(),
+        extra="forbid",
     )
 
     service: str = Field(description="One of the rate-card service keys.")
