@@ -5,10 +5,15 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from .. import sessions
 from ..database import users_collection
 from ..deps import get_current_user
 from ..models.auth import ChangePasswordRequest, ProfileUpdateRequest
-from ..security import create_access_token_for_user, hash_password, verify_password
+from ..security import (
+    create_access_token_for_user,
+    hash_password_async,
+    verify_password_async,
+)
 from ..serialization import public_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -38,22 +43,27 @@ async def update_profile(
 async def change_password(
     payload: ChangePasswordRequest, user: dict = Depends(get_current_user)
 ):
-    if not verify_password(payload.current_password, user["password_hash"]):
+    if not await verify_password_async(payload.current_password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect.",
         )
+    new_password_hash = await hash_password_async(payload.new_password)
     await users_collection().update_one(
         {"_id": user["_id"]},
         {
             "$set": {
-                "password_hash": hash_password(payload.new_password),
+                "password_hash": new_password_hash,
                 "updated_at": datetime.now(timezone.utc),
             },
             # Sign out every other session that is holding an older token.
             "$inc": {"token_version": 1},
         },
     )
+
+    # Refresh tokens survive a `token_version` bump, so revoke them too —
+    # otherwise a stolen session could mint new access tokens indefinitely.
+    await sessions.revoke_all_for_user(user["_id"], "password_change")
 
     # The bump above also retires the caller's own token, so hand back a fresh
     # one — changing your password shouldn't log you out of the tab you're in.

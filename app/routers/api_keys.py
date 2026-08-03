@@ -9,12 +9,14 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from ..config import get_settings
 from ..database import api_keys_collection
 from ..deps import get_current_user
-from ..models.auth import ApiKeyCreateRequest
+from ..models.auth import ApiKeyCreateRequest, ApiKeyRenameRequest
 from ..security import generate_api_key
+from .projects import resolve_project
 
 router = APIRouter(prefix="/api-keys", tags=["api-keys"])
 
@@ -24,6 +26,7 @@ def _mask(doc: dict) -> dict:
         "id": str(doc["_id"]),
         "name": doc.get("name"),
         "masked_key": f"{doc.get('key_prefix', 'cb_live')}_****{doc.get('key_last4', '')}",
+        "project_id": doc.get("project_id"),
         "created_at": doc.get("created_at"),
         "last_used_at": doc.get("last_used_at"),
         "revoked": doc.get("revoked", False),
@@ -34,10 +37,24 @@ def _mask(doc: dict) -> dict:
 async def create_key(
     payload: ApiKeyCreateRequest, user: dict = Depends(get_current_user)
 ):
+    # An unverified address means nobody has proven they own it, so issuing a
+    # live credential against it is a decision worth gating. Off by default:
+    # switching it on would lock out every account created before verification
+    # existed until they confirm.
+    if get_settings().require_email_verification and not user.get("email_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verify your email address before creating API keys.",
+        )
+
     full, prefix, key_hash, last4 = generate_api_key()
+    # Validated against the caller's own projects, so a guessed id cannot
+    # attach this key to another customer's project.
+    project_id = await resolve_project(user, payload.project_id)
     document = {
         "user_id": user["_id"],
         "name": payload.name.strip(),
+        "project_id": project_id,
         "key_prefix": prefix,
         "key_hash": key_hash,
         "key_last4": last4,
@@ -56,20 +73,80 @@ async def create_key(
 
 
 @router.get("")
-async def list_keys(user: dict = Depends(get_current_user)):
-    cursor = api_keys_collection().find({"user_id": user["_id"]}).sort("created_at", -1)
-    docs = await cursor.to_list(length=None)
-    return {"status": True, "data": [_mask(d) for d in docs]}
+async def list_keys(
+    user: dict = Depends(get_current_user),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    include_revoked: bool = Query(default=True),
+):
+    """The caller's API keys, newest first.
+
+    Paged rather than returning everything: an account that has rotated keys
+    for years would otherwise get the whole history in one response.
+    """
+    query: dict = {"user_id": user["_id"]}
+    if not include_revoked:
+        query["revoked"] = False
+
+    total = await api_keys_collection().count_documents(query)
+    cursor = (
+        api_keys_collection()
+        .find(query)
+        .sort("created_at", -1)
+        .skip(offset)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+    return {
+        "status": True,
+        "count": len(docs),
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "data": [_mask(d) for d in docs],
+    }
+
+
+def _key_oid(key_id: str) -> ObjectId:
+    try:
+        return ObjectId(key_id)
+    except (InvalidId, TypeError):
+        # A malformed id is indistinguishable from someone else's key here, and
+        # both should look the same to the caller.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Key not found."
+        )
+
+
+@router.patch("/{key_id}")
+async def rename_key(
+    key_id: str,
+    payload: ApiKeyRenameRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Rename a key. The secret itself is unchanged — this is only the label."""
+    updates: dict = {"name": payload.name.strip()}
+    if payload.project_id is not None:
+        # "" means unassign; an id is validated as the caller's own.
+        updates["project_id"] = await resolve_project(user, payload.project_id or None)
+
+    doc = await api_keys_collection().find_one_and_update(
+        # Scoped to the caller's own keys, so a valid id belonging to another
+        # customer is a 404 rather than a rename of their key.
+        {"_id": _key_oid(key_id), "user_id": user["_id"]},
+        {"$set": updates},
+        return_document=True,
+    )
+    if doc is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Key not found."
+        )
+    return {"status": True, "message": "API key renamed.", "data": _mask(doc)}
 
 
 @router.delete("/{key_id}")
 async def revoke_key(key_id: str, user: dict = Depends(get_current_user)):
-    try:
-        oid = ObjectId(key_id)
-    except (InvalidId, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Key not found."
-        )
+    oid = _key_oid(key_id)
     result = await api_keys_collection().update_one(
         {"_id": oid, "user_id": user["_id"]}, {"$set": {"revoked": True}}
     )

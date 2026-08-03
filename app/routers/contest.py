@@ -15,9 +15,10 @@ import secrets
 import string
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
+from .. import ratelimit
 from ..database import contest_registrations_collection
 from ..models.requests import ContestRegistrationRequest
 
@@ -32,7 +33,7 @@ def _reference_number() -> str:
     return f"WX-{suffix}"
 
 
-@router.post("/register")
+@router.post("/register", dependencies=[Depends(ratelimit.by_ip("contest_ip"))])
 async def register(payload: ContestRegistrationRequest):
     reference_number = _reference_number()
     document = {

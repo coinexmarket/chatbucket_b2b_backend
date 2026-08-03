@@ -18,15 +18,24 @@ from fastapi.responses import JSONResponse
 from . import database
 from .config import get_settings
 from .routers import (
+    account,
     api_keys,
     auth,
+    billing,
     blogs,
     contest,
+    demo,
+    limits,
     pricing,
     profile,
+    projects,
     subscriptions,
     usage,
 )
+from .routers import (
+    status as status_router,
+)
+from .security import warm_password_hasher
 
 logger = logging.getLogger("chatbucket_b2b")
 
@@ -55,10 +64,59 @@ async def _ensure_indexes_forever() -> None:
             delay = min(delay * 2, _INDEX_RETRY_MAX_DELAY)
 
 
+async def _probe_services_forever() -> None:
+    """Poll each configured health URL and record the result.
+
+    Only runs when `STATUS_PROBE_URLS` is set, so a deployment that reports via
+    heartbeats instead pays nothing for this. Uses the stdlib in a worker
+    thread rather than adding an HTTP client dependency for one background job.
+    """
+    import urllib.error
+    import urllib.request
+
+    from starlette.concurrency import run_in_threadpool
+
+    from . import status as service_status
+
+    settings = get_settings()
+    probes = settings.status_probe_map
+
+    def check(url: str) -> str:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as response:
+                return (
+                    service_status.OPERATIONAL
+                    if 200 <= response.status < 300
+                    else service_status.DEGRADED
+                )
+        except urllib.error.HTTPError as exc:
+            # It answered, just not happily — degraded rather than down.
+            return service_status.DEGRADED if exc.code < 500 else service_status.DOWN
+        except Exception:
+            return service_status.DOWN
+
+    while True:
+        for key, url in probes.items():
+            try:
+                result = await run_in_threadpool(check, url)
+                await service_status.record(key, result, service_status.SOURCE_PROBE)
+            except Exception as exc:
+                logger.error("status probe for %s failed: %s", key, exc)
+        await asyncio.sleep(settings.status_probe_interval_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Open the Mongo connection on startup, close it on shutdown.
     await database.connect()
+
+    # Build the login timing-defence hash now rather than on the event loop
+    # during the first login that misses.
+    warm_password_hasher()
+
+    # Stated at boot so "no reset emails arrived" is one log line to diagnose
+    # rather than a guess about configuration.
+    logger.info("email backend: %s", settings.resolved_email_backend)
 
     # Try inline first so a healthy boot has its indexes before the first
     # request; fall back to retrying in the background rather than giving up.
@@ -69,13 +127,19 @@ async def lifespan(app: FastAPI):
         logger.error("ensure_indexes failed at startup, retrying in background: %s", exc)
         retry_task = asyncio.create_task(_ensure_indexes_forever())
 
+    probe_task: asyncio.Task | None = None
+    if settings.status_probe_map:
+        logger.info("status probing %d service(s)", len(settings.status_probe_map))
+        probe_task = asyncio.create_task(_probe_services_forever())
+
     try:
         yield
     finally:
-        if retry_task is not None:
-            retry_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await retry_task
+        for task in (retry_task, probe_task):
+            if task is not None:
+                task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await task
         await database.disconnect()
 
 
@@ -103,14 +167,21 @@ app.add_middleware(
 # --- B2B platform ---------------------------------------------------------
 app.include_router(auth.router)
 app.include_router(profile.router)
+app.include_router(account.router)
 app.include_router(api_keys.router)
 app.include_router(usage.router)
 app.include_router(pricing.router)
+app.include_router(limits.router)
+app.include_router(billing.router)
+app.include_router(projects.router)
+app.include_router(status_router.router)
 
 # --- chatbucket-web site endpoints ---------------------------------------
 app.include_router(blogs.router)
 app.include_router(subscriptions.router)
 app.include_router(contest.router)
+# Called from the marketing site, but the leads land in the B2B database.
+app.include_router(demo.router)
 
 
 @app.get("/", tags=["health"])

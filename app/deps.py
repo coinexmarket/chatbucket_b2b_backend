@@ -87,8 +87,12 @@ async def get_api_user(x_api_key: str | None = Header(default=None)) -> dict:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
-    # Stash which key was used so the usage record can reference it.
+    # Stash which key was used so the usage record can reference it, and the
+    # project that key belongs to — usage inherits the key's project rather
+    # than the caller declaring one, so attribution cannot drift from whichever
+    # credential actually did the work.
     user["_api_key_id"] = str(key_doc["_id"])
+    user["_api_key_project_id"] = key_doc.get("project_id")
     return user
 
 

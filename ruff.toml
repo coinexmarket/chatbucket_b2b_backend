@@ -1,0 +1,27 @@
+# Lint config. Deliberately narrow: the point is to catch real defects
+# (unused names, undefined references, shadowed builtins) without churning
+# the codebase over formatting opinions.
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    # Long lines are mostly test assertions and comment prose, where wrapping
+    # hurts more than it helps.
+    "E501",
+    # `Depends()` / `Query()` / `Header()` as parameter defaults IS the FastAPI
+    # idiom — the framework evaluates them per request, not once at import.
+    "B008",
+    # `raise X from exc` inside except. Worth doing, but ~14 sites of churn
+    # for better tracebacks; not blocking CI over it today.
+    "B904",
+    # `timezone.utc` -> `datetime.UTC`. Cosmetic, and the codebase is
+    # consistent as it stands.
+    "UP017",
+]
+
+[lint.per-file-ignores]
+# The smoke suites set environment variables before importing `app`, which the
+# settings object reads at import time — imports genuinely cannot come first.
+"scripts/smoke_*.py" = ["E402"]
