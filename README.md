@@ -854,7 +854,7 @@ docker run -p 8000:8000 --env-file .env chatbucket-b2b-backend
 | `STATUS_PROBE_INTERVAL_SECONDS` | `60` | How often to poll them. |
 | `OPS_SECRET` | – | Required to read `/vendors/usage`; unset ⇒ 503. |
 | `VENDOR_FREE_QUOTAS` | – | `vendor=amount` pairs in the vendor's unit. Empty ⇒ burn is counted, `remaining` is null. |
-| `CORS_ORIGINS` | localhost + chatbucket domains | Allowed browser origins. |
+| `CORS_ORIGINS` | localhost `:3000`/`:4100` (and `127.0.0.1`) + chatbucket domains | Allowed browser origins. Matched exactly — scheme, host and port all count. |
 | `ENVIRONMENT` | `development` | In `development`, `forgot-password` returns the reset token. **Set this to `production` when deploying** — the default is a dev value, so leaving it unset both exposes reset tokens and skips the `JWT_SECRET` check. |
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |
 | `SMTP_HOST` | – | Provider host. Required in production unless `EMAIL_BACKEND=disabled`. |

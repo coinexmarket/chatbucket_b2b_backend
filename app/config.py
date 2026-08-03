@@ -131,7 +131,15 @@ class Settings(BaseSettings):
     # --- HTTP / CORS -------------------------------------------------------
     cors_origins: str = Field(
         default=(
+            # Local dev servers. An origin is matched exactly — scheme, host and
+            # port all count — so `localhost` and `127.0.0.1` are two different
+            # origins to a browser however identical they look here, and both
+            # are listed rather than leaving whichever one someone opens to
+            # fail a preflight with no obvious cause.
             "http://localhost:3000,"
+            "http://127.0.0.1:3000,"
+            "http://localhost:4100,"
+            "http://127.0.0.1:4100,"
             "https://chatbucket.chat,"
             "https://www.chatbucket.chat,"
             "https://chatbucket.business"
