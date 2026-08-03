@@ -6,7 +6,7 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.alias_generators import to_camel
 
-from .. import vendors
+from .. import engines
 
 _WHITESPACE = re.compile(r"\s+")
 
@@ -53,71 +53,71 @@ class UsageRequest(BaseModel):
         max_length=64,
         description="Model that served the request, e.g. 'Bulbul v3'.",
     )
-    # --- Upstream vendor (our cost, never the customer's) ------------------
-    # Which supplier served the call and how much of *their* meter it burned.
-    # Recorded for the ops view only: it is not priced, not charged, and not
-    # echoed back to customers.
-    vendor: str | None = Field(
+    # --- Engine capacity (our cost, never the customer's) ------------------
+    # Which ChatBucket engine served the call and how much of *its* meter it
+    # burned. Recorded for the operator view only: it is not priced, not
+    # charged, and not echoed back to customers.
+    engine: str | None = Field(
         default=None,
         max_length=64,
-        description="Upstream supplier that served this call, e.g. 'deepgram'.",
+        description="ChatBucket engine that served this call, e.g. 'cb_vinu'.",
     )
-    vendor_quantity: float | None = Field(
+    engine_quantity: float | None = Field(
         default=None,
         gt=0,
         description=(
-            "Amount consumed in the VENDOR's unit — not ours. Required "
-            "whenever `vendor` is set."
+            "Amount consumed on the ENGINE's meter — not ours. Required "
+            "whenever `engine` is set."
         ),
     )
     metadata: dict | None = Field(
         default=None, description="Optional caller context (session id, etc.)."
     )
 
-    @field_validator("vendor")
+    @field_validator("engine")
     @classmethod
-    def _check_vendor(cls, value: str | None) -> str | None:
-        """Reject an unknown vendor, unlike `model` which accepts anything.
+    def _check_engine(cls, value: str | None) -> str | None:
+        """Reject an unknown engine, unlike `model` which accepts anything.
 
         The rules differ because the callers do. `model` names are supplied by
         customers, who may send anything, and failing a billing call over an
-        unrecognised one would be indefensible. `vendor` is set by our own
-        services against a fixed list of suppliers we hold accounts with, so a
-        typo is a bug in our code — and one that silently under-reports how
-        much free credit we have burned, which is precisely the figure this
-        field exists to keep honest. Better a 422 in development than a quota
-        that looks healthier than it is.
+        unrecognised one would be indefensible. `engine` is set by our own
+        services against a fixed list of capabilities, so a typo is a bug in
+        our code — and one that silently under-reports how much capacity we
+        have burned, which is precisely the figure this field exists to keep
+        honest. Better a 422 in development than a quota that looks healthier
+        than it is.
         """
         if value is None:
             return None
         cleaned = _WHITESPACE.sub(" ", value.strip())
         if not cleaned:
             return None
-        if not vendors.is_known(cleaned):
-            known = ", ".join(sorted(vendors.VENDORS))
-            raise ValueError(f"Unknown vendor {cleaned!r}. Known vendors: {known}.")
-        return vendors.normalize_vendor_key(cleaned)
+        if not engines.is_known(cleaned):
+            known = ", ".join(sorted(engines.ENGINES))
+            raise ValueError(f"Unknown engine {cleaned!r}. Known engines: {known}.")
+        return engines.normalize_engine_key(cleaned)
 
     @model_validator(mode="after")
-    def _vendor_needs_quantity(self) -> UsageRequest:
-        """`vendor` and `vendor_quantity` travel together.
+    def _engine_needs_quantity(self) -> UsageRequest:
+        """`engine` and `engine_quantity` travel together.
 
-        The vendor's amount is **not** defaulted from `quantity`, even where
-        the units look identical. Deepgram meters the audio it processed —
+        The engine's amount is **not** defaulted from `quantity`, even where
+        the units look identical. An engine may meter the audio it processed —
         including leading silence — while we bill the customer for the audio
-        they sent; Murf counts the characters it synthesised, markup included,
-        where we count the text. Inferring one from the other would quietly
-        misstate the free-tier burn in whichever direction the two happen to
-        diverge. The caller knows what the vendor actually charged; it reports
+        they sent, or count the characters it synthesised with markup included
+        where we count only the text. Inferring one from the other would
+        quietly misstate the burn in whichever direction the two happen to
+        diverge. The caller knows what the engine actually consumed; it reports
         that, or reports nothing.
         """
-        if self.vendor and self.vendor_quantity is None:
+        if self.engine and self.engine_quantity is None:
             raise ValueError(
-                "vendor_quantity is required when vendor is set: the vendor's "
+                "engine_quantity is required when engine is set: the engine's "
                 "meter is not derivable from ours."
             )
-        if self.vendor_quantity is not None and not self.vendor:
-            raise ValueError("vendor_quantity was sent without a vendor.")
+        if self.engine_quantity is not None and not self.engine:
+            raise ValueError("engine_quantity was sent without an engine.")
         return self
 
     @model_validator(mode="after")

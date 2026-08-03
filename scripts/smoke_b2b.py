@@ -994,52 +994,52 @@ def main() -> int:
         r = client.post("/usage/estimate", json={"service": "voip_call", "quantity": 12.3 / 60})
         check("without an increment, fractions bill exactly", r.json()["data"]["cost"] == 1.025, r.text)
 
-        # --- upstream vendor burn --------------------------------------------
-        # Our site serves STT/TTS to a signed-in customer through Deepgram and
-        # Murf on free credit. The customer is billed at our rate card; the
-        # vendor's meter is recorded separately as our cost.
+        # --- engine capacity burn --------------------------------------------
+        # Our site serves STT/TTS to a signed-in customer on our own engine
+        # allowance. The customer is billed at our rate card; the engine's
+        # meter is recorded separately as our cost.
         #
         # A fresh account: the one above was closed by the deletion block, and
         # its key and token died with it.
         r = client.post("/auth/register", json={
-            "name": "Vendor Co", "email": "vendor@acme.io", "password": "hunter2secret",
+            "name": "Engine Co", "email": "engine@acme.io", "password": "hunter2secret",
             "mobile": "+919876500123", "acceptTerms": True,
         })
-        vend_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
+        eng_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
         # The plaintext key is top-level and shown exactly once.
-        vend_key = {"X-API-Key": client.post(
-            "/api-keys", headers=vend_auth, json={"name": "Site"}
+        eng_key = {"X-API-Key": client.post(
+            "/api-keys", headers=eng_auth, json={"name": "Site"}
         ).json()["api_key"]}
         # Credits so the metered calls below bill rather than 402.
-        r = client.post("/billing/top-up", headers=vend_auth, json={"amountInr": 500})
+        r = client.post("/billing/top-up", headers=eng_auth, json={"amountInr": 500})
         client.post(
             f"/billing/payments/{r.json()['data']['id']}/confirm",
             headers={"X-Billing-Secret": "test-webhook-secret"},
-            json={"providerPaymentId": "pay_vendor_1"},
+            json={"providerPaymentId": "pay_engine_1"},
         )
 
-        headers_key = vend_key
-        auth = vend_auth
+        headers_key = eng_key
+        auth = eng_auth
         r = client.post("/usage", headers=headers_key, json={
-            "service": "stt_offline", "quantity": 2, "vendor": "deepgram", "vendorQuantity": 2.4,
+            "service": "stt_offline", "quantity": 2, "engine": "cb_vinu", "engineQuantity": 2.4,
         })
-        check("usage accepts a vendor + vendor quantity", r.status_code == 201, r.text)
+        check("usage accepts an engine + engine quantity", r.status_code == 201, r.text)
         check("the customer is still billed at OUR rate", r.json()["data"]["cost"] == 0.78, r.text)
-        check("vendor is not echoed to the caller", "vendor" not in r.json()["data"], r.text)
+        check("engine is not echoed to the caller", "engine" not in r.json()["data"], r.text)
 
         r = client.post("/usage", headers=headers_key, json={
-            "service": "stt_offline", "quantity": 1, "vendor": "assemblyai", "vendorQuantity": 1,
+            "service": "stt_offline", "quantity": 1, "engine": "cb_unknown", "engineQuantity": 1,
         })
-        check("unknown vendor -> 422, not a silent row", r.status_code == 422, r.text)
+        check("unknown engine -> 422, not a silent row", r.status_code == 422, r.text)
         r = client.post("/usage", headers=headers_key, json={
-            "service": "stt_offline", "quantity": 1, "vendor": "deepgram",
+            "service": "stt_offline", "quantity": 1, "engine": "cb_vinu",
         })
-        check("vendor without its quantity -> 422", r.status_code == 422, r.text)
+        check("engine without its quantity -> 422", r.status_code == 422, r.text)
 
         # A signed-in customer has a session, not an API key — the key was shown
         # once and stored hashed, so the site cannot produce it server-side.
         r = client.post("/usage", headers=auth, json={
-            "service": "tts_streaming", "quantity": 1000, "vendor": "murf", "vendorQuantity": 1200,
+            "service": "tts_streaming", "quantity": 1000, "engine": "cb_palukulu", "engineQuantity": 1200,
         })
         check("usage can be metered with a bearer token", r.status_code == 201, r.text)
         check("token-metered usage bills normally", r.json()["data"]["cost"] == 0.91, r.text)
@@ -1052,64 +1052,64 @@ def main() -> int:
         # The customer must not see who serves their calls, or what it costs us.
         r = client.get("/usage", headers=auth)
         check(
-            "vendor never appears in customer usage history",
-            all("vendor" not in d and "vendor_quantity" not in d for d in r.json()["data"]),
+            "engine never appears in customer usage history",
+            all("engine" not in d and "engine_quantity" not in d for d in r.json()["data"]),
             r.text,
         )
 
-        # --- vendor burn, operator view ---------------------------------------
-        r = client.get("/vendors/usage")
-        check("vendor view 503s when OPS_SECRET is unset", r.status_code == 503, r.text)
+        # --- engine burn, operator view ---------------------------------------
+        r = client.get("/engines/usage")
+        check("engine view 503s when OPS_SECRET is unset", r.status_code == 503, r.text)
         os.environ["OPS_SECRET"] = "test-ops-secret"
         get_settings.cache_clear()
         try:
-            r = client.get("/vendors/usage")
-            check("vendor view without the secret -> 401", r.status_code == 401, r.text)
-            r = client.get("/vendors/usage", headers={"X-Ops-Secret": "wrong"})
-            check("vendor view with a wrong secret -> 401", r.status_code == 401, r.text)
+            r = client.get("/engines/usage")
+            check("engine view without the secret -> 401", r.status_code == 401, r.text)
+            r = client.get("/engines/usage", headers={"X-Ops-Secret": "wrong"})
+            check("engine view with a wrong secret -> 401", r.status_code == 401, r.text)
 
             ops = {"X-Ops-Secret": "test-ops-secret"}
-            r = client.get("/vendors/usage", headers=ops)
+            r = client.get("/engines/usage", headers=ops)
             j = r.json()
-            check("vendor view returns 200 with the secret", r.status_code == 200, r.text)
-            rows = {row["vendor"]: row for row in j["data"]}
-            check("deepgram burn is counted in ITS unit", rows["deepgram"]["consumed"] == 2.4, str(rows))
-            check("murf burn is counted separately", rows["murf"]["consumed"] == 1200, str(rows))
-            check("burn is reported in the vendor's unit", rows["murf"]["unit"] == "characters", str(rows))
-            check("the burning account is named", rows["deepgram"]["top_accounts"][0]["email"] == "vendor@acme.io", str(rows))
+            check("engine view returns 200 with the secret", r.status_code == 200, r.text)
+            rows = {row["engine"]: row for row in j["data"]}
+            check("cb_vinu burn is counted in ITS unit", rows["cb_vinu"]["consumed"] == 2.4, str(rows))
+            check("cb_palukulu burn is counted separately", rows["cb_palukulu"]["consumed"] == 1200, str(rows))
+            check("burn is reported in the engine's unit", rows["cb_palukulu"]["unit"] == "characters", str(rows))
+            check("the burning account is named", rows["cb_vinu"]["top_accounts"][0]["email"] == "engine@acme.io", str(rows))
 
             # Nothing has told us how big the free tier is, so nothing is claimed.
-            check("remaining is null while no quota is set", rows["deepgram"]["remaining"] is None, str(rows))
-            check("percent_used is null too, not 0", rows["deepgram"]["percent_used"] is None, str(rows))
-            check("and it does not claim to be exhausted", rows["deepgram"]["exhausted"] is False, str(rows))
+            check("remaining is null while no quota is set", rows["cb_vinu"]["remaining"] is None, str(rows))
+            check("percent_used is null too, not 0", rows["cb_vinu"]["percent_used"] is None, str(rows))
+            check("and it does not claim to be exhausted", rows["cb_vinu"]["exhausted"] is False, str(rows))
             check("the view says quotas are unconfigured", j["quotas_configured"] is False, r.text)
 
-            os.environ["VENDOR_FREE_QUOTAS"] = "deepgram=10,murf=1000"
+            os.environ["ENGINE_FREE_QUOTAS"] = "cb_vinu=10,cb_palukulu=1000"
             get_settings.cache_clear()
-            r = client.get("/vendors/usage", headers=ops)
+            r = client.get("/engines/usage", headers=ops)
             j = r.json()
-            rows = {row["vendor"]: row for row in j["data"]}
-            check("configured quota is reported", rows["deepgram"]["free_quota"] == 10, str(rows))
-            check("remaining = quota - consumed", rows["deepgram"]["remaining"] == 7.6, str(rows))
-            check("percent_used is computed", rows["deepgram"]["percent_used"] == 24.0, str(rows))
+            rows = {row["engine"]: row for row in j["data"]}
+            check("configured quota is reported", rows["cb_vinu"]["free_quota"] == 10, str(rows))
+            check("remaining = quota - consumed", rows["cb_vinu"]["remaining"] == 7.6, str(rows))
+            check("percent_used is computed", rows["cb_vinu"]["percent_used"] == 24.0, str(rows))
             check("the view says quotas are configured", j["quotas_configured"] is True, r.text)
-            # Murf burned 1200 of 1000 — over the free tier.
-            check("an overrun reads exhausted", rows["murf"]["exhausted"] is True, str(rows))
-            check("remaining floors at 0, never negative", rows["murf"]["remaining"] == 0.0, str(rows))
-            check("percent_used caps at 100", rows["murf"]["percent_used"] == 100.0, str(rows))
+            # CB Palukulu burned 1200 of 1000 - over the allowance.
+            check("an overrun reads exhausted", rows["cb_palukulu"]["exhausted"] is True, str(rows))
+            check("remaining floors at 0, never negative", rows["cb_palukulu"]["remaining"] == 0.0, str(rows))
+            check("percent_used caps at 100", rows["cb_palukulu"]["percent_used"] == 100.0, str(rows))
 
-            # A vendor nobody reported for must still be listed: absent and
+            # An engine nobody reported for must still be listed: absent and
             # idle look identical otherwise, and one of them is an outage.
-            os.environ["VENDOR_FREE_QUOTAS"] = ""
+            os.environ["ENGINE_FREE_QUOTAS"] = ""
             get_settings.cache_clear()
-            r = client.get("/vendors/usage", headers=ops)
+            r = client.get("/engines/usage", headers=ops)
             check(
-                "every known vendor is listed, even with no traffic",
-                {row["vendor"] for row in r.json()["data"]} >= {"deepgram", "murf"},
+                "every known engine is listed, even with no traffic",
+                {row["engine"] for row in r.json()["data"]} >= {"cb_vinu", "cb_palukulu"},
                 r.text,
             )
         finally:
-            for key in ("OPS_SECRET", "VENDOR_FREE_QUOTAS"):
+            for key in ("OPS_SECRET", "ENGINE_FREE_QUOTAS"):
                 os.environ.pop(key, None)
             get_settings.cache_clear()
 
