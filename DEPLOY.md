@@ -54,8 +54,14 @@ The app authenticates as **`cb-b2b-app`**, a user created for it, not as
 every other product's data by typo; this one can only reach what it writes.
 
 It creates its three logical databases (`chatbucket_b2b`, `chatbucket`,
-`ChatBucketHackathon`) on first write, alongside the `cb_prod` database other
-services already use on the same cluster.
+`ChatBucketHackathon`) on first write.
+
+The cluster is **`cb-b2b-mongodb-pord`**, dedicated to this service — three
+nodes in `blr1`, so a node failure fails over rather than taking billing down.
+It was moved off the shared `cb-db-mongodb-pord` while both were empty, which
+is the only time such a move is free: no export, no import, no window during
+which a write could land on the cluster being left behind. Indexes rebuild
+themselves on first start, so nothing had to be recreated by hand.
 
 The URI is the `mongodb+srv://` form, which resolves through DNS and therefore
 needs `dnspython` — that is why it is pinned in `requirements.txt` even though
