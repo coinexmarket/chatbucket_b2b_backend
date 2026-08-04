@@ -841,6 +841,13 @@ python -m scripts.set_status down "DB failover"  # all systems down
 python -m scripts.set_status --service tts degraded "Slow synthesis"
 ```
 
+## Deploying the metering
+
+Bringing per-customer metering live across the AI services has an order that
+matters — three of them now refuse callers without an API key, and two pairs of
+repos record nothing unless they ship together. **[ROLLOUT.md](ROLLOUT.md)** is
+the sequence, with the verification and rollback for each step.
+
 ## Local development
 
 ```bash
