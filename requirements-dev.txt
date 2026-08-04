@@ -1,4 +1,4 @@
 # Test and lint tooling. Not installed in the Docker image.
 mongomock-motor==0.0.36
 httpx==0.28.1
-ruff==0.9.6
+ruff==0.16.1
