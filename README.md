@@ -54,7 +54,7 @@ scripts/
   seed.py            Sample blog data
   smoke_test.py      End-to-end test for the site endpoints (61 checks)
   set_status.py      Set every system's status by hand
-  smoke_b2b.py       End-to-end test for the B2B platform (300 checks)
+  smoke_b2b.py       End-to-end test for the B2B platform (346 checks)
 ```
 
 ## Billing model (usage-based, INR)
@@ -869,7 +869,7 @@ Interactive docs: <http://localhost:8000/docs>
 
 ```bash
 pip install -r requirements-dev.txt
-python -m scripts.smoke_b2b     # 300 checks: accounts, keys, usage, credits, billing, email
+python -m scripts.smoke_b2b     # 346 checks: accounts, keys, usage, credits, billing, email
 python -m scripts.smoke_test    # 61 checks: blogs, subscriptions, contest, demo, status
 ```
 
