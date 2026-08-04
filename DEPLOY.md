@@ -79,13 +79,26 @@ worth doing.
   payment and nothing else; settlement is by the shared-secret confirm endpoint
   only. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
   `RAZORPAY_WEBHOOK_SECRET` to turn Checkout on.
-* **No custom domain.** The app answers on its `*.ondigitalocean.app` hostname.
-  To serve `api.chatbucket.business`, add the domain in the DO dashboard and
-  point a CNAME at that hostname from wherever `chatbucket.business` is hosted —
-  the domain is not on DigitalOcean DNS, so App Platform cannot create the
-  record itself.
+* **`ENFORCE_CREDIT_BALANCE`** is left at its default of `true`. That is only
+  safe because this deployment started with an empty database — on an install
+  with existing accounts it would 402 every one of them, all at once.
 * **`ENGINE_FREE_QUOTAS`** — unset, so engine burn is counted but `remaining`
   and `percent_used` read null. See the README.
+
+## The domain
+
+`api.chatbucket.business` is the app's primary domain; the
+`*.ondigitalocean.app` hostname keeps working alongside it.
+
+DNS for `chatbucket.business` is at the registrar, **not** DigitalOcean, so App
+Platform cannot create records itself — the subdomain is a `CNAME` to the app's
+default hostname, added by hand at the registrar. Everything after that (the
+TXT challenge, CA authorization, the certificate and its renewal) DigitalOcean
+does on its own; a domain sitting in `CONFIGURING` at the `verify-cname` step
+means the record is missing or has not propagated, not that anything is broken.
+
+The apex `chatbucket.business` points at the `cb-b2b-pord` droplet and is
+untouched by this — only the `api` subdomain is delegated here.
 
 ## CORS
 
