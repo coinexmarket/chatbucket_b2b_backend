@@ -87,7 +87,7 @@ worth doing.
 
 ## The domain
 
-`api.chatbucket.business` is the app's primary domain; the
+`api.b2b.chatbucket.business` is the app's primary domain; the
 `*.ondigitalocean.app` hostname keeps working alongside it.
 
 DNS for `chatbucket.business` is at the registrar, **not** DigitalOcean, so App
@@ -97,8 +97,8 @@ TXT challenge, CA authorization, the certificate and its renewal) DigitalOcean
 does on its own; a domain sitting in `CONFIGURING` at the `verify-cname` step
 means the record is missing or has not propagated, not that anything is broken.
 
-The apex `chatbucket.business` points at the `cb-b2b-pord` droplet and is
-untouched by this — only the `api` subdomain is delegated here.
+The apex `chatbucket.business` and `www` point at the `cb-b2b-pord` droplet and
+are untouched by this — only the `api.b2b` subdomain is delegated here.
 
 ## CORS
 

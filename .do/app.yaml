@@ -62,5 +62,5 @@ ingress:
       component:
         name: api
 domains:
-- domain: api.chatbucket.business
+- domain: api.b2b.chatbucket.business
   type: PRIMARY
