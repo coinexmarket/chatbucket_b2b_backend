@@ -258,6 +258,25 @@ absent from the `POST /usage` response and from the CSV export.
 > learns how the product is built; and a capability can be re-provisioned
 > without renaming a field that history is keyed on.
 
+#### Which upstream served it
+
+`POST /usage` takes an optional `provider` alongside `engine` — who actually
+did the work, so our own supplier invoices can be reconciled. Today each
+capability has one upstream, and the engine total *is* that invoice. The day a
+capability is served by two, or fails over to a second, `by_provider` is what
+splits 40,000 characters across two bills instead of leaving one number nobody
+can check.
+
+It is **free text, and no list of suppliers exists in this repo.** Each service
+reads its own from configuration (`CB_VINU_PROVIDER`, `CB_PALUKU_PROVIDER`, …),
+so a supplier's identity lives with its credentials rather than in source, and a
+failover deployment reports a different one without a code change.
+
+**Operator-only**, exactly like the engine figures: projected out of
+`GET /usage`, absent from the `POST /usage` response and the CSV export.
+`provider` without an `engine` is a 422 — on its own it is an unattributable
+row.
+
 #### The operator view
 
 | Method | Path | Auth |
@@ -272,10 +291,17 @@ business. Unset ⇒ **503**, like the billing and status secrets.
 
 ```json
 {"engine": "cb_vinu", "label": "CB Vinu", "capability": "Speech to Text",
- "unit": "minutes", "consumed": 2.4, "events": 1, "free_quota": 10,
- "remaining": 7.6, "percent_used": 24.0, "exhausted": false,
- "top_accounts": [{"email": "acme@example.com", "consumed": 2.4, "events": 1}]}
+ "unit": "minutes", "consumed": 7.7, "events": 3, "free_quota": 10,
+ "remaining": 2.3, "percent_used": 77.0, "exhausted": false,
+ "by_provider": [{"provider": "…", "consumed": 5.3, "events": 2},
+                 {"provider": "(unreported)", "consumed": 2.4, "events": 1}],
+ "top_accounts": [{"email": "acme@example.com", "consumed": 7.7, "events": 3}]}
 ```
+
+`by_provider` always sums to `consumed`. Usage recorded before a service was
+configured with one is bucketed as `(unreported)` rather than dropped — a
+reconciliation that silently omits rows is worse than one that admits what it
+cannot attribute.
 
 > **Allowances ship unset.** Capacity is a fact about an arrangement this
 > service cannot observe, so `ENGINE_FREE_QUOTAS=cb_vinu=12000,cb_paluku=100000`

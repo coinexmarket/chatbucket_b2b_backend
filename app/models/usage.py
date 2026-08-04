@@ -81,6 +81,23 @@ class UsageRequest(BaseModel):
             "whenever `engine` is set."
         ),
     )
+    # Which upstream actually served this call, for reconciling our own bills.
+    #
+    # Free text, and deliberately *not* a list in this repo: the value comes
+    # from each service's deployment config, so the identity of a supplier
+    # lives where the credentials for it already live and never appears in
+    # source, in a comment, or in this API's documentation.
+    #
+    # Operator-only, like the engine figures — projected out of everything a
+    # customer can read.
+    provider: str | None = Field(
+        default=None,
+        max_length=64,
+        description=(
+            "Upstream that served this call, for operator reconciliation. "
+            "Set from the calling service's own configuration."
+        ),
+    )
     metadata: dict | None = Field(
         default=None, description="Optional caller context (session id, etc.)."
     )
@@ -129,7 +146,21 @@ class UsageRequest(BaseModel):
             )
         if self.engine_quantity is not None and not self.engine:
             raise ValueError("engine_quantity was sent without an engine.")
+        # A provider only means something as "the upstream behind this engine".
+        # On its own it would be an unattributable row in the ops view.
+        if self.provider and not self.engine:
+            raise ValueError("provider was sent without an engine.")
         return self
+
+    @field_validator("provider")
+    @classmethod
+    def _clean_provider(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = _WHITESPACE.sub(" ", value.strip())
+        # Whitespace-only is a misconfigured env var, not a provider. Treated
+        # as absent rather than becoming its own row in the reconciliation.
+        return cleaned or None
 
     @model_validator(mode="after")
     def _one_pricing_form(self) -> UsageRequest:

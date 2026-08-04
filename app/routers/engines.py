@@ -79,7 +79,14 @@ async def engine_usage(
         },
         {
             "$group": {
-                "_id": {"engine": "$engine", "user_id": "$user_id"},
+                "_id": {
+                    "engine": "$engine",
+                    "user_id": "$user_id",
+                    # Grouped in the same pass, so the per-provider split and
+                    # the engine total are the same numbers seen two ways and
+                    # cannot disagree.
+                    "provider": "$provider",
+                },
                 "consumed": {"$sum": "$engine_quantity"},
                 "events": {"$sum": 1},
             }
@@ -90,13 +97,23 @@ async def engine_usage(
     by_engine: dict[str, dict] = {}
     for row in rows:
         key = row["_id"]["engine"]
-        bucket = by_engine.setdefault(key, {"consumed": 0.0, "events": 0, "accounts": []})
+        bucket = by_engine.setdefault(
+            key, {"consumed": 0.0, "events": 0, "accounts": [], "providers": {}}
+        )
         consumed = float(row.get("consumed") or 0)
         bucket["consumed"] += consumed
         bucket["events"] += row["events"]
         bucket["accounts"].append(
             {"user_id": row["_id"]["user_id"], "consumed": consumed, "events": row["events"]}
         )
+        # Usage recorded before a service was configured with a provider has
+        # none. Kept as a named bucket rather than dropped, so the split always
+        # adds up to the engine total — a reconciliation that silently omits
+        # rows is worse than one that admits what it cannot attribute.
+        provider = row["_id"].get("provider") or "(unreported)"
+        entry = bucket["providers"].setdefault(provider, {"consumed": 0.0, "events": 0})
+        entry["consumed"] += consumed
+        entry["events"] += row["events"]
 
     quotas = get_settings().engine_quota_map
     labels = await _account_labels(by_engine)
@@ -106,8 +123,24 @@ async def engine_usage(
     # missing from the page is indistinguishable from one nobody has reported
     # for, and silence is exactly what a capacity view must not hide.
     for key in sorted(set(engines.ENGINES) | set(by_engine)):
-        bucket = by_engine.get(key, {"consumed": 0.0, "events": 0, "accounts": []})
+        bucket = by_engine.get(
+            key, {"consumed": 0.0, "events": 0, "accounts": [], "providers": {}}
+        )
         line = engines.summarise(key, bucket["consumed"], bucket["events"], quotas)
+        # What to reconcile against which upstream invoice. Heaviest first,
+        # because that is the bill worth checking.
+        line["by_provider"] = [
+            {
+                "provider": name,
+                "consumed": round(stats["consumed"], 4),
+                "events": stats["events"],
+            }
+            for name, stats in sorted(
+                bucket["providers"].items(),
+                key=lambda item: item[1]["consumed"],
+                reverse=True,
+            )
+        ]
         top = sorted(bucket["accounts"], key=lambda a: a["consumed"], reverse=True)
         line["top_accounts"] = [
             {

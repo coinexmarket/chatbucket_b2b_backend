@@ -1061,6 +1061,25 @@ def main() -> int:
         check("misspelt engine field -> 422, not a silent drop", r.status_code == 422, r.text)
         check("the rejection names the offending key", "engineQty" in r.text, r.text)
 
+        # --- provider (operator-only reconciliation) --------------------------
+        # Which upstream served the call, so a capability served by two of them
+        # can be split across two invoices.
+        r = client.post("/usage", headers=headers_key, json={
+            "service": "stt_offline", "quantity": 3,
+            "engine": "cb_vinu", "engineQuantity": 3.1, "provider": "provider-one",
+        })
+        check("usage accepts a provider", r.status_code == 201, r.text)
+        check("provider is not echoed to the caller", "provider" not in r.json()["data"], r.text)
+        r = client.post("/usage", headers=headers_key, json={
+            "service": "stt_offline", "quantity": 2,
+            "engine": "cb_vinu", "engineQuantity": 2.2, "provider": "provider-two",
+        })
+        check("a second provider on the same engine", r.status_code == 201, r.text)
+        r = client.post("/usage", headers=headers_key, json={
+            "service": "stt_offline", "quantity": 1, "provider": "provider-one",
+        })
+        check("provider without an engine -> 422", r.status_code == 422, r.text)
+
         # A signed-in customer has a session, not an API key — the key was shown
         # once and stored hashed, so the site cannot produce it server-side.
         r = client.post("/usage", headers=auth, json={
@@ -1098,10 +1117,24 @@ def main() -> int:
             j = r.json()
             check("engine view returns 200 with the secret", r.status_code == 200, r.text)
             rows = {row["engine"]: row for row in j["data"]}
-            check("cb_vinu burn is counted in ITS unit", rows["cb_vinu"]["consumed"] == 2.4, str(rows))
+            check("cb_vinu burn is counted in ITS unit", rows["cb_vinu"]["consumed"] == 7.7, str(rows))  # 2.4 + 3.1 + 2.2
             check("cb_paluku burn is counted separately", rows["cb_paluku"]["consumed"] == 1200, str(rows))
             check("burn is reported in the engine's unit", rows["cb_paluku"]["unit"] == "characters", str(rows))
             check("the burning account is named", rows["cb_vinu"]["top_accounts"][0]["email"] == "engine@acme.io", str(rows))
+
+            # One engine, two upstreams: the split is what each invoice covers.
+            split = {p["provider"]: p["consumed"] for p in rows["cb_vinu"]["by_provider"]}
+            check("engine burn splits by provider", split.get("provider-one") == 3.1 and split.get("provider-two") == 2.2, str(split))
+            check(
+                "unattributed burn is named, not dropped",
+                "(unreported)" in split,
+                str(split),
+            )
+            check(
+                "the provider split adds up to the engine total",
+                abs(sum(split.values()) - rows["cb_vinu"]["consumed"]) < 0.0001,
+                f"{split} vs {rows['cb_vinu']['consumed']}",
+            )
 
             # Nothing has told us how big the free tier is, so nothing is claimed.
             check("remaining is null while no quota is set", rows["cb_vinu"]["remaining"] is None, str(rows))
@@ -1115,8 +1148,8 @@ def main() -> int:
             j = r.json()
             rows = {row["engine"]: row for row in j["data"]}
             check("configured quota is reported", rows["cb_vinu"]["free_quota"] == 10, str(rows))
-            check("remaining = quota - consumed", rows["cb_vinu"]["remaining"] == 7.6, str(rows))
-            check("percent_used is computed", rows["cb_vinu"]["percent_used"] == 24.0, str(rows))
+            check("remaining = quota - consumed", rows["cb_vinu"]["remaining"] == 2.3, str(rows))  # 10 - 7.7
+            check("percent_used is computed", rows["cb_vinu"]["percent_used"] == 77.0, str(rows))  # 7.7 / 10
             check("the view says quotas are configured", j["quotas_configured"] is True, r.text)
             # CB Paluku burned 1200 of 1000 - over the allowance.
             check("an overrun reads exhausted", rows["cb_paluku"]["exhausted"] is True, str(rows))

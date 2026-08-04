@@ -264,6 +264,11 @@ async def record_usage(
         # customer neither pays it nor sees it.
         "engine": payload.engine,
         "engine_quantity": payload.engine_quantity,
+        # Which upstream served it. Normalised for grouping, so a service
+        # configured with a differently-cased name does not open a second row
+        # in the reconciliation.
+        "provider": payload.provider,
+        "provider_key": payload.provider.lower() if payload.provider else None,
         "metadata": payload.metadata,
         # Flipped to True once the credits are actually taken, below. Recorded
         # up front so usage is never lost just because it could not be paid for.
@@ -402,7 +407,7 @@ async def usage_history(
         # commercial information — it is our margin. Projected away here
         # rather than filtered in Python so it never reaches the process
         # boundary at all.
-        .find(query, {"engine": 0, "engine_quantity": 0})
+        .find(query, {"engine": 0, "engine_quantity": 0, "provider": 0, "provider_key": 0})
         .sort("created_at", -1)
         .limit(limit)
     )
