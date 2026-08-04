@@ -3,6 +3,11 @@ fastapi==0.139.0
 uvicorn[standard]==0.34.0
 motor==3.7.1
 pymongo==4.17.0
+# Required to resolve a `mongodb+srv://` URI, which is the only form DigitalOcean
+# hands out for a managed cluster. pymongo does not depend on it, so without this
+# the image builds and then fails at connect time with "dnspython must be
+# installed" — a fault that cannot appear until deploy.
+dnspython==2.7.0
 pydantic==2.13.4
 pydantic-settings==2.7.1
 email-validator==2.2.0

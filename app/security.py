@@ -3,6 +3,10 @@
 Password hashing uses PBKDF2-HMAC-SHA256 from the standard library — strong,
 salted, and with no native/Rust build dependency (important on very new Python
 versions). Tokens use PyJWT (pure Python).
+
+The hashing work factor is deliberately expensive (~200ms), so request handlers
+must use the ``*_async`` wrappers below rather than the sync functions — see
+their docstring.
 """
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from functools import lru_cache
 from typing import Any
 
 import jwt
+from starlette.concurrency import run_in_threadpool
 
 from .config import get_settings
 
@@ -57,6 +62,35 @@ def dummy_password_hash() -> str:
     match.
     """
     return hash_password(secrets.token_urlsafe(32))
+
+
+# --- Async wrappers (use these from request handlers) ----------------------
+# PBKDF2 at 240k iterations costs ~200ms of CPU. Called directly from an async
+# handler it blocks the event loop for that whole time, stalling every other
+# in-flight request — and since `login` runs the hash even when no user matches
+# (see `dummy_password_hash`), unauthenticated traffic alone could saturate the
+# worker. Running it in the threadpool keeps the loop free; `hashlib` releases
+# the GIL during PBKDF2, so the work genuinely runs in parallel.
+
+
+async def hash_password_async(password: str) -> str:
+    """`hash_password`, off the event loop."""
+    return await run_in_threadpool(hash_password, password)
+
+
+async def verify_password_async(password: str, stored: str) -> bool:
+    """`verify_password`, off the event loop."""
+    return await run_in_threadpool(verify_password, password, stored)
+
+
+def warm_password_hasher() -> None:
+    """Populate the `dummy_password_hash` cache before serving traffic.
+
+    It is `lru_cache`d, so otherwise the very first login with an unknown email
+    pays the ~200ms hash *on the event loop* to build it. Called from the app
+    lifespan, where blocking costs nothing.
+    """
+    dummy_password_hash()
 
 
 # --- JWT access tokens -----------------------------------------------------
@@ -129,6 +163,25 @@ def hash_api_key(full_key: str) -> str:
 
 def generate_reset_token() -> tuple[str, str]:
     """Return ``(token, sha256_hash)`` for a password-reset link."""
+    token = secrets.token_urlsafe(32)
+    return token, hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def generate_refresh_token() -> tuple[str, str]:
+    """Return ``(token, sha256_hash)`` for a session refresh token.
+
+    Opaque and random rather than a JWT: a refresh token must be revocable the
+    instant a user signs out, and that means checking it against storage on
+    every use — which a self-contained JWT is specifically designed to avoid.
+    Only the hash is stored, so a database leak does not hand over live
+    sessions.
+    """
+    token = secrets.token_urlsafe(48)
+    return token, hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def generate_verification_token() -> tuple[str, str]:
+    """Return ``(token, sha256_hash)`` for an email-verification link."""
     token = secrets.token_urlsafe(32)
     return token, hashlib.sha256(token.encode("utf-8")).hexdigest()
 

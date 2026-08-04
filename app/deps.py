@@ -6,8 +6,11 @@ Two ways to authenticate:
   endpoints (profile, API-key management, usage history).
 * ``get_api_user`` — an ``X-API-Key`` header, used for machine-to-machine
   calls (reporting usage from the STT/TTS/translation/voice services).
+* ``get_metering_user`` — either of the above, for ``POST /usage``, which is
+  called both by those services (key) and by our own site on behalf of a
+  signed-in customer (token).
 
-Both resolve to the same user document (with ``_id`` as a string).
+All resolve to the same user document (with ``_id`` as a string).
 """
 from __future__ import annotations
 
@@ -87,9 +90,45 @@ async def get_api_user(x_api_key: str | None = Header(default=None)) -> dict:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
-    # Stash which key was used so the usage record can reference it.
+    # Stash which key was used so the usage record can reference it, and the
+    # project that key belongs to — usage inherits the key's project rather
+    # than the caller declaring one, so attribution cannot drift from whichever
+    # credential actually did the work.
     user["_api_key_id"] = str(key_doc["_id"])
+    user["_api_key_project_id"] = key_doc.get("project_id")
     return user
+
+
+async def get_metering_user(
+    x_api_key: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> dict:
+    """Resolve the account to meter, from **either** credential.
+
+    `POST /usage` is normally machine-to-machine and authenticated by API key.
+    But our own site serves STT/TTS to signed-in customers through its internal
+    routes, and what those routes hold is the customer's session — the API key
+    was shown once at creation and stored only as a hash, so no server can
+    produce it later. Without this the site's own traffic could not be metered
+    to the customer who caused it, which is the whole point of metering it.
+
+    The API key wins when both are sent: it is the more specific credential and
+    the only one that can attribute usage to a key and project.
+
+    A JWT is no weaker here than a key. Both belong to the account being
+    charged, so the worst either allows is inflating one's own bill — and the
+    dashboard endpoints already trust this same token to spend credits.
+    """
+    if x_api_key:
+        return await get_api_user(x_api_key)
+    if credentials and credentials.credentials:
+        # No `_api_key_id` is stashed: this usage genuinely came from no key,
+        # and inventing an attribution would corrupt the `by_api_key` split.
+        return await get_current_user(credentials)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Send an X-API-Key header or a Bearer access token.",
+    )
 
 
 async def _load_user(user_id: str | None) -> dict | None:

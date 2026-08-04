@@ -65,6 +65,32 @@ def to_json(value: Decimal | Decimal128 | float | int | str) -> float:
     return float(to_decimal(value))
 
 
+PAISE = Decimal("0.01")
+
+
+def to_paise(amount: Decimal | float | int | str) -> int:
+    """Render an amount as whole paise, for a payment gateway.
+
+    Gateways take integer minor units, so an amount that is not a whole number
+    of paise cannot be charged exactly. Raises rather than rounding: charging
+    ₹100.56 for a ₹100.5551 order would make the money taken differ from the
+    money recorded, which is the one thing billing must never do. Quantize with
+    `to_chargeable` first.
+    """
+    value = to_decimal(amount)
+    paise = value * 100
+    if paise != paise.to_integral_value():
+        raise ValueError(
+            f"{value} is not a whole number of paise and cannot be charged exactly."
+        )
+    return int(paise)
+
+
+def to_chargeable(amount: Decimal | float | int | str) -> Decimal:
+    """Round an amount to whole paise, half-up — what a gateway can charge."""
+    return to_decimal(amount).quantize(PAISE, rounding=ROUND_HALF_UP)
+
+
 def total(amounts) -> Decimal:
     """Sum amounts exactly. `sum()` would start from the int 0 and is fine,
     but this states the intent and keeps the quantize in one place."""

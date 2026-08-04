@@ -9,8 +9,9 @@ for the "overview" shape (``IBlogOverview`` in the frontend types).
 """
 from __future__ import annotations
 
-from datetime import datetime, date
-from typing import Any, Iterable
+from collections.abc import Iterable
+from datetime import date, datetime
+from typing import Any
 
 from bson import ObjectId
 from bson.decimal128 import Decimal128
@@ -38,13 +39,23 @@ def _jsonify_value(value: Any) -> Any:
     if isinstance(value, Decimal128):
         # Money is stored exactly (see money.py); JSON can only carry a float.
         return money.to_json(value)
-    if isinstance(value, (datetime, date)):
+    if isinstance(value, datetime | date):
         return value.isoformat()
     if isinstance(value, list):
         return [_jsonify_value(v) for v in value]
     if isinstance(value, dict):
         return {k: _jsonify_value(v) for k, v in value.items()}
     return value
+
+
+def iso(value):
+    """ISO-8601 string for a datetime, or the value unchanged if it is not one.
+
+    Mongo returns datetimes, but a document written by an older code path (or
+    a mock) may hold a string already. Rendering either without a branch at
+    every call site keeps the serializers readable.
+    """
+    return value.isoformat() if hasattr(value, "isoformat") else value
 
 
 def serialize_doc(doc: dict | None) -> dict | None:
@@ -76,6 +87,9 @@ _USER_SECRET_FIELDS = {
     "reset_token_hash",
     "reset_token_expires",
     "_api_key_id",
+    "_api_key_project_id",
+    "verification_token_hash",
+    "verification_token_expires",
 }
 
 
