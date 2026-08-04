@@ -890,6 +890,11 @@ docker build -t chatbucket-b2b-backend .
 docker run -p 8000:8000 --env-file .env chatbucket-b2b-backend
 ```
 
+The same image is what runs in production, on DigitalOcean App Platform against
+the managed MongoDB cluster — see **[DEPLOY.md](DEPLOY.md)** for the app, how to
+ship a change, and what is deliberately left unconfigured there (mail and the
+payment gateway, both of which fail quietly rather than loudly).
+
 ## Configuration
 
 | Env var | Default | Purpose |
