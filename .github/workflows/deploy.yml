@@ -36,7 +36,12 @@ jobs:
         # The floor and the ceiling of what the Dockerfile and requirements
         # target — a wheel that stops shipping for a new Python shows up here
         # rather than in a failed deploy.
-        python-version: ["3.12", "3.13"]
+        #
+        # 3.12 is what the image runs today; 3.14 is here so a base-image bump
+        # can be judged on evidence. Testing only up to 3.13 while Dependabot
+        # offers 3.14-slim would let a green pipeline ship a runtime nothing
+        # had ever exercised.
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7.0.0
