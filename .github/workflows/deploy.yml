@@ -1,10 +1,10 @@
 name: Build, test and deploy
 
-# One workflow for both jobs a change needs: proving it works, and shipping it.
-# They were separate files, which ran the suites twice on every push to main.
+# One workflow covering everything a change needs: proving it is correct,
+# proving it is not vulnerable, and shipping it.
 #
-# Pull requests stop after the image smoke test. Only main and a manual dispatch
-# publish, and only once the suites have passed.
+# Pull requests stop after the checks. Only main and a manual dispatch publish,
+# and only once everything above them has passed.
 on:
   push:
     branches: [main]
@@ -18,11 +18,17 @@ concurrency:
   group: pipeline-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege by default. A workflow that can only read the repository
+# cannot be turned into one that rewrites it, and every job that needs more
+# asks for exactly what it needs. Jobs inherit this unless they override it.
+permissions:
+  contents: read
+
 # Every action is pinned to an exact patch. A floating major tag is a moving
 # target: the same commit can build differently tomorrow because someone else
 # released, and nothing in this repository would record it. Upgrades are a
-# commit, reviewed like any other. The cost is that security patches arrive
-# only when bumped -- check periodically rather than assuming.
+# commit, reviewed like any other -- Dependabot proposes them weekly, and they
+# run this same pipeline before they can be merged.
 env:
   REGISTRY: registry.digitalocean.com/chatbucket
   IMAGE: b2b-backend
@@ -30,6 +36,8 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # A hung suite should not hold a runner for six hours, which is the default.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -37,10 +45,9 @@ jobs:
         # target — a wheel that stops shipping for a new Python shows up here
         # rather than in a failed deploy.
         #
-        # 3.12 is what the image runs today; 3.14 is here so a base-image bump
-        # can be judged on evidence. Testing only up to 3.13 while Dependabot
-        # offers 3.14-slim would let a green pipeline ship a runtime nothing
-        # had ever exercised.
+        # 3.14 is what the image runs; the older two stay so a base-image
+        # change can be judged against something, and so the package set is
+        # not silently pinned to one interpreter.
         python-version: ["3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v7.0.1
@@ -61,22 +68,71 @@ jobs:
       - name: Smoke tests (site endpoints)
         run: python -m scripts.smoke_test
 
+  codeql:
+    # Static analysis of the source. Complements the suites: they prove the
+    # behaviour we thought to check, this looks for the classes of bug nobody
+    # wrote a test for.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write   # to file findings in the Security tab
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: github/codeql-action/init@v4.37.6
+        with:
+          languages: python
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v4.37.6
+
+  dependency-review:
+    # Pull requests only: refuses a change that introduces a dependency with a
+    # known vulnerability, at the point where removing it is still cheap.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: high
+
   image-smoke:
-    # Pull requests only. On main the image is built by `publish` and proven by
-    # production's own health check, so building it twice would buy nothing.
+    # Pull requests only. On main the same image is built by `publish` and
+    # proven by production's own health check.
     if: github.event_name == 'pull_request'
     needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.2.0
       - name: Build image
-        run: docker build -t chatbucket-b2b-backend .
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          load: true
+          tags: chatbucket-b2b-backend:pr
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Scanned before anything is trusted to run. A CVE in the base image is
+      # the most likely way this service acquires one, and it arrives without
+      # any change to our own code.
+      - name: Scan the image for known vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: chatbucket-b2b-backend:pr
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true   # nothing to do about a CVE with no patch yet
+          exit-code: "1"
+
       - name: Container starts and answers /health
         run: |
           # No MONGODB_URI, so /health must report 503 rather than hang or
           # crash — that is the behaviour load balancers depend on.
           docker run -d --name cb -p 8000:8000 \
-            -e ENVIRONMENT=development chatbucket-b2b-backend
+            -e ENVIRONMENT=development chatbucket-b2b-backend:pr
           for i in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/ || true)
             [ "$code" = "200" ] && break
@@ -87,14 +143,16 @@ jobs:
           docker rm -f cb
 
   publish:
-    # The image is only built once the suites pass on every supported Python.
-    # App Platform's own deploy-on-push has no such gate -- it ships whatever
+    # The image is only built once the suites and static analysis pass. App
+    # Platform's own deploy-on-push has no such gate -- it ships whatever
     # arrives, and a red main would go straight to production.
     if: github.event_name != 'pull_request'
-    needs: test
+    needs: [test, codeql]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.2.0
 
       - uses: digitalocean/action-doctl@v2.5.2
         with:
@@ -103,20 +161,34 @@ jobs:
       - name: Log in to the registry
         run: doctl registry login --expiry-seconds 1200
 
-      # Tagged with the commit as well as `latest`: `latest` is what App
-      # Platform follows, and the commit tag is what a rollback names. Without
-      # it there is no way to ask for "the image from before this one".
+      # Built once, loaded locally, and scanned before it is pushed anywhere.
+      # Scanning after publication would mean the vulnerable image is already
+      # the one production is being told to deploy.
       - name: Build
-        run: |
-          docker build \
-            -t "$REGISTRY/$IMAGE:${{ github.sha }}" \
-            -t "$REGISTRY/$IMAGE:latest" .
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          load: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
+      - name: Scan the image for known vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      # The commit tag goes first and is immutable: it is what a rollback
+      # names. `latest` is what App Platform follows, so it moves last -- never
+      # before the thing it will deploy is safely stored under a fixed name.
       - name: Push the commit tag
         run: docker push "$REGISTRY/$IMAGE:${{ github.sha }}"
 
-      # Pushed last, and separately: this is the tag that triggers the deploy,
-      # so it must not move until the immutable one is safely stored.
       - name: Push latest, which triggers the deploy
         run: docker push "$REGISTRY/$IMAGE:latest"
 
