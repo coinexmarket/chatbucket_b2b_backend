@@ -1,0 +1,66 @@
+version: 2
+
+# Actions and dependencies here are pinned to exact versions, which stops a
+# build changing under us but also stops security patches arriving on their own.
+# Dependabot is the other half of that trade: it opens a PR per update, which
+# runs the full test gate before anyone merges it.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci:"
+    labels:
+      - dependencies
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps:"
+    labels:
+      - dependencies
+    groups:
+      # One PR for the whole runtime set rather than eight. These packages are
+      # released in step and tested together; separate PRs would each rebuild
+      # the image to prove a combination nobody ships.
+      runtime:
+        applies-to: version-updates
+        patterns:
+          - "fastapi"
+          - "uvicorn*"
+          - "pydantic*"
+          - "motor"
+          - "pymongo"
+          - "dnspython"
+          - "PyJWT"
+          - "email-validator"
+      # Named explicitly rather than by dependency-type: for a plain
+      # requirements-dev.txt, Dependabot cannot reliably tell test tooling from
+      # what the image runs, and a mislabelled group silently updates nothing.
+      dev:
+        applies-to: version-updates
+        patterns:
+          - "mongomock-motor"
+          - "httpx"
+          - "ruff"
+    # Security fixes stay ungrouped on purpose: a lone PR is easier to review
+    # and merge in a hurry than one bundled with routine bumps.
+
+  # The base image the service actually runs on. A patched python:3.12-slim is
+  # where most CVE fixes land, and nothing else here would notice it moved.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "docker:"
+    labels:
+      - dependencies
