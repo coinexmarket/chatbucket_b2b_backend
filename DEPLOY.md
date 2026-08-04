@@ -15,20 +15,39 @@ in this repo against the managed MongoDB cluster `cb-db-mongodb-pord` (blr1).
 
 ```bash
 git push origin main
+```
+
+That is the whole procedure. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+lints, runs both suites on Python 3.12 and 3.13, builds the image and pushes it
+to `registry.digitalocean.com/chatbucket/b2b-backend`. App Platform subscribes
+to that repository and redeploys itself when a new `latest` arrives.
+
+**App Platform does not build anything.** It runs the image CI published, which
+is why the tests are a gate rather than a report: a red `main` never produces an
+image, so it cannot reach production. Wiring App Platform straight to the GitHub
+repository would have removed that gate — it deploys whatever lands on the
+branch.
+
+Every build is tagged twice: `latest`, which the app follows, and the commit
+SHA, which is immutable. `latest` is pushed **last**, so the tag that triggers a
+deploy never moves before the rollback target is safely stored.
+
+A deployment starts the new image and only shifts traffic once `/health`
+answers 200; a failed health check leaves the previous instance serving.
+
+To deploy without a commit, run the workflow from the Actions tab
+(`workflow_dispatch`). To deploy by hand, bypassing the tests entirely:
+
+```bash
 doctl apps create-deployment 37f4ec6f-3fbf-4758-9d2e-e52bfefdbad2 --wait
 ```
 
-**The second line is not optional.** The app is wired to this repo as a plain
-git clone URL rather than through DigitalOcean's GitHub app, so nothing
-webhooks a push — a merge to `main` changes nothing until a deployment is asked
-for. That was the deliberate trade for setting the app up without granting a
-third party write-scoped access to the GitHub account; authorize the GitHub
-integration in the DO dashboard and set `deploy_on_push: true` if you would
-rather have it automatic.
+### CI credentials
 
-A deployment builds the image, starts it, and only shifts traffic once
-`/health` answers 200. A failed build or a failed health check leaves the
-previous instance serving.
+The workflow needs one repository secret, **`DIGITALOCEAN_ACCESS_TOKEN`**, used
+to log in to the registry. Scope it to the registry and apps rather than issuing
+a full-access token: it lives in CI, and a token that can also delete droplets
+and rewrite DNS is a much worse thing to leak than one that can push an image.
 
 ## Secrets
 
@@ -154,10 +173,20 @@ at a local backend, or add the origin knowingly.
 
 ## Rolling back
 
+Retag the commit you want back as `latest` and the app redeploys itself:
+
 ```bash
-doctl apps list-deployments 37f4ec6f-3fbf-4758-9d2e-e52bfefdbad2
-doctl apps create-deployment 37f4ec6f-3fbf-4758-9d2e-e52bfefdbad2 --deployment-id <previous>
+doctl registry login
+docker pull registry.digitalocean.com/chatbucket/b2b-backend:<sha>
+docker tag  registry.digitalocean.com/chatbucket/b2b-backend:<sha> \
+            registry.digitalocean.com/chatbucket/b2b-backend:latest
+docker push registry.digitalocean.com/chatbucket/b2b-backend:latest
 ```
+
+`doctl registry repository list-tags b2b-backend` lists what is available to go
+back to. Reverting the commit and letting CI rebuild works too, and is tidier
+in the history — but it takes a full test-and-build cycle, which is the wrong
+order of events when production is down.
 
 Rolling back the code does **not** roll back the database. Index creation is
 additive and safe to leave; a migration that rewrote records would not be.
