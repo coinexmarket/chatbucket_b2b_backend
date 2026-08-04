@@ -38,19 +38,41 @@ import hmac  # noqa: E402
 import json  # noqa: E402
 from dataclasses import replace  # noqa: E402
 from decimal import Decimal  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
 
 import anyio  # noqa: E402
 from bson import ObjectId  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from mongomock_motor import AsyncMongoMockClient  # noqa: E402
 
-from app import credits, database, payments, pricing  # noqa: E402
+from app import credits, database, payments, pricing, ratelimit  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.email import _build_message, outbox  # noqa: E402
 from app.main import app  # noqa: E402
 
 PASS = 0
 FAIL = 0
+
+
+def freeze_limiter_clock():
+    """Stop the limiter's clock. Returns the real module, to restore after.
+
+    `ratelimit.hit` derives its fixed window from wall-clock time
+    (`now - now % window_seconds`), so a burst that straddles a boundary is
+    counted against two windows and never reaches the cap. These assertions
+    therefore failed whenever a run happened to cross a minute mark mid-burst —
+    a fact about *when* the suite ran, not about the code under test, and one
+    that blocked deploys at random since a red suite stops the pipeline.
+
+    Holding the clock still does not weaken what is asserted. Every request in
+    the burst lands in one window, which is precisely the case the limit exists
+    to handle; the boundary behaviour it used to depend on was never the thing
+    being tested.
+    """
+    real = ratelimit.time
+    now = real.time()
+    ratelimit.time = SimpleNamespace(time=lambda: now)
+    return real
 
 
 def check(name: str, condition: bool, detail: str = "") -> None:
@@ -806,6 +828,7 @@ def main() -> int:
         # --- rate limiting -------------------------------------------------
         os.environ["RATE_LIMIT_ENABLED"] = "true"
         get_settings.cache_clear()
+        real_clock = freeze_limiter_clock()
         try:
             # login_email allows 5 per 15 min against one account.
             codes = [client.post("/auth/login", json={"email": "rl@acme.io", "password": "nope"}).status_code
@@ -840,6 +863,7 @@ def main() -> int:
                      for _ in range(5)]
             check("forgot-password is rate limited per address", 429 in codes, str(codes))
         finally:
+            ratelimit.time = real_clock
             os.environ["RATE_LIMIT_ENABLED"] = "false"
             get_settings.cache_clear()
 
