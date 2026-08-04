@@ -73,6 +73,17 @@ services:
       - key: SALES_EMAIL
         scope: RUN_TIME
         value: Support@chatbucket.business
+      - key: RAZORPAY_KEY_ID
+        scope: RUN_TIME
+        value: ${RAZORPAY_KEY_ID}
+      - key: RAZORPAY_KEY_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: ${RAZORPAY_KEY_SECRET}
+      - key: RAZORPAY_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: ${RAZORPAY_WEBHOOK_SECRET}
       - key: APP_BASE_URL
         scope: RUN_TIME
         value: https://chatbucket.business

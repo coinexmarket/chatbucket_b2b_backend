@@ -69,10 +69,12 @@ worth doing.
 
 ## What is deliberately unset
 
-* **Razorpay is not configured.** `POST /billing/top-up` creates a local pending
-  payment and nothing else; settlement is by the shared-secret confirm endpoint
-  only. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
-  `RAZORPAY_WEBHOOK_SECRET` to turn Checkout on.
+* **Razorpay runs on test keys** (`rzp_test_…`), so no real money moves. The
+  whole path works — order creation, Checkout, webhook, credits, invoice — but
+  only with test cards. Going live is swapping `RAZORPAY_KEY_ID` and
+  `RAZORPAY_KEY_SECRET` for their `rzp_live_` counterparts and re-registering
+  the webhook, which is a **separate** endpoint on the live dashboard with its
+  own secret.
 * **`ENFORCE_CREDIT_BALANCE`** is left at its default of `true`. That is only
   safe because this deployment started with an empty database — on an install
   with existing accounts it would 402 every one of them, all at once.
@@ -103,6 +105,24 @@ mail still arrives, from an address the customer was not expecting.
 Two messages are sent: the password-reset link, and the demo-request
 notification to `SALES_EMAIL` (also `Support@`). Neither can fail a request;
 a mail outage is logged under `chatbucket_b2b.email` and nothing else.
+
+## Payments
+
+The webhook is registered in the Razorpay dashboard against
+`https://api.b2b.chatbucket.business/billing/webhook/razorpay`, subscribed to
+`payment.captured` and `payment.authorized` — the only two events the handler
+acts on; anything else is acknowledged and ignored.
+
+`RAZORPAY_WEBHOOK_SECRET` is **not** the key secret. It is a value chosen when
+registering the webhook, and signing with the wrong one rejects every delivery
+while looking correctly configured from both ends. The smoke suite asserts a
+webhook signed with the key secret is refused, because that is the mistake
+people make.
+
+Re-registering the webhook after a key rotation is easy to forget: live and
+test mode have separate webhook registrations, so switching keys without adding
+the live webhook leaves payments that settle at the gateway and never credit
+anyone here.
 
 ## The domain
 
