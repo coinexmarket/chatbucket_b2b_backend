@@ -18,6 +18,11 @@ concurrency:
   group: pipeline-${{ github.ref }}
   cancel-in-progress: true
 
+# Every action is pinned to an exact patch. A floating major tag is a moving
+# target: the same commit can build differently tomorrow because someone else
+# released, and nothing in this repository would record it. Upgrades are a
+# commit, reviewed like any other. The cost is that security patches arrive
+# only when bumped -- check periodically rather than assuming.
 env:
   REGISTRY: registry.digitalocean.com/chatbucket
   IMAGE: b2b-backend
@@ -33,8 +38,8 @@ jobs:
         # rather than in a failed deploy.
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -58,7 +63,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - name: Build image
         run: docker build -t chatbucket-b2b-backend .
       - name: Container starts and answers /health
@@ -84,7 +89,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - uses: digitalocean/action-doctl@v2.5.2
         with:
