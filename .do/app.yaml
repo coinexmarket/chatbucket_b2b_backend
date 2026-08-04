@@ -44,7 +44,35 @@ services:
         value: "${OPS_SECRET}"
       - key: EMAIL_BACKEND
         scope: RUN_TIME
-        value: disabled
+        value: smtp
+      - key: SMTP_HOST
+        scope: RUN_TIME
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        scope: RUN_TIME
+        value: "587"
+      - key: SMTP_STARTTLS
+        scope: RUN_TIME
+        value: "true"
+      - key: SMTP_USE_SSL
+        scope: RUN_TIME
+        value: "false"
+      - key: SMTP_USERNAME
+        scope: RUN_TIME
+        value: Support@chatbucket.business
+      - key: SMTP_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: ${SMTP_PASSWORD}
+      - key: EMAIL_FROM
+        scope: RUN_TIME
+        value: Support@chatbucket.business
+      - key: EMAIL_FROM_NAME
+        scope: RUN_TIME
+        value: ChatBucket
+      - key: SALES_EMAIL
+        scope: RUN_TIME
+        value: Support@chatbucket.business
       - key: APP_BASE_URL
         scope: RUN_TIME
         value: https://chatbucket.business

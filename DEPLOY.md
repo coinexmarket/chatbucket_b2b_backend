@@ -69,12 +69,6 @@ worth doing.
 
 ## What is deliberately unset
 
-* **`EMAIL_BACKEND=disabled`** — this deployment sends no mail at all. Password
-  reset returns its usual 200 and no link is delivered; demo requests are
-  recorded but sales is not notified. Set `SMTP_HOST` and the credentials, then
-  switch to `auto`, before either matters to a real customer. `disabled` is
-  chosen over `auto` on purpose: `auto` with no host would log reset links to
-  stdout, which looks exactly like a working password reset.
 * **Razorpay is not configured.** `POST /billing/top-up` creates a local pending
   payment and nothing else; settlement is by the shared-secret confirm endpoint
   only. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
@@ -84,6 +78,31 @@ worth doing.
   with existing accounts it would 402 every one of them, all at once.
 * **`ENGINE_FREE_QUOTAS`** — unset, so engine burn is counted but `remaining`
   and `percent_used` read null. See the README.
+
+## Mail
+
+Mail goes out through Google Workspace as `Support@chatbucket.business`, over
+`smtp.gmail.com:587` with STARTTLS. `EMAIL_BACKEND=smtp` rather than `auto`, so
+a missing `SMTP_HOST` fails loudly at startup instead of quietly falling back to
+logging reset links to stdout.
+
+`SMTP_PASSWORD` is a Google **App Password**, not the account's login password —
+Google stopped accepting the latter for SMTP, and no amount of correctness in
+the value will make it authenticate. It is tied to 2-Step Verification on that
+mailbox, and revoking it in the Google account is what turns off this
+deployment's ability to send.
+
+It authenticates as a plain mailbox, deliberately not the Workspace admin: this
+credential lives in an environment variable that anyone with dashboard access
+can read, and it should not be able to send as an administrator.
+
+`EMAIL_FROM` matches `SMTP_USERNAME` because Google rewrites a `From` header
+that is neither the authenticated account nor one of its verified aliases — the
+mail still arrives, from an address the customer was not expecting.
+
+Two messages are sent: the password-reset link, and the demo-request
+notification to `SALES_EMAIL` (also `Support@`). Neither can fail a request;
+a mail outage is logged under `chatbucket_b2b.email` and nothing else.
 
 ## The domain
 
