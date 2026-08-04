@@ -1,18 +1,21 @@
-name: Build and deploy
+name: Build, test and deploy
 
-# Push to main -> test -> build the image -> push it to the registry.
-# App Platform is subscribed to that repository and redeploys itself when a new
-# `latest` lands, so nothing here calls the deploy API.
+# One workflow for both jobs a change needs: proving it works, and shipping it.
+# They were separate files, which ran the suites twice on every push to main.
+#
+# Pull requests stop after the image smoke test. Only main and a manual dispatch
+# publish, and only once the suites have passed.
 on:
   push:
     branches: [main]
+  pull_request:
   # So an image can be rebuilt and shipped without an empty commit.
   workflow_dispatch:
 
 concurrency:
   # Two pushes in quick succession must not race to publish `latest`; the older
   # one is abandoned rather than allowed to overwrite the newer image.
-  group: publish-production
+  group: pipeline-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -25,6 +28,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The floor and the ceiling of what the Dockerfile and requirements
+        # target — a wheel that stops shipping for a new Python shows up here
+        # rather than in a failed deploy.
         python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
@@ -38,17 +44,43 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Lint
         run: ruff check app scripts
-      # Both suites run against an in-memory Mongo, so this gate needs no
-      # database and cannot touch production data.
+      # Both suites run against an in-memory Mongo, so no service container is
+      # needed and this gate cannot touch production data.
       - name: Smoke tests (B2B platform)
         run: python -m scripts.smoke_b2b
       - name: Smoke tests (site endpoints)
         run: python -m scripts.smoke_test
 
+  image-smoke:
+    # Pull requests only. On main the image is built by `publish` and proven by
+    # production's own health check, so building it twice would buy nothing.
+    if: github.event_name == 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t chatbucket-b2b-backend .
+      - name: Container starts and answers /health
+        run: |
+          # No MONGODB_URI, so /health must report 503 rather than hang or
+          # crash — that is the behaviour load balancers depend on.
+          docker run -d --name cb -p 8000:8000 \
+            -e ENVIRONMENT=development chatbucket-b2b-backend
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/ || true)
+            [ "$code" = "200" ] && break
+            sleep 2
+          done
+          test "$code" = "200" || { docker logs cb; exit 1; }
+          curl -s http://localhost:8000/health | grep -q '"database"' || { docker logs cb; exit 1; }
+          docker rm -f cb
+
   publish:
     # The image is only built once the suites pass on every supported Python.
     # App Platform's own deploy-on-push has no such gate -- it ships whatever
     # arrives, and a red main would go straight to production.
+    if: github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
     steps:
