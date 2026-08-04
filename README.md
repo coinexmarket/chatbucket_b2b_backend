@@ -297,12 +297,12 @@ implying a balance.
 ### Per-model usage
 
 `POST /usage` takes an optional `model` — the model that actually served the
-request ("Bulbul v3", "Sarvam 30b") — and `GET /usage/summary` returns a
+request ("CB Paluku", "CB Vinu") — and `GET /usage/summary` returns a
 `by_model` breakdown with cost, quantity, events and `share_percent`, which is
 what the dashboard's model table shows.
 
 ```bash
--d '{"service":"tts_streaming","quantity":2500,"model":"Bulbul v3"}'
+-d '{"service":"tts_streaming","quantity":2500,"model":"CB Paluku"}'
 ```
 
 It is a **free string, not an enum**: models are added and renamed far more
@@ -353,7 +353,7 @@ keyed by `(service, model)`:
 
 ```python
 MODEL_RATES = {... for m in [
-    ModelRate("chat_agent", "Sarvam 30b", Decimal("9.00")),
+    ModelRate("chat_agent", "CB Thodu", Decimal("9.00")),
     ModelRate("chat_agent", "Tiny Model", Decimal("2.50"), unit_size=1000),
 ]}
 ```
@@ -375,7 +375,7 @@ history and replays stay correct after a price change.
 To stop a typo becoming a permanent extra row, each record stores both the
 name as sent (`model`, for display) and a normalised `model_key` (lower-cased,
 whitespace collapsed) that all grouping and the `?model=` filter use. So
-"Bulbul v3", "bulbul  V3" and " Bulbul V3 " are one row, while genuinely
+"CB Paluku", "cb  paluku" and " CB PALUKU " are one row, while genuinely
 different models can never be merged. Whitespace-only is stored as absent.
 
 Records whose caller sent no model are **not** dropped from the maths: their

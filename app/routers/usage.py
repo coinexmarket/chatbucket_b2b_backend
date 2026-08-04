@@ -255,8 +255,8 @@ async def record_usage(
         "project_id": user.get("_api_key_project_id"),
         **_for_bson(priced),
         # `model` is kept as the caller spelled it, for display; `model_key` is
-        # the normalised value everything groups on, so "Bulbul v3" and
-        # "bulbul  V3" are one row rather than two.
+        # the normalised value everything groups on, so "CB Paluku" and
+        # "cb  paluku" are one row rather than two.
         "model": payload.model,
         "model_key": normalize_model_key(payload.model) if payload.model else None,
         # What the call cost *us* in engine capacity. Stored beside the

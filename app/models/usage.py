@@ -62,7 +62,7 @@ class UsageRequest(BaseModel):
     model: str | None = Field(
         default=None,
         max_length=64,
-        description="Model that served the request, e.g. 'Bulbul v3'.",
+        description="ChatBucket model that served the request, e.g. 'CB Paluku'.",
     )
     # --- Engine capacity (our cost, never the customer's) ------------------
     # Which ChatBucket engine served the call and how much of *its* meter it

@@ -27,8 +27,8 @@ _WHITESPACE = re.compile(r"\s+")
 def normalize_model_key(model: str) -> str:
     """Grouping/lookup key for a model name.
 
-    Lower-cased with runs of whitespace collapsed, so "Bulbul v3",
-    "bulbul  v3" and " Bulbul V3 " are one model for both pricing and the
+    Lower-cased with runs of whitespace collapsed, so "CB Paluku",
+    "cb  paluku" and " CB PALUKU " are one model for both pricing and the
     usage breakdown. Deliberately conservative — it folds only case and
     spacing, so two genuinely different models can never be merged.
     """
@@ -118,8 +118,8 @@ class ModelRate:
 # exactly as before. Add real prices here — this is the single source of truth
 # for them, the same way SERVICES is for the base rates:
 #
-#     ModelRate("chat_agent", "Sarvam 30b", Decimal("9.00")),
-#     ModelRate("tts_streaming", "Bulbul v3", Decimal("1.20")),
+#     ModelRate("chat_agent", "CB Thodu", Decimal("9.00")),
+#     ModelRate("tts_streaming", "CB Paluku", Decimal("1.20")),
 #     ModelRate("chat_agent", "Big Model", Decimal("2.50"), unit_size=1000),
 #
 # A model with no entry is not an error: callers send arbitrary model names,
@@ -128,7 +128,7 @@ class ModelRate:
 MODEL_RATES: dict[tuple[str, str], ModelRate] = {
     (m.service, normalize_model_key(m.model)): m
     for m in [
-        # e.g. ModelRate("chat_agent", "Sarvam 30b", Decimal("9.00")),
+        # e.g. ModelRate("chat_agent", "CB Thodu", Decimal("9.00")),
     ]
 }
 
