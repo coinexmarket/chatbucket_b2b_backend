@@ -183,6 +183,26 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
 
+      # Booted before it is published, not after. `image-smoke` covers this on
+      # pull requests, but a commit reaching main another way would otherwise
+      # put an image in the registry that nobody had ever started -- and the
+      # first thing to notice would be production failing its health check,
+      # with a bad `latest` already sitting there.
+      - name: Container starts and answers /health
+        run: |
+          # No MONGODB_URI, so /health must report 503 rather than hang or
+          # crash — that is the behaviour load balancers depend on.
+          docker run -d --name cb -p 8000:8000 \
+            -e ENVIRONMENT=development "$REGISTRY/$IMAGE:${{ github.sha }}"
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/ || true)
+            [ "$code" = "200" ] && break
+            sleep 2
+          done
+          test "$code" = "200" || { docker logs cb; exit 1; }
+          curl -s http://localhost:8000/health | grep -q '"database"' || { docker logs cb; exit 1; }
+          docker rm -f cb
+
       # The commit tag goes first and is immutable: it is what a rollback
       # names. `latest` is what App Platform follows, so it moves last -- never
       # before the thing it will deploy is safely stored under a fixed name.
