@@ -44,8 +44,10 @@ class AnnouncementRequest(_Broadcast):
     # usually right and always better than shipping the design's placeholder.
     hero_title: str | None = Field(default=None, max_length=120)
     hero_subtitle: str | None = Field(default=None, max_length=400)
-    # Quoted back by anyone who replies. Generated when omitted.
-    reference_id: str | None = Field(default=None, max_length=40)
+    # Quoted back by anyone who replies, and echoed into the run log. Restricted
+    # to identifier characters: free text here lets a newline forge log entries,
+    # and "ANN-2026-A" is the whole range of values this ever needs to hold.
+    reference_id: str | None = Field(default=None, max_length=40, pattern=r"^[A-Za-z0-9._-]+$")
     # Announcements are marketing, so they go to confirmed addresses only
     # unless someone deliberately says otherwise.
     verified_only: bool = Field(default=True)
@@ -56,7 +58,8 @@ class MaintenanceRequest(_Broadcast):
     starts_at: datetime
     ends_at: datetime
     maintenance_type: str = Field(default="Scheduled Maintenance", max_length=80)
-    reference_id: str | None = Field(default=None, max_length=40)
+    # Same rule as the announcement's: it reaches the log.
+    reference_id: str | None = Field(default=None, max_length=40, pattern=r"^[A-Za-z0-9._-]+$")
     # Unlike an announcement: this is service information, and an account with
     # an unconfirmed address can still be calling the API during the window.
     verified_only: bool = Field(default=False)

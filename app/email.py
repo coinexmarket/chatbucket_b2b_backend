@@ -275,13 +275,11 @@ async def send_email_verified(
     greeting = _first_name(name)
     symbol = emailtemplates.currency_symbol()
 
-    lines = [
-        f"Hi {greeting},",
-        "",
+    unlocked = (
         "Your email address is verified and your ChatBucket account is now "
-        "fully active. You can create an API key and start building.",
-        "",
-    ]
+        "fully active. You can create an API key and start building."
+    )
+    lines = [f"Hi {greeting},", "", unlocked, ""]
     if credits_available:
         lines += [f"You have {symbol}{credits_available} of credits ready to spend.", ""]
     lines += [
@@ -323,11 +321,11 @@ async def send_welcome(
         "",
     ]
     if bonus_credits:
-        lines += [
+        granted = (
             f"We have added {symbol}{bonus_credits} of free credits to get you "
-            f"started. They are good for {days} days.",
-            "",
-        ]
+            f"started. They are good for {days} days."
+        )
+        lines += [granted, ""]
     lines += [
         f"Open your dashboard: {settings.dashboard_url_for}",
         "",
@@ -516,11 +514,14 @@ async def send_withdrawal_request(
         emailtemplates.fmt_time(requested_at),
     )
 
+    received_line = (
+        f"We have received your withdrawal request for {symbol}{amount} and it "
+        "is being processed."
+    )
     body = "\n".join([
         f"Hi {greeting},",
         "",
-        f"We have received your withdrawal request for {symbol}{amount} and it "
-        "is being processed.",
+        received_line,
         "",
         f"Amount:         {symbol}{amount}",
         f"Transfer to:    {method} {provider}".rstrip(),
