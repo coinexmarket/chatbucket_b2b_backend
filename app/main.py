@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, status
@@ -189,10 +190,34 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
+    # Any loopback port, in development only — see `cors_origin_regex`. None in
+    # production, where the exact list above is the whole policy.
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _log_rejected_origin(request, call_next):
+    """Say which origin was refused, on the server, once per request.
+
+    A browser reports a CORS failure only to its own console, and the server
+    stays silent — so "CORS issues" arrives as a bug report with no way to tell
+    which origin was actually sent. Naming it turns that into one log line.
+    """
+    origin = request.headers.get("origin")
+    if origin and origin not in settings.cors_origin_list:
+        pattern = settings.cors_origin_regex
+        if not (pattern and re.match(pattern, origin)):
+            logger.warning(
+                "CORS: refused Origin %r. Allowed: %s%s",
+                origin,
+                ", ".join(settings.cors_origin_list) or "(none)",
+                " (+ any localhost port)" if pattern else "",
+            )
+    return await call_next(request)
 
 # --- B2B platform ---------------------------------------------------------
 app.include_router(auth.router)
