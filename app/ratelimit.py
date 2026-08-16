@@ -52,6 +52,12 @@ LIMITS: dict[str, Limit] = {
     "forgot_email": Limit(3, 3600),      # also caps reset emails per address
     "demo_ip": Limit(10, 3600),
     "contest_ip": Limit(10, 3600),
+    # The six-digit verification code. The per-address attempt counter on the
+    # user document is the real defence — it burns the code after a handful of
+    # wrong guesses — but that counter resets with every resend, so this caps
+    # how fast the resend-and-guess cycle can be repeated.
+    "verify_otp_ip": Limit(30, 900),
+    "verify_otp_email": Limit(10, 900),
 }
 
 

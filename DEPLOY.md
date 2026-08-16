@@ -127,9 +127,48 @@ can read, and it should not be able to send as an administrator.
 that is neither the authenticated account nor one of its verified aliases — the
 mail still arrives, from an address the customer was not expecting.
 
-Two messages are sent: the password-reset link, and the demo-request
-notification to `SALES_EMAIL` (also `Support@`). Neither can fail a request;
+Twelve designed HTML emails ship with the app (welcome, verification, reset,
+contact acknowledgement, subscription, deposit receipt, monthly report, credit
+reminder, onboarding nudge, announcement, maintenance, withdrawal) — see
+**Email** in the README for what triggers each. No message can fail a request;
 a mail outage is logged under `chatbucket_b2b.email` and nothing else.
+
+Sending volume matters here. Google Workspace caps a mailbox at roughly 2,000
+recipients a day, and the broadcast endpoints (`/notifications/announcement`,
+`/notifications/maintenance`) can exceed that in one run once the base is large
+enough. `BROADCAST_MAX_RECIPIENTS` (5,000) is above that cap on purpose — it is
+a runaway guard, not a quota — so before a real broadcast either check the base
+size or move bulk mail to a provider sold for it. Always send yourself a
+`testEmail` copy first; the endpoint exists for exactly that.
+
+The `/notifications` runs are gated by `OPS_SECRET`, the same secret as
+`/engines/usage`.
+
+The monthly report, credit reminder and onboarding nudge can run on a timer
+inside the app (`NOTIFICATION_SCHEDULER_ENABLED`), which suits this deployment:
+it is a single component, and adding a scheduled-job component to run three
+curls would be more moving parts than the problem deserves. Both workers start
+the loop; runs are claimed in Mongo so only one does the work.
+
+**It ships off, and must stay off until the sending domain authenticates.** As
+of 2026-08-16 `chatbucket.business` publishes DKIM and an MX to Workspace but
+**no SPF and no DMARC record**, and test mail to Gmail lands in spam as a
+result. Two TXT records fix it:
+
+    @        TXT   v=spf1 include:_spf.google.com ~all
+    _dmarc   TXT   v=DMARC1; p=none; rua=mailto:support@chatbucket.business
+
+Turning the scheduler on before those exist would send every customer a monthly
+report from an unauthenticated domain — spam at scale, and a reputation hit
+that is far harder to undo than to avoid. Verify with a `testEmail` broadcast
+first; only enable once a test copy reaches an inbox.
+
+`EMAIL_FROM` now defaults to `support@chatbucket.business`, matching the
+mailbox the SMTP account authenticates as. It previously defaulted to
+`no-reply@chatbucket.chat`; that domain publishes `v=DMARC1; p=reject; pct=100`
+with an SPF authorising a different provider, so sending as it through Google
+was refused outright rather than merely filtered. Do not point `EMAIL_FROM` at
+a domain the sending account cannot authenticate for.
 
 ## Payments
 

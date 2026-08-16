@@ -8,17 +8,23 @@ development the token is returned in the response for convenience.
 from __future__ import annotations
 
 import logging
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pymongo.errors import DuplicateKeyError
 
-from .. import credits, ratelimit, sessions
+from .. import credits, ratelimit, sessions, verification
 from ..config import get_settings
 from ..database import indexes_ready, users_collection
 from ..deps import get_current_user
-from ..email import send_email_verification, send_password_reset
+from ..email import (
+    send_email_verification,
+    send_email_verified,
+    send_password_reset,
+    send_welcome,
+)
 from ..models.auth import (
     ForgotPasswordRequest,
     LoginRequest,
@@ -26,6 +32,7 @@ from ..models.auth import (
     RefreshRequest,
     RegisterRequest,
     ResetPasswordRequest,
+    VerifyEmailOtpRequest,
     VerifyEmailRequest,
 )
 from ..plans import DEFAULT_PLAN
@@ -33,7 +40,7 @@ from ..security import (
     create_access_token_for_user,
     dummy_password_hash,
     generate_reset_token,
-    generate_verification_token,
+    hash_email_otp,
     hash_password_async,
     hash_token,
     verify_password_async,
@@ -128,13 +135,34 @@ async def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
         logger.error("could not open credit account for %s: %s", document["_id"], exc)
 
     # Queued after the response, like the reset email.
-    token = await _issue_verification(document, background_tasks)
+    token, code = await _issue_verification(document, background_tasks)
+
+    # Also queued: a welcome email is worth sending, but not worth making the
+    # customer wait on an SMTP round trip before their account appears.
+    background_tasks.add_task(
+        send_welcome,
+        document["email"],
+        document["name"],
+        # None rather than "0" when nothing was granted, so the template hides
+        # the free-credits panel instead of advertising zero.
+        _bonus_label(bonus_units),
+    )
 
     body = await _token_response(document)
     if settings.is_dev:
-        # No inbox to read the link out of under the console backend.
+        # No inbox to read the link or the code out of under the console backend.
         body["verification_token"] = token
+        body["verification_code"] = code
     return body
+
+
+def _bonus_label(bonus_units: int) -> str | None:
+    """The trial balance as the welcome email should show it, or None."""
+    if bonus_units <= 0:
+        return None
+    amount = credits.from_units(bonus_units)
+    # Whole rupees read better than "100.0000" on a marketing panel.
+    return f"{amount:,.0f}" if amount == amount.to_integral_value() else f"{amount:,.2f}"
 
 
 @router.post("/login", dependencies=[Depends(ratelimit.by_ip("login_ip"))])
@@ -195,7 +223,9 @@ async def forgot_password(
         # registered address does not take measurably longer than an unknown
         # one. Awaiting the SMTP round trip here would undo the identical
         # responses above and hand back an enumeration oracle.
-        background_tasks.add_task(send_password_reset, user["email"], token)
+        background_tasks.add_task(
+            send_password_reset, user["email"], token, user.get("name")
+        )
 
         # Still returned in development, where the console backend means there
         # is no inbox to read the link out of.
@@ -205,26 +235,53 @@ async def forgot_password(
     return JSONResponse(status_code=200, content=response)
 
 
-async def _issue_verification(user: dict, background_tasks: BackgroundTasks) -> str:
-    """Store a fresh verification token and queue the email. Returns the token."""
-    settings = get_settings()
-    token, token_hash = generate_verification_token()
-    await users_collection().update_one(
-        {"_id": user["_id"]},
-        {
-            "$set": {
-                "verification_token_hash": token_hash,
-                "verification_token_expires": datetime.now(timezone.utc)
-                + timedelta(hours=settings.verification_token_expire_hours),
-            }
-        },
+async def _issue_verification(
+    user: dict, background_tasks: BackgroundTasks
+) -> tuple[str, str]:
+    """Mint a fresh link token and code, queue the email, return both.
+
+    The credentials themselves are minted by `verification.issue_credentials`,
+    which the scheduled reminder also uses — a reminder a day later has to mint
+    a *new* pair, because the code from signup expired within minutes.
+    """
+    token, code = await verification.issue_credentials(user["_id"])
+    background_tasks.add_task(
+        send_email_verification, user["email"], token, code, user.get("name")
     )
-    background_tasks.add_task(send_email_verification, user["email"], token)
-    return token
+    return token, code
+
+
+async def _confirm_and_notify(user: dict, background_tasks: BackgroundTasks) -> None:
+    """Mark the address verified and tell the customer their account is open.
+
+    The confirmation is queued after the response for the same reason every
+    other message is: verification should not wait on a mail server.
+    """
+    await users_collection().update_one(
+        {"_id": user["_id"]}, verification.mark_verified_update()
+    )
+    # State the balance they can now actually spend — until this moment the
+    # signup credits were granted but unusable.
+    try:
+        balance = credits.from_units(await credits.balance_units(user["_id"]))
+        available = f"{balance:,.0f}" if balance == balance.to_integral_value() else f"{balance:,.2f}"
+    except Exception as exc:
+        logger.error("could not read balance for %s: %s", user["_id"], exc)
+        available = None
+    background_tasks.add_task(
+        send_email_verified, user["email"], user.get("name"), available
+    )
+
+
+def _as_utc(moment):
+    """Mongo stores UTC; some driver configs hand back naive datetimes."""
+    if moment is not None and moment.tzinfo is None:
+        return moment.replace(tzinfo=timezone.utc)
+    return moment
 
 
 @router.post("/verify-email")
-async def verify_email(payload: VerifyEmailRequest):
+async def verify_email(payload: VerifyEmailRequest, background_tasks: BackgroundTasks):
     """Confirm an email address from the link's token.
 
     Public and idempotent-ish: verifying an already-verified account with a
@@ -233,29 +290,69 @@ async def verify_email(payload: VerifyEmailRequest):
     user = await users_collection().find_one(
         {"verification_token_hash": hash_token(payload.token)}
     )
-    expires = user.get("verification_token_expires") if user else None
-    if expires is not None and expires.tzinfo is None:
-        expires = expires.replace(tzinfo=timezone.utc)
+    expires = _as_utc(user.get("verification_token_expires") if user else None)
     if user is None or expires is None or expires < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired verification link.",
         )
 
-    await users_collection().update_one(
-        {"_id": user["_id"]},
-        {
-            "$set": {
-                "email_verified": True,
-                "email_verified_at": datetime.now(timezone.utc),
-            },
-            # Single use: the token is spent whether or not it is replayed.
-            "$unset": {
-                "verification_token_hash": "",
-                "verification_token_expires": "",
-            },
-        },
+    await _confirm_and_notify(user, background_tasks)
+    return {"status": True, "message": "Email verified."}
+
+
+@router.post(
+    "/verify-email/otp",
+    dependencies=[Depends(ratelimit.by_ip("verify_otp_ip"))],
+)
+async def verify_email_otp(
+    payload: VerifyEmailOtpRequest, background_tasks: BackgroundTasks
+):
+    """Confirm an email address from the six-digit code in the email.
+
+    Public, like the link route — someone verifying on a phone has no session.
+    Two things stop that being a way to brute-force six digits: a per-address
+    attempt counter that burns the code, and a per-IP limit on top.
+    """
+    settings = get_settings()
+    email = payload.email.lower().strip()
+    # Also limited per address, for the same reason `login` is: a per-IP cap
+    # alone lets a spread-out attacker work through one account's million codes.
+    await ratelimit.enforce("verify_otp_email", email, "verify_otp_email")
+
+    invalid = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid or expired verification code.",
     )
+
+    user = await users_collection().find_one({"email": email})
+    if user is None:
+        raise invalid
+    if user.get("email_verified"):
+        # Idempotent for the customer who taps the button twice, and it reveals
+        # nothing: they already told us this address by typing it.
+        return {"status": True, "message": "Email is already verified."}
+
+    stored = user.get("verification_code_hash")
+    expires = _as_utc(user.get("verification_code_expires"))
+    attempts = int(user.get("verification_code_attempts", 0))
+    if not stored or expires is None or expires < datetime.now(timezone.utc):
+        raise invalid
+    if attempts >= settings.email_otp_max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many incorrect codes. Request a new one.",
+        )
+
+    if not secrets.compare_digest(stored, hash_email_otp(payload.code)):
+        # Counted in the database, not in memory: the cap has to hold across
+        # workers and restarts, and an in-process counter holds across neither.
+        await users_collection().update_one(
+            {"_id": user["_id"]}, {"$inc": {"verification_code_attempts": 1}}
+        )
+        raise invalid
+
+    await _confirm_and_notify(user, background_tasks)
     return {"status": True, "message": "Email verified."}
 
 
@@ -272,10 +369,11 @@ async def resend_verification(
     if user.get("email_verified"):
         return {"status": True, "message": "Email is already verified."}
 
-    token = await _issue_verification(user, background_tasks)
+    token, code = await _issue_verification(user, background_tasks)
     response: dict = {"status": True, "message": "Verification email sent."}
     if settings.is_dev:
         response["verification_token"] = token
+        response["verification_code"] = code
     return response
 
 

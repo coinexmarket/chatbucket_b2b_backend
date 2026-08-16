@@ -19,7 +19,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from .. import ratelimit
 from ..database import demo_requests_collection
-from ..email import send_demo_request_notification
+from ..email import send_contact_received, send_demo_request_notification
 from ..models.requests import DemoRequestBody
 
 router = APIRouter(prefix="/demo-requests", tags=["demo"])
@@ -51,11 +51,14 @@ async def create_demo_request(
 
     result = await demo_requests_collection().insert_one(document)
 
-    # Notify sales after the response goes out: the lead is already safely
-    # stored, so a mail outage must not fail the submission and lose it.
-    background_tasks.add_task(
-        send_demo_request_notification, {**document, "_id": str(result.inserted_id)}
-    )
+    # Notify sales *and* acknowledge to the person who wrote in, both after the
+    # response goes out: the lead is already safely stored, so a mail outage
+    # must not fail the submission and lose it.
+    lead = {**document, "_id": str(result.inserted_id)}
+    background_tasks.add_task(send_demo_request_notification, lead)
+    # The lead id doubles as the query id the acknowledgement tells them to
+    # quote — one identifier for the customer, sales and support to share.
+    background_tasks.add_task(send_contact_received, lead)
 
     return {
         "status": True,

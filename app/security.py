@@ -186,5 +186,30 @@ def generate_verification_token() -> tuple[str, str]:
     return token, hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def hash_email_otp(code: str) -> str:
+    """Keyed hash of a verification code, for storage.
+
+    HMAC under `JWT_SECRET` rather than a bare SHA-256: there are only a
+    million six-digit codes, so a plain digest is reversed by a laptop in
+    seconds and storing one would be the same as storing the code. The key
+    lives in the environment, not the database, so a dump of the users
+    collection on its own reveals nothing.
+    """
+    secret = get_settings().jwt_secret.encode("utf-8")
+    return hmac.new(secret, code.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def generate_email_otp() -> tuple[str, str]:
+    """Return ``(code, keyed_hash)`` for the 6-digit email verification code.
+
+    `secrets.randbelow`, not `random`: this is a credential, and the stdlib's
+    default generator is seeded predictably enough to guess. Zero-padded, so
+    "004821" is a valid code and the keyspace is the full million rather than
+    the 900,000 you get by starting at 100000.
+    """
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    return code, hash_email_otp(code)
+
+
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()

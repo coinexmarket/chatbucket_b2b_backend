@@ -167,15 +167,79 @@ class Settings(BaseSettings):
     smtp_use_ssl: bool = Field(default=False)
     smtp_starttls: bool = Field(default=True)
     smtp_timeout_seconds: int = Field(default=15)
+    # Log the full SMTP conversation, including the provider's queue id for
+    # each accepted message. For diagnosing "we sent it but nothing arrived",
+    # which is otherwise unfalsifiable. Off in production: the dialogue
+    # contains the base64-encoded AUTH credentials.
+    smtp_debug: bool = Field(default=False)
 
-    email_from: str = Field(default="no-reply@chatbucket.chat")
+    # Must be an address on the domain the SMTP account actually authenticates
+    # as, or DMARC rejects the mail. The previous default here was
+    # `no-reply@chatbucket.chat`, and that domain publishes
+    # `v=DMARC1; p=reject` with an SPF authorising a different provider than
+    # the one we send through — so a deploy that forgot to override this did
+    # not merely land in spam, it got refused at the door.
+    email_from: str = Field(default="support@chatbucket.business")
     email_from_name: str = Field(default="ChatBucket")
     # Where demo requests are sent. Empty disables that notification.
     sales_email: str = Field(default="")
+    # Printed in every template's help block, and the Reply-To on mail a
+    # customer might answer. Not the same as `EMAIL_FROM`, which is a no-reply.
+    support_email: str = Field(default="support@chatbucket.business")
     # Base URL of the site that hosts the password-reset page, used to build
     # the link in the reset email.
     app_base_url: str = Field(default="http://localhost:3000")
     password_reset_path: str = Field(default="/reset-password")
+
+    # --- Links inside the designed emails ----------------------------------
+    # Every template carries the same header/footer furniture: a "Visit
+    # ChatBucket" button, "Track Query Status", the dashboard CTA and the
+    # policy links. They are settings rather than constants because the
+    # marketing site and the dashboard are different hosts, and staging is a
+    # third. `emailtemplates.base_context` feeds these to every render.
+    marketing_url: str = Field(default="https://chatbucket.business")
+    # Everything is stored in UTC. Dates and times *shown to a customer* are
+    # rendered in this zone, because "31 July, 6:59 PM" on a receipt has to
+    # match the clock the customer paid by, not the server's.
+    display_timezone: str = Field(default="Asia/Kolkata")
+    dashboard_path: str = Field(default="/dashboard")
+    login_path: str = Field(default="/login")
+    # Where a customer follows up a support request. Relative to the app, or an
+    # absolute URL if the help desk lives elsewhere.
+    track_query_path: str = Field(default="/support/tickets")
+    privacy_policy_path: str = Field(default="/privacy-policy")
+    terms_path: str = Field(default="/terms-of-service")
+
+    def _app_url(self, path: str) -> str:
+        """Resolve a configured path against the app, passing absolutes through."""
+        if path.startswith(("http://", "https://")):
+            return path
+        return f"{self.app_base_url.rstrip('/')}/{path.lstrip('/')}"
+
+    @property
+    def dashboard_url_for(self) -> str:
+        return self._app_url(self.dashboard_path)
+
+    @property
+    def login_url_for(self) -> str:
+        return self._app_url(self.login_path)
+
+    @property
+    def track_query_url_for(self) -> str:
+        return self._app_url(self.track_query_path)
+
+    @property
+    def privacy_policy_url_for(self) -> str:
+        # Policy pages live on the marketing site, not the dashboard.
+        if self.privacy_policy_path.startswith(("http://", "https://")):
+            return self.privacy_policy_path
+        return f"{self.marketing_url.rstrip('/')}/{self.privacy_policy_path.lstrip('/')}"
+
+    @property
+    def terms_url_for(self) -> str:
+        if self.terms_path.startswith(("http://", "https://")):
+            return self.terms_path
+        return f"{self.marketing_url.rstrip('/')}/{self.terms_path.lstrip('/')}"
 
     # --- Email verification -------------------------------------------------
     # When true, an unverified account cannot create API keys. Off by default:
@@ -183,6 +247,13 @@ class Settings(BaseSettings):
     require_email_verification: bool = Field(default=False)
     verification_token_expire_hours: int = Field(default=48)
     email_verify_path: str = Field(default="/verify-email")
+    # The verification email carries a 6-digit code as well as the link. The
+    # code is what someone types on a phone; it is short-lived because a
+    # six-digit secret is only strong while the window to guess it is small.
+    email_otp_expire_minutes: int = Field(default=10, ge=1, le=60)
+    # Wrong codes tolerated before the code is burned. Without a cap, six
+    # digits is a million tries against a static value.
+    email_otp_max_attempts: int = Field(default=5, ge=1, le=20)
 
     @property
     def email_verify_url_for(self) -> str:
@@ -199,10 +270,57 @@ class Settings(BaseSettings):
     enforce_credit_balance: bool = Field(default=True)
     # Credits granted to a brand-new account. 0 means a new customer must top
     # up before any metered call succeeds.
-    signup_bonus_credits: str = Field(default="0")
+    # 1 credit = ₹1, so this is ₹100 of free usage for every new account.
+    # It is a real cost per signup, which is why the welcome email states
+    # the amount and `FREE_CREDIT_VALIDITY_DAYS` sets the window it is
+    # presented with. Set to 0 to require a top-up before the first call.
+    signup_bonus_credits: str = Field(default="100")
     # Shared secret the payment gateway's webhook must present to mark a
     # top-up paid. Unset means no request can ever grant credits.
     billing_webhook_secret: str = Field(default="")
+
+    # --- Lifecycle notifications -------------------------------------------
+    # How long the signup bonus is presented as being good for. Nothing expires
+    # credits automatically — the product line is that credits never expire —
+    # so this is the window the welcome and reminder emails talk about, and the
+    # figure the reminder counts down to.
+    free_credit_validity_days: int = Field(default=30, ge=1)
+    # Send the "credits expire soon" reminder once the remaining validity drops
+    # to this many days.
+    free_credit_reminder_days: int = Field(default=7, ge=1)
+    # Nudge accounts that registered this many days ago and have never metered
+    # a single call. Sent once per account.
+    onboarding_nudge_after_days: int = Field(default=3, ge=1)
+    # Chase accounts that registered this many hours ago and never confirmed
+    # their address. With REQUIRE_EMAIL_VERIFICATION on they are stuck: signed
+    # up, credited, and unable to create a key. A *fresh* code is minted, since
+    # the one from signup expired within minutes. Sent once per account.
+    verification_reminder_after_hours: int = Field(default=24, ge=1)
+    # Ceiling on one broadcast (announcement / maintenance). A run that would
+    # exceed it stops and says so, rather than quietly mailing half the base.
+    broadcast_max_recipients: int = Field(default=5000, ge=1)
+    # Messages in flight at once during a broadcast or report run. SMTP
+    # providers rate-limit, and one connection per recipient in parallel is the
+    # fastest way to get a sending domain throttled.
+    broadcast_concurrency: int = Field(default=5, ge=1, le=50)
+
+    # --- Notification scheduler ---------------------------------------------
+    # Runs the monthly report, the free-credit reminder and the onboarding
+    # nudge on a timer inside the app, so they need no external cron.
+    #
+    # **Off by default, and that is deliberate.** Turning it on starts mailing
+    # real customers unattended. A deployment should opt in only once its
+    # sending domain is authenticated (SPF + DKIM + DMARC) and a test broadcast
+    # has been seen to reach an inbox rather than a spam folder.
+    notification_scheduler_enabled: bool = Field(default=False)
+    # How often the loop wakes to see whether anything is due. Not how often
+    # jobs run — each job runs once per its own period, whatever this is.
+    notification_scheduler_interval_seconds: int = Field(default=900, ge=60)
+    # Hour of the day, in DISPLAY_TIMEZONE, that the daily jobs run. Mail sent
+    # at 3am reads as machine-generated and is opened less.
+    notification_scheduler_hour: int = Field(default=6, ge=0, le=23)
+    # Day of the month the monthly report goes out, covering the month before.
+    notification_monthly_report_day: int = Field(default=1, ge=1, le=28)
 
     # --- Razorpay ----------------------------------------------------------
     # Order creation authenticates with key id + secret (HTTP Basic).

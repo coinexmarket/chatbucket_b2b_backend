@@ -1,0 +1,3877 @@
+<!-- =====================================================
+PART 1
+
+ChatBucket Business
+Monthly AI Usage Report
+Hero Section
+
+===================================================== -->
+
+
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<meta
+    http-equiv="X-UA-Compatible"
+    content="IE=edge"
+>
+
+<title>
+Your Monthly AI Usage Report
+</title>
+
+
+<!--[if mso]>
+<style type="text/css">
+
+table,
+td,
+div,
+p,
+a{
+    font-family:Arial,Helvetica,sans-serif !important;
+}
+
+</style>
+<![endif]-->
+
+
+<style type="text/css">
+
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    background:#EEF0F7;
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+}
+
+table{
+    border-collapse:collapse;
+}
+
+img{
+    border:0;
+    outline:none;
+    text-decoration:none;
+    display:block;
+    -ms-interpolation-mode:bicubic;
+}
+
+a{
+    text-decoration:none;
+}
+
+.container{
+    width:800px;
+    max-width:800px;
+}
+
+.hero-left{
+    width:45%;
+}
+
+.hero-right{
+    width:55%;
+}
+
+.hero-image{
+    width:430px;
+    max-width:100%;
+    height:auto;
+}
+
+.hero-title{
+    font-size:30px;
+    line-height:35px;
+}
+
+@media only screen and (max-width:800px){
+    /* A 38px heading is ~390px on one line, which sets the minimum width of
+       every table above it — `width:100%` cannot shrink a table below its
+       content. Capping the display sizes is what actually lets the layout
+       reach 360px. */
+    h1 { font-size: 26px !important; line-height: 32px !important; }
+    h2 { font-size: 21px !important; line-height: 27px !important; }
+    .hero-title { font-size: 26px !important; line-height: 32px !important; }
+  /* Design's own layout classes for the shared footer and feature strips.
+     These rows are what set the table's minimum width — a table cannot shrink
+     below the sum of its columns' min-content, so `width:100%` above them was
+     never going to be enough. */
+  .footer-col,
+  .footer-bottom-left,
+  .footer-bottom-right,
+  .support-left,
+  .support-right {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+  /* Feature strips read better two-up than as one tall column. */
+  .feature-cell {
+    display: inline-block !important;
+    width: 48% !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    text-align: center !important;
+  }
+  .feature-separator { display: none !important; }
+  /* The footer's two call-to-action buttons carry their own nowrap, so the
+     pair is a ~300px floor the surrounding table cannot shrink past. Letting
+     the label wrap costs one line and removes the last overflow. */
+  /* Two buttons side by side in a 340px footer wrap to three cramped lines
+     each. Stacked and centred they stay one line and stay tappable. */
+  .btn, a.btn {
+    white-space: normal !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 260px !important;
+    margin: 8px auto !important;
+    text-align: center !important;
+  }
+
+  /* The spend-by-service rows: label above the bar, amount below it. The bar
+     cell itself is left alone — stacking a progress bar destroys it. */
+  .bar-label, .bar-amount {
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    padding-left: 0 !important;
+  }
+  .bar-amount { padding-top: 3px !important; padding-bottom: 8px !important; }
+  .bar-icon { display: none !important; }
+
+  /* `white-space:nowrap` is a hard floor: "₹1,678.00 / ₹9,875.00  17%" cannot
+     be squeezed, so the table around it cannot shrink either. On a phone it
+     is better for that to wrap onto two lines than for the whole email to
+     scroll sideways. */
+  td, th { white-space: normal !important; }
+  /* `overflow-wrap` breaks a string only when it genuinely cannot fit;
+     `word-break: break-word` breaks eagerly and turned
+     "support@chatbucket.business" into "support@chatbucket.b / usiness". */
+  td, div, p, span, a { overflow-wrap: break-word !important; }
+
+
+    /* --- responsive helpers ------------------------------------------- */
+    .mobile-stack {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      /* Side-by-side columns were separated by their own width. Stacked, they
+         need vertical space or the last line of one runs into the heading of
+         the next. The right border did the same job horizontally and becomes a
+         stray edge once stacked. */
+      padding-bottom: 14px !important;
+      border-right: 0 !important;
+    }
+    .mobile-half {
+      display: inline-block !important;
+      width: 50% !important;
+      box-sizing: border-box !important;
+    }
+    .mobile-hide {
+      display: none !important;
+    }
+    .mobile-center {
+      text-align: center !important;
+    }
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+
+    .container{
+        width:100%!important;
+    }
+
+    .hero-left,
+    .hero-right{
+        display:block!important;
+        width:100%!important;
+    }
+
+    .hero-left{
+        padding:32px 24px 20px 24px!important;
+    }
+
+    .hero-right{
+        padding:5px 20px 30px 20px!important;
+        text-align:center!important;
+    }
+
+    .hero-image{
+        width:100%!important;
+        max-width:430px!important;
+        margin:0 auto!important;
+    }
+
+    .hero-title{
+        font-size:29px!important;
+        line-height:35px!important;
+    }
+
+    .report-box{
+        max-width:100%!important;
+    }
+
+}
+
+
+/* --- mobile overrides (appended; absolute caps break the width cycle) --- */
+@media only screen and (max-width:800px) {
+  .container { width: 100% !important; }
+  /* An auto-layout table cannot shrink below the sum of its columns'
+     min-content, whatever width you give it. Fixed layout makes the outer
+     table honour 100% and pushes the constraint inward, where the stacking
+     rules above can act on it. Applied only to the outermost table — fixed
+     layout on nested ones would redistribute their columns by the first row
+     and distort the OTP grid and the progress bars. */
+  .container { table-layout: fixed !important; max-width: 100% !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+  /* A hero carrying width="430" is a hard floor for every table above it.
+     Capping it in px, not %, is what lets the layout reach 360. */
+  .hero-image, .hero-img {
+    width: 280px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  h1 { font-size: 26px !important; line-height: 32px !important; }
+  h2 { font-size: 21px !important; line-height: 27px !important; }
+  .hero-title { font-size: 26px !important; line-height: 32px !important; }
+}
+</style>
+
+</head>
+
+
+<body
+    style="
+        margin:0;
+        padding:0;
+        background:#EEF0F7;
+    "
+>
+
+
+<!-- =====================================================
+OUTER WRAPPER
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#EEF0F7;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding:24px 12px;
+    "
+>
+
+
+<!-- =====================================================
+MAIN EMAIL CONTAINER
+===================================================== -->
+
+<table
+    role="presentation"
+    class="container"
+    width="800"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        overflow:hidden;
+        border-radius:18px;
+            overflow:hidden;
+    "
+>
+
+
+<!-- =====================================================
+HERO SECTION
+===================================================== -->
+
+<tr>
+
+<td
+    style="
+        background:#09052F;
+        background-image:linear-gradient(
+            120deg,
+            #08032D 0%,
+            #10043D 38%,
+            #250765 70%,
+            #0B052F 100%
+        );
+        border-radius:18px 18px 0 0;
+            overflow:hidden;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+
+<!-- =====================================================
+HERO LEFT
+===================================================== -->
+
+<td
+    class="hero-left mobile-stack"
+    width="45%"
+    valign="top"
+    style="
+        width:45%;
+        padding:42px 5px 38px 48px;
+        vertical-align:top;
+    "
+>
+
+
+
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/ChatBucket-logo.png"
+    width="210"
+    alt="ChatBucket Business"
+    style="
+        display:block;
+        width:210px;
+        max-width:100%;
+        height:auto;
+    "
+>
+
+
+<!-- =====================================================
+GREETING
+===================================================== -->
+
+<div
+    style="
+        margin-top:25px;
+        font-size:28px;
+        line-height:34px;
+        font-weight:400;
+        color:#FFFFFF;
+    "
+>
+
+Hi
+
+<strong
+    style="
+        font-weight:800;
+    "
+>
+
+{{name}}
+
+</strong>
+
+<span
+    style="
+        color:#FFFFFF;
+        font-size:27px;
+    "
+>
+
+👋
+
+</span>
+
+</div>
+
+
+<!-- =====================================================
+MAIN TITLE
+===================================================== -->
+
+<div
+    class="hero-title"
+    style="
+        margin-top:3px;
+        font-weight:400;
+        color:#FFFFFF;
+    "
+>
+
+Your Monthly
+
+<br>
+
+AI Usage Report
+
+</div>
+
+
+<!-- =====================================================
+INTRODUCTION
+===================================================== -->
+
+<div
+    style="
+        margin-top:14px;
+        max-width:340px;
+        font-size:12px;
+        line-height:17px;
+        color:#D9D5E8;
+    "
+>
+
+Here's how your business used ChatBucket this
+month. Great job staying connected and driving
+meaningful conversations!
+
+<span
+    style="
+        font-size:11px;
+    "
+>
+
+🚀
+
+</span>
+
+</div>
+
+
+<!-- =====================================================
+REPORT INFORMATION BOX
+===================================================== -->
+
+<table
+    class="report-box"
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:16px;
+        border:1px solid #7446C8;
+        border-radius:12px;
+        background:rgba(40,15,91,.35);
+        border-radius: 50px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+
+<!-- =====================================================
+REPORTING PERIOD
+===================================================== -->
+
+<td
+    valign="middle"
+    style="
+        padding:10px 13px;
+        vertical-align:middle;
+    "
+>
+
+<div
+    style="
+        font-size:10px;
+        line-height:11px;
+        color:#AAA2C4;
+    "
+>
+
+Reporting period
+
+</div>
+
+<div
+    style="
+        margin-top:5px;
+        font-size:14px;
+        line-height:13px;
+        font-weight:700;
+        color:#FFFFFF;
+        white-space:nowrap;
+    "
+>
+{{period}}
+
+</div>
+
+</td>
+
+
+<!-- =====================================================
+VERTICAL DIVIDER
+===================================================== -->
+
+<td
+    width="1"
+    style="
+        width:1px;
+        background:#7446C8;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+
+<!-- =====================================================
+REPORT GENERATED
+===================================================== -->
+
+<td
+    valign="middle"
+    style="
+        padding:8px 13px;
+        vertical-align:middle;
+    "
+>
+
+<div
+    style="
+        font-size:10px;
+        line-height:11px;
+        color:#AAA2C4;
+    "
+>
+
+Report Generated
+
+</div>
+
+<div
+    style="
+        margin-top:5px;
+        font-size:14px;
+        line-height:13px;
+        font-weight:700;
+        color:#FFFFFF;
+        white-space:nowrap;
+    "
+>
+
+{{generated_on}}
+
+</div>
+
+</td>
+
+
+</tr>
+
+</table>
+
+
+</td>
+
+
+
+
+<td
+    class="hero-right mobile-stack"
+    width="55%"
+    align="center"
+    valign="middle"
+    style="
+        width:55%;
+        padding:0px 20px 20px 0;
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/hero-img.png"
+    class="hero-image"
+    width="430"
+    alt="ChatBucket AI Usage Dashboard"
+    style="
+    mix-blend-mode: lighten;
+        display:block;
+        width:430px;
+        max-width:100%;
+        height:auto;
+        margin:0 auto;
+    "
+>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 2 STARTS HERE
+
+Your Usage Summary
+4 Metric Cards
+
+===================================================== -->
+<!-- =====================================================
+PART 2
+
+Your Usage Summary
+4 Usage Metric Cards
+
+===================================================== -->
+
+
+<!-- =====================================================
+YOUR USAGE SUMMARY SECTION
+===================================================== -->
+
+<tr>
+
+<td
+    style="
+        padding:28px 42px 18px 42px;
+        background:#FFFFFF;
+    "
+>
+
+
+<!-- =====================================================
+SUMMARY CONTAINER
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #ECE8F3;
+        border-radius:10px;
+        overflow: hidden;
+        box-shadow:0 3px 14px rgba(40,20,90,.06);
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:18px 16px 15px 16px;
+    "
+>
+
+
+<!-- =====================================================
+SECTION HEADER
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="center"
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/usage-summary.png"
+    width="100%"
+    height="65"
+    alt="Usage Summary"
+    style="
+        display:block;
+        width:65px;
+        height:100%;
+        margin:0 auto;
+    "
+>
+
+<div
+    style="
+        margin-top:5px;
+        font-size:18px;
+        line-height:24px;
+        font-weight:800;
+        color:#5720C9;
+    "
+>
+
+Your Usage Summary
+
+</div>
+
+<div
+    style="
+        margin-top:2px;
+        font-size:14px;
+        line-height:14px;
+        color:#70697C;
+    "
+>
+
+Here's how your business used ChatBucket this month.
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =====================================================
+METRIC CARDS
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:25px;
+    "
+>
+
+<tr>
+
+
+<!-- =====================================================
+CARD 1 — TOTAL CONVERSATIONS
+===================================================== -->
+
+<td class="mobile-stack"
+    width="25%"
+    valign="top"
+    style="
+        width:25%;
+        padding-right:5px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E9E5EF;
+        border-radius:9px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:13px 11px 10px 11px;
+    "
+>
+
+
+<!-- ICON -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="center"
+    valign="middle"
+    style="
+        width:38px;
+        height:38px;
+        background:#F0E6FF;
+        border-radius:50%;
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/1.png"
+    width="32"
+    height="32"
+    alt="Conversations"
+    style="
+        display:block;
+        width:32px;
+        height:32px;
+        margin:0 auto;
+    "
+>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CARD TITLE -->
+
+<div
+    style="
+        margin-top:10px;
+        font-size:11px;
+        line-height:13px;
+        font-weight:700;
+        color:#302A40;
+    "
+>
+
+{{metric1_label}}
+
+</div>
+
+
+<!-- MAIN VALUE -->
+
+<div
+    style="
+        margin-top:2px;
+        font-size:23px;
+        line-height:27px;
+        font-weight:800;
+        color:#5520C9;
+    "
+>
+
+{{metric1_value}}
+
+</div>
+
+
+<!-- GROWTH -->
+
+<div
+    style="
+        margin-top:3px;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:{{metric1_color}};
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        width:16px;
+        height:16px;
+        line-height:16px;
+        text-align:center;
+        background:{{metric1_background}};
+        border-radius:50%;
+    "
+>
+
+{{metric1_arrow}}
+
+</span>
+
+&nbsp;
+
+{{metric1_change}}
+
+</div>
+
+
+<!-- PREVIOUS MONTH -->
+
+<div
+    style="
+        margin-top:7px;
+        padding:5px 6px;
+        background:#FAF9FD;
+        border:1px solid #EEEAF4;
+        border-radius:6px;
+        font-size:10px;
+        line-height:12px;
+        color:#70697C;
+    "
+>
+
+vs {{previous_period}}:
+
+<strong
+    style="
+        color:#5720C9;
+    "
+>
+
+{{metric1_previous}}
+
+</strong>
+
+</div>
+
+
+<!-- MINI CHART -->
+
+<div
+    style="
+        margin-top:8px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/graph1.png"
+    width="190"
+    alt="Conversations Growth Chart"
+    style="
+        display:block;
+        width:100%;
+        max-width:190px;
+        height:auto;
+    "
+>
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =====================================================
+CARD 2 — MESSAGES PROCESSED
+===================================================== -->
+
+<td class="mobile-stack"
+    width="25%"
+    valign="top"
+    style="
+        width:25%;
+        padding:0 3px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E9E5EF;
+        border-radius:9px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:11px 11px 10px 11px;
+    "
+>
+
+
+<!-- ICON -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="center"
+    valign="middle"
+    style="
+        width:38px;
+        height:38px;
+        background:#E3F8EE;
+        border-radius:50%;
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/2.png"
+    width="32"
+    height="32"
+    alt="Messages"
+    style="
+        display:block;
+        width:22px;
+        height:22px;
+        margin:0 auto;
+    "
+>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- TITLE -->
+
+<div
+    style="
+        margin-top:10px;
+        font-size:11px;
+        line-height:13px;
+        font-weight:700;
+        color:#302A40;
+    "
+>
+
+{{metric2_label}}
+
+</div>
+
+
+<!-- VALUE -->
+
+<div
+    style="
+        margin-top:2px;
+        font-size:23px;
+        line-height:27px;
+        font-weight:800;
+        color:#159455;
+    "
+>
+
+{{metric2_value}}
+
+</div>
+
+
+<!-- GROWTH -->
+
+<div
+    style="
+        margin-top:3px;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:{{metric2_color}};
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        width:16px;
+        height:16px;
+        line-height:16px;
+        text-align:center;
+        background:{{metric2_background}};
+        border-radius:50%;
+    "
+>
+
+{{metric2_arrow}}
+
+</span>
+
+&nbsp;
+
+{{metric2_change}}
+
+</div>
+
+
+<!-- PREVIOUS -->
+
+<div
+    style="
+        margin-top:7px;
+        padding:5px 6px;
+        background:#FAF9FD;
+        border:1px solid #EEEAF4;
+        border-radius:6px;
+        font-size:10px;
+        line-height:12px;
+        color:#70697C;
+    "
+>
+
+vs {{previous_period}}:
+
+<strong
+    style="
+        color:#159455;
+    "
+>
+
+{{metric2_previous}}
+
+</strong>
+
+</div>
+
+
+<!-- CHART -->
+
+<div
+    style="
+        margin-top:8px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/graph2.png"
+    width="190"
+    alt="Messages Growth Chart"
+    style="
+        display:block;
+        width:100%;
+        max-width:190px;
+        height:auto;
+    "
+>
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =====================================================
+CARD 3 — VOICE MINUTES USED
+===================================================== -->
+
+<td class="mobile-stack"
+    width="25%"
+    valign="top"
+    style="
+        width:25%;
+        padding:0 3px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E9E5EF;
+        border-radius:9px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:11px 11px 10px 11px;
+    "
+>
+
+
+<!-- ICON -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="center"
+    valign="middle"
+    style="
+        width:38px;
+        height:38px;
+        background:#E6F0FF;
+        border-radius:50%;
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/3.png"
+    width="32"
+    height="32"
+    alt="Voice Minutes"
+    style="
+        display:block;
+        width:22px;
+        height:22px;
+        margin:0 auto;
+    "
+>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- TITLE -->
+
+<div
+    style="
+        margin-top:10px;
+        font-size:11px;
+        line-height:13px;
+        font-weight:700;
+        color:#302A40;
+    "
+>
+
+{{metric3_label}}
+
+</div>
+
+
+<!-- VALUE -->
+
+<div
+    style="
+        margin-top:2px;
+        font-size:23px;
+        line-height:27px;
+        font-weight:800;
+        color:#1E63D7;
+    "
+>
+
+{{metric3_value}}
+
+</div>
+
+
+<!-- GROWTH -->
+
+<div
+    style="
+        margin-top:3px;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:{{metric3_color}};
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        width:16px;
+        height:16px;
+        line-height:16px;
+        text-align:center;
+        background:{{metric3_background}};
+        border-radius:50%;
+    "
+>
+
+{{metric3_arrow}}
+
+</span>
+
+&nbsp;
+
+{{metric3_change}}
+
+</div>
+
+
+<!-- PREVIOUS -->
+
+<div
+    style="
+        margin-top:7px;
+        padding:5px 6px;
+        background:#FAF9FD;
+        border:1px solid #EEEAF4;
+        border-radius:6px;
+        font-size:10px;
+        line-height:12px;
+        color:#70697C;
+    "
+>
+
+vs {{previous_period}}:
+
+<strong
+    style="
+        color:#1E63D7;
+    "
+>
+
+{{metric3_previous}}
+
+</strong>
+
+</div>
+
+
+<!-- CHART -->
+
+<div
+    style="
+        margin-top:8px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/graph3.png"
+    width="190"
+    alt="Voice Usage Growth Chart"
+    style="
+        display:block;
+        width:100%;
+        max-width:190px;
+        height:auto;
+    "
+>
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =====================================================
+CARD 4 — AI AGENT INTERACTIONS
+===================================================== -->
+
+<td class="mobile-stack"
+    width="25%"
+    valign="top"
+    style="
+        width:25%;
+        padding-left:5px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E9E5EF;
+        border-radius:9px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:17px 12px 10px 11px;
+    "
+>
+
+
+<!-- ICON -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="center"
+    valign="middle"
+    style="
+        width:38px;
+        height:38px;
+        background:#FFF0E1;
+        border-radius:50%;
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/4.png"
+    width="32"
+    height="32"
+    alt="AI Agent Interactions"
+    style="
+        display:block;
+        width:22px;
+        height:22px;
+        margin:0 auto;
+    "
+>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- TITLE -->
+
+<div
+    style="
+        margin-top:10px;
+        font-size:11px;
+        line-height:13px;
+        font-weight:700;
+        color:#302A40;
+    "
+>
+
+{{metric4_label}}
+
+</div>
+
+
+<!-- VALUE -->
+
+<div
+    style="
+        margin-top:2px;
+        font-size:23px;
+        line-height:27px;
+        font-weight:800;
+        color:#F28A17;
+    "
+>
+
+{{metric4_value}}
+
+</div>
+
+
+<!-- GROWTH -->
+
+<div
+    style="
+        margin-top:3px;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:{{metric4_color}};
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        width:16px;
+        height:16px;
+        line-height:16px;
+        text-align:center;
+        background:{{metric4_background}};
+        border-radius:50%;
+    "
+>
+
+{{metric4_arrow}}
+
+</span>
+
+&nbsp;
+
+{{metric4_change}}
+
+</div>
+
+
+<!-- PREVIOUS -->
+
+<div
+    style="
+        margin-top:7px;
+        padding:5px 6px;
+        background:#FAF9FD;
+        border:1px solid #EEEAF4;
+        border-radius:6px;
+        font-size:10px;
+        line-height:12px;
+        color:#70697C;
+    "
+>
+
+vs {{previous_period}}:
+
+<strong
+    style="
+        color:#F28A17;
+    "
+>
+
+{{metric4_previous}}
+
+</strong>
+
+</div>
+
+
+<!-- CHART -->
+
+<div
+    style="
+        margin-top:8px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/graph4.png"
+    width="190"
+    alt="AI Agent Growth Chart"
+    style="
+        display:block;
+        width:100%;
+        max-width:190px;
+        height:auto;
+    "
+>
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+</tr>
+
+</table>
+
+
+<!-- =====================================================
+SUMMARY FOOTNOTE
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:10px;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+>
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FAF8FF;
+        border:1px solid #E7E0F2;
+        border-radius:7px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:6px 12px;
+        font-size:12px;
+        line-height:13px;
+        color:#625C70;
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        color:#6A29D7;
+        font-size:12px;
+        vertical-align:middle;
+    "
+>
+
+✓
+
+</span>
+
+&nbsp;
+
+{{headline_note}}
+
+<strong
+    style="
+        color:#6A29D7;
+        font-size: 12px;
+    "
+>
+
+{{headline_cheer}}
+
+</strong>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 3 STARTS HERE
+
+Top AI Services Used
+Your Plan & Usage
+
+===================================================== -->
+<!-- =====================================================
+PART 3
+
+Top AI Services Used
+Your Plan & Usage
+Insights & Recommendations
+
+===================================================== -->
+
+
+<!-- =====================================================
+TOP AI SERVICES + YOUR PLAN
+===================================================== -->
+
+<tr>
+
+<td
+    style="
+        padding:0 42px 14px 42px;
+        background:#FFFFFF;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+
+<!-- =====================================================
+LEFT — TOP AI SERVICES USED
+===================================================== -->
+
+<td class="mobile-stack"
+    width="50%"
+    valign="top"
+    style="
+        width:50%;
+        padding-right:5px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E8E3EF;
+        border-radius:10px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:14px 14px 13px 14px;
+    "
+>
+
+
+<!-- =================================================
+TITLE
+================================================= -->
+
+<div
+    style="
+        font-size:13px;
+        line-height:18px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+Top AI Services Used
+
+</div>
+
+
+<!-- =================================================
+CHART + LEGEND
+================================================= -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:10px;
+    "
+>
+
+<tr>
+
+
+
+
+<td class="mobile-stack"
+    width="47%"
+    align="center"
+    valign="middle"
+    style="
+        width:47%;
+        vertical-align:middle;
+    "
+>
+
+<table
+    role="presentation"
+    width="120"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        width:120px;
+        margin:0 auto;
+        border-radius:10px;
+        overflow:hidden;
+    "
+>
+{{#services}}
+<tr>
+<td
+    height="{{bar_height}}"
+    style="
+        height:{{bar_height}}px;
+        background:{{color}};
+        font-size:0;
+        line-height:0;
+    "
+>
+&nbsp;
+</td>
+</tr>
+{{/services}}
+</table>
+
+</td>
+
+
+<!-- =================================================
+LEGEND
+===================================================== -->
+
+<td class="mobile-stack"
+    width="53%"
+    valign="middle"
+    style="
+        width:53%;
+        padding-left:5px;
+        vertical-align:middle;
+    "
+>
+
+
+{{#services}}
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="10"
+    style="
+        width:10px;
+    "
+>
+
+<span
+    style="
+        display:block;
+        width:7px;
+        height:7px;
+        background:{{color}};
+        border-radius:50%;
+    "
+>
+</span>
+
+</td>
+
+<td
+    style="
+        font-size:10px;
+        line-height:14px;
+        color:#302A40;
+    "
+>
+
+{{name}}
+
+</td>
+
+<td
+    align="right"
+    style="
+        font-size:10px;
+        line-height:14px;
+        font-weight:700;
+        color:#302A40;
+    "
+>
+
+{{percent}}%
+
+</td>
+
+<td
+    align="right"
+    style="
+        padding-left:7px;
+        font-size:10px;
+        line-height:14px;
+        color:#625C70;
+    "
+>
+
+{{value}}
+
+</td>
+
+</tr>
+
+</table>
+{{/services}}
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+ANALYTICS BUTTON
+================================================= -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:20px;
+        margin-bottom: 13px;
+    "
+>
+
+<tr>
+
+<td>
+
+<a
+    href="{{analytics_url}}"
+    style="
+        display:inline-block;
+        padding:7px 10px;
+        border:1px solid #6940D5;
+        border-radius:5px;
+        font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:#5421C7;
+        text-decoration:none;
+    "
+>
+
+View Detailed Analytics
+
+<span
+    style="
+        padding-left:8px;
+        font-size:11px;
+    "
+>
+→
+</span>
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =====================================================
+RIGHT — YOUR PLAN & USAGE
+===================================================== -->
+
+<td class="mobile-stack"
+    width="50%"
+    valign="top"
+    style="
+        width:50%;
+        padding-left:5px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#FFFFFF;
+        border:1px solid #E8E3EF;
+        border-radius:10px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:14px 14px 13px 14px;
+    "
+>
+
+
+<!-- =================================================
+TITLE
+===================================================== -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/your-plan.png"
+    width="24"
+    height="24"
+    alt="Your Plan"
+    style="
+        display:block;
+        width:24px;
+        height:24px;
+    "
+>
+
+</td>
+
+<td
+    valign="middle"
+    style="
+        padding-left:6px;
+        vertical-align:middle;
+    "
+>
+
+<div
+    style="
+        font-size:13px;
+        line-height:18px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+Your Plan &amp; Usage
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+CURRENT PLAN
+===================================================== -->
+
+<div
+    style="
+        margin-top:10px;
+        font-size:10px;
+        line-height:12px;
+        color:#625C70;
+    "
+>
+
+Current Plan
+
+</div>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<div
+    style="
+        font-size:12px;
+        line-height:17px;
+        font-weight:800;
+        color:#302A40;
+    "
+>
+
+{{plan_name}}
+
+</div>
+
+</td>
+
+<td
+    align="right"
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<span
+    style="
+        display:inline-block;
+        padding:4px 8px;
+        background:#E9E2FF;
+        border-radius:10px;
+        font-size:10px;
+        line-height:11px;
+        font-weight:700;
+        color:#6330D2;
+    "
+>
+
+{{plan_status}}
+
+</span>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+USAGE SUMMARY LABEL
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:20px;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        font-size:10px;
+        line-height:12px;
+        font-weight:700;
+        color:#625C70;
+    "
+>
+
+Usage Summary
+
+</td>
+
+<td
+    align="right"
+    style="
+        font-size:10px;
+        line-height:12px;
+        color:#625C70;
+    "
+>
+
+(This Month)
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+CONVERSATIONS USAGE
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:15px;
+    "
+>
+
+<tr>
+
+<td class="bar-icon" width="18"
+    style="
+        width:18px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/chat.png"
+    width="14"
+    height="14"
+    alt="Conversations"
+    style="
+        display:block;
+        width:14px;
+        height:14px;
+    "
+>
+
+</td>
+
+<td class="bar-label" width="82"
+    style="
+        width:82px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+    "
+>
+
+{{bar1_label}}
+
+</td>
+
+<td
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="{{bar1_percent}}%"
+    style="
+        width:{{bar1_percent}}%;
+        height:6px;
+        background:#5720CF;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+<td
+    style="
+        height:6px;
+        background:#EAE6F2;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<td class="bar-amount" width="105"
+    align="right"
+    style="
+        width:105px;
+        padding-left:7px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+        white-space:nowrap;
+    "
+>
+
+{{bar1_amount}}
+
+&nbsp;
+
+<strong
+    style="
+        color:#5421C7;
+    "
+>
+{{bar1_percent}}%
+</strong>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+VOICE MINUTES
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:9px;
+    "
+>
+
+<tr>
+
+<td class="bar-icon" width="18"
+    style="
+        width:18px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/call.png"
+    width="14"
+    height="14"
+    alt="Voice Minutes"
+    style="
+        display:block;
+        width:14px;
+        height:14px;
+    "
+>
+
+</td>
+
+<td class="bar-label" width="82"
+    style="
+        width:82px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+    "
+>
+
+{{bar2_label}}
+
+</td>
+
+<td
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="{{bar2_percent}}%"
+    style="
+        width:{{bar2_percent}}%;
+        height:6px;
+        background:#5720CF;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+<td
+    style="
+        height:6px;
+        background:#EAE6F2;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<td class="bar-amount" width="105"
+    align="right"
+    style="
+        width:105px;
+        padding-left:7px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+        white-space:nowrap;
+    "
+>
+
+{{bar2_amount}}
+
+&nbsp;
+
+<strong
+    style="
+        color:#5421C7;
+    "
+>
+{{bar2_percent}}%
+</strong>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+AI AGENT INTERACTIONS
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:9px;
+    "
+>
+
+<tr>
+
+<td class="bar-icon" width="18"
+    style="
+        width:18px;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/agent.png"
+    width="14"
+    height="14"
+    alt="AI Agent Interactions"
+    style="
+        display:block;
+        width:14px;
+        height:14px;
+    "
+>
+
+</td>
+
+<td class="bar-label" width="82"
+    style="
+        width:82px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+    "
+>
+
+{{bar3_label}}
+
+</td>
+
+<td
+    valign="middle"
+    style="
+        vertical-align:middle;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="{{bar3_percent}}%"
+    style="
+        width:{{bar3_percent}}%;
+        height:6px;
+        background:#5720CF;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+<td
+    style="
+        height:6px;
+        background:#EAE6F2;
+        border-radius:5px;
+        font-size:0;
+        line-height:0;
+    "
+>
+
+&nbsp;
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<td class="bar-amount" width="105"
+    align="right"
+    style="
+        width:105px;
+        padding-left:7px;
+        font-size:10px;
+        line-height:13px;
+        color:#403A4C;
+        white-space:nowrap;
+    "
+>
+
+{{bar3_amount}}
+
+&nbsp;
+
+<strong
+    style="
+        color:#5421C7;
+    "
+>
+{{bar3_percent}}%
+</strong>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+UPGRADE BUTTON
+===================================================== -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:20px;
+    "
+>
+
+<tr>
+
+<td>
+
+<a
+    href="{{upgrade_url}}"
+    style="
+        display:inline-block;
+        padding:7px 11px;
+        background:#5720CF;
+        border-radius:5px;
+        font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+        font-size:10px;
+        line-height:13px;
+        font-weight:700;
+        color:#FFFFFF;
+        text-decoration:none;
+    "
+>
+
+Upgrade Plan
+
+<span
+    style="
+        padding-left:8px;
+        font-size:11px;
+    "
+>
+→
+</span>
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+INSIGHTS & RECOMMENDATIONS
+===================================================== -->
+
+<tr>
+
+<td
+    style="
+        padding:4px 42px 18px 42px;
+        background:#FFFFFF;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        background:#F7F3FF;
+        border:1px solid #E5DCF4;
+        border-radius:10px;
+        border-collapse: separate;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        padding:13px 16px 14px 16px;
+    "
+>
+
+
+<!-- =================================================
+SECTION TITLE
+===================================================== -->
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+
+
+<td
+    valign="center"
+    style="
+        padding-left:250px;
+        vertical-align:middle;
+    "
+>
+
+<div
+    style="
+        font-size:15px;
+        margin-top: 5px;
+       
+        line-height:17px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+Insights &amp; Recommendations
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+INSIGHT CARDS
+===================================================== -->
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="
+        margin-top:25px;
+        margin-bottom: 10px;
+    "
+>
+
+<tr>
+
+
+<!-- =================================================
+YOU'RE GROWING
+===================================================== -->
+
+<td class="mobile-stack"
+    width="33.33%"
+    valign="top"
+    style="
+        width:33.33%;
+        padding-right:10px;
+        border-right:1px solid #DDD5EC;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="37"
+    valign="top"
+    style="
+        width:37px;
+        vertical-align:top;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/grow.png"
+    width="31"
+    height="31"
+    alt="Growth"
+    style="
+        display:block;
+        width:31px;
+        height:31px;
+    "
+>
+
+</td>
+
+<td
+    valign="top"
+    style="
+        padding-left:5px;
+        vertical-align:top;
+    "
+>
+
+<div
+    style="
+        font-size:10px;
+        line-height:13px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+{{insight1_title}}
+
+</div>
+
+<div
+    style="
+        margin-top:2px;
+        font-size:10px;
+        line-height:12px;
+        color:#514B5D;
+    "
+>
+
+{{insight1_text}}
+
+<span
+    style="
+        font-size:10px;
+    "
+>
+🚀
+</span>
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+BOOST AUTOMATION
+===================================================== -->
+
+<td class="mobile-stack"
+    width="33.33%"
+    valign="top"
+    style="
+        width:33.33%;
+        padding:0 10px;
+        border-right:1px solid #DDD5EC;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="37"
+    valign="top"
+    style="
+        width:37px;
+        vertical-align:top;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/rocket.png"
+    width="31"
+    height="31"
+    alt="Automation"
+    style="
+        display:block;
+        width:31px;
+        height:31px;
+    "
+>
+
+</td>
+
+<td
+    valign="top"
+    style="
+        padding-left:5px;
+        vertical-align:top;
+    "
+>
+
+<div
+    style="
+        font-size:10px;
+        line-height:13px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+{{insight2_title}}
+
+</div>
+
+<div
+    style="
+        margin-top:2px;
+        font-size:10px;
+        line-height:12px;
+        color:#514B5D;
+    "
+>
+
+{{insight2_text}}
+
+<span
+    style="
+        font-size:10px;
+    "
+>
+🤖
+</span>
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+PRO TIP
+===================================================== -->
+
+<td class="mobile-stack"
+    width="33.33%"
+    valign="top"
+    style="
+        width:33.33%;
+        padding-left:10px;
+        vertical-align:top;
+    "
+>
+
+<table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    width="37"
+    valign="top"
+    style="
+        width:37px;
+        vertical-align:top;
+    "
+>
+
+<img
+    src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/pro.png"
+    width="31"
+    height="31"
+    alt="Pro Tip"
+    style="
+        display:block;
+        width:31px;
+        height:31px;
+    "
+>
+
+</td>
+
+<td
+    valign="top"
+    style="
+        padding-left:5px;
+        vertical-align:top;
+    "
+>
+
+<div
+    style="
+        font-size:10px;
+        line-height:13px;
+        font-weight:800;
+        color:#5421C7;
+    "
+>
+
+{{insight3_title}}
+
+</div>
+
+<div
+    style="
+        margin-top:2px;
+        font-size:10px;
+        line-height:12px;
+        color:#514B5D;
+    "
+>
+
+{{insight3_text}}
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 4 STARTS HERE
+
+Support
+Thank You
+Footer
+
+===================================================== -->
+<!-- =====================================================
+PART 4
+
+Need Help / Support
+Track Query Status
+Visit ChatBucket
+Closing Message
+Footer
+
+===================================================== -->
+
+
+<!-- =====================================================
+NEED IMMEDIATE ASSISTANCE
+===================================================== -->
+
+<tr>
+
+            <td
+              class="px"
+              style="
+                padding:12px 44px 28px 44px;
+                background:#ffffff;
+              "
+            >
+
+              <table
+                role="presentation"
+                width="100%"
+                border="0"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                  background:#F2ECFF;
+                  border:1px solid #E5DCF4;
+                  border-radius:10px;
+                  border-collapse: separate;
+                "
+              >
+
+                <tr>
+
+                  <td style="padding:18px 22px;">
+
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+
+                      <tr>
+
+
+                        <!-- SUPPORT LEFT -->
+
+                        <td
+                          class="support-left mobile-stack"
+                          width="45%"
+                          valign="middle"
+                          style="vertical-align:middle;"
+                        >
+
+                          <table
+                            role="presentation"
+                            border="0"
+                            cellpadding="0"
+                            cellspacing="0"
+                          >
+
+                            <tr>
+
+                              <td valign="middle">
+
+                                <img
+                                  src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/support.png"
+                                  width="80"
+                                  alt="Support"
+                                  style="
+                                    display:block;
+                                    width:80px;
+                                    max-width:100%;
+                                    height:auto;
+                                  "
+                                />
+
+                              </td>
+
+
+                              <td
+                                valign="middle"
+                                style="
+                                  padding-left:15px;
+                                  vertical-align:middle;
+                                "
+                              >
+
+                                <div style="
+                                  color:#1D1733;
+                                  font-family:'Segoe UI',Arial,sans-serif;
+                                  font-size:13px;
+                                  font-weight:800;
+                                ">
+
+                                  Need immediate assistance?
+
+                                </div>
+
+
+                                <div style="
+                                  color:#575168;
+                                  font-family:'Segoe UI',Arial,sans-serif;
+                                  font-size:11px;
+                                  margin-top:4px;
+                                ">
+
+                                  Reach out to us at
+
+                                </div>
+
+
+                                <a
+                                  href="mailto:{{support_email}}"
+                                  style="
+                                    color:#4C22C8;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:12px;
+                                    font-weight:700;
+                                  "
+                                >
+
+                                  {{support_email}}
+
+                                </a>
+
+                              </td>
+
+                            </tr>
+
+                          </table>
+
+                        </td>
+
+
+
+                        <!-- CTA BUTTONS -->
+
+                        <td
+                          class="support-right mobile-stack"
+                          width="55%"
+                          align="right"
+                          valign="middle"
+                          style="vertical-align:middle;"
+                        >
+
+                          <table
+                            role="presentation"
+                            border="0"
+                            cellpadding="0"
+                            cellspacing="0"
+                            align="right"
+                          >
+
+                            <tr>
+
+
+                              <!-- TRACK QUERY -->
+
+                              <td
+                                class="button-cell"
+                                style="padding:0 6px;"
+                              >
+
+                                <!--[if mso]>
+                                <v:roundrect
+                                  xmlns:v="urn:schemas-microsoft-com:vml"
+                                  xmlns:w="urn:schemas-microsoft-com:office:word"
+                                  href="{{track_url}}"
+                                  style="height:42px;v-text-anchor:middle;width:170px;"
+                                  arcsize="18%"
+                                  strokecolor="#5721DB"
+                                  fillcolor="#5721DB">
+                                  <w:anchorlock/>
+                                  <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;">
+                                    Track Query Status &#8594;
+                                  </center>
+                                </v:roundrect>
+                                <![endif]-->
+
+
+                                <!--[if !mso]><!-- -->
+
+                                <a
+                                  href="{{track_url}}"
+                                  class="btn"
+                                  style="
+                                    display:inline-block;
+                                    background:#5721DB;
+                                    background-image:linear-gradient(
+                                      90deg,
+                                      #4C1ACB,
+                                      #6925E7
+                                    );
+                                    color:#ffffff;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:12px;
+                                    font-weight:700;
+                                    padding:12px 17px;
+                                    border-radius:7px;
+                                    white-space:nowrap;
+                                  "
+                                >
+
+                                  Track Query Status
+                                  &nbsp;&#8594;
+
+                                </a>
+
+                                <!--<![endif]-->
+
+                              </td>
+
+
+
+                              <!-- VISIT -->
+
+                              <td
+                                class="button-cell"
+                                style="padding:0 6px;"
+                              >
+
+                                <a
+                                  href="{{visit_url}}"
+                                  class="btn"
+                                  style="
+                                    display:inline-block;
+                                    background:#ffffff;
+                                    color:#5423D6;
+                                    border:1px solid #8E6DE7;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:12px;
+                                    font-weight:700;
+                                    padding:11px 17px;
+                                    border-radius:7px;
+                                    white-space:nowrap;
+                                  "
+                                >
+
+                                  Visit ChatBucket
+                                  &nbsp;&#8594;
+
+                                </a>
+
+                              </td>
+
+
+                            </tr>
+
+                          </table>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+
+          </tr>
+
+
+<!-- =====================================================
+THANK YOU / CLOSING
+===================================================== -->
+
+<tr>
+
+<td
+    style="
+        padding:10px 42px 25px 42px;
+        background:#FFFFFF;
+    "
+>
+
+<table
+    role="presentation"
+    width="100%"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+>
+
+<tr>
+
+<td
+    align="left"
+    style="
+        font-size:11px;
+        line-height:16px;
+        color:#403A4C;
+    "
+>
+
+Thank you for choosing ChatBucket Business.
+
+<br>
+
+We're excited to help your business grow smarter
+with AI-powered communication.
+
+<span
+    style="
+        font-size:10px;
+        color:#5720C9;
+    "
+>
+💜
+</span>
+
+<br><br>
+
+Warm regards,
+
+<br>
+
+<strong
+    style="
+        color:#5720C9;
+        font-weight:800;
+    "
+>
+
+The ChatBucket Business Team
+
+</strong>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+     FOOTER
+====================================================== -->
+
+<tr>
+
+            <td style="
+              background:#10072E;
+              background-image:linear-gradient(
+                180deg,
+                #10072E 0%,
+                #17073F 100%
+              );
+              padding:28px 32px;
+              color:#ffffff;
+            ">
+
+
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+              >
+
+                <tr>
+
+
+                  <!-- LOGO -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="33%"
+                  >
+
+                    <img
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/ChatBucket-logo.png"
+                      class="footer-logo"
+                      width="180"
+                      alt="ChatBucket Business"
+                      style="
+                        display:block;
+                        width:180px;
+                        max-width:100%;
+                        height:auto;
+                      "
+                    />
+
+                  </td>
+
+
+
+                  <!-- SOCIAL -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="34%"
+                    align="center"
+                  >
+
+                    <div style="
+                     font-family: 'Segoe UI', Arial, sans-serif;
+                     font-size: 13px;
+                     color: #ffffff;
+                    margin-bottom: 15px;
+                    ">
+
+                      Follow us
+
+                    </div>
+
+
+                    <table
+                      role="presentation"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      align="center"
+                    >
+
+                      <tr>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.linkedin.com/company/chatbucket/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/linkedin.png"
+                              width="32"
+                              height="32"
+                              alt="LinkedIn"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://x.com/ChatbucketApp">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/X.png"
+                              width="32"
+                              height="32"
+                              alt="X"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.youtube.com/@chatbucket">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/youtube.png"
+                              width="32"
+                              height="32"
+                              alt="YouTube"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.instagram.com/chatbucket_app/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/monthly-report/insta.png"
+                              width="32"
+                              height="32"
+                              alt="Website"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+
+
+                  <!-- COMPANY -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="33%"
+                    align="right"
+                    style="
+                      color:rgba(255,255,255,0.75);
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      line-height:17px;
+                    "
+                  >
+
+                    <strong style="
+                      color:#ffffff;
+                      font-weight:600;
+                    ">
+
+                      ChatBucket Technologies Pvt. Ltd.
+
+                    </strong>
+
+                    <br/>
+
+                    Hyderabad, Telangana, India
+
+                    <br/>
+
+                    <a
+                      href="https://www.instagram.com/chatbucket_app/"
+                      style="
+                        color:#A78BFA;
+                        font-weight:600;
+                      "
+                    >
+
+                      www.chatbucket.business
+
+                    </a>
+
+                  </td>
+
+
+                </tr>
+
+
+
+                <!-- DIVIDER -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="padding-top:18px;"
+                  >
+
+                    <div style="
+                      height:1px;
+                      background:rgba(255,255,255,0.10);
+                      font-size:0;
+                      line-height:0;
+                    ">
+
+                      &nbsp;
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+
+
+                <!-- COPYRIGHT -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="
+                          padding-top: 14px;
+                          color: rgba(255, 255, 255, 0.60);
+                           font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 13px;
+                    "
+                  >
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+
+                      <tr>
+
+
+                        <td
+                          class="footer-bottom-left"
+                          align="left"
+                        >
+
+                          &copy; {{year}} ChatBucket Technologies Pvt. Ltd.
+                          All rights reserved.
+
+                        </td>
+
+
+                        <td
+                          class="footer-bottom-right"
+                          align="right"
+                        >
+
+                          <a
+                            href="{{privacy_policy_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Privacy Policy
+
+                          </a>
+
+                          <span style="
+                            opacity:0.4;
+                            margin:0 8px;
+                          ">
+
+                            |
+
+                          </span>
+
+                          <a
+                            href="{{terms_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Terms of Service
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+
+              </table>
+
+            </td>
+
+          </tr>
+
+
+<!-- =====================================================
+END OF EMAIL CONTAINER
+===================================================== -->
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</body>
+
+</html>

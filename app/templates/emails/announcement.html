@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{headline}}</title>
+
+  <style>
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #eef0f5;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+      display: block;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    @media only screen and (max-width: 800px) {
+      .container {
+        width: 100% !important;
+      }
+
+      .mobile-stack {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      .mobile-padding {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+
+      .mobile-center {
+        text-align: center !important;
+      }
+
+      .hero-title {
+        font-size: 32px !important;
+        line-height: 38px !important;
+      }
+
+      .hero-image {
+        width: 260px !important;
+        max-width: 100% !important;
+        margin: 25px auto 0 !important;
+      }
+
+      .button {
+        display: block !important;
+        text-align: center !important;
+        margin: 8px 0 !important;
+      }
+    }
+  
+/* --- mobile overrides (appended; absolute caps break the width cycle) --- */
+@media only screen and (max-width:800px) {
+  .container { width: 100% !important; }
+  /* An auto-layout table cannot shrink below the sum of its columns'
+     min-content, whatever width you give it. Fixed layout makes the outer
+     table honour 100% and pushes the constraint inward, where the stacking
+     rules above can act on it. Applied only to the outermost table — fixed
+     layout on nested ones would redistribute their columns by the first row
+     and distort the OTP grid and the progress bars. */
+  .container { table-layout: fixed !important; max-width: 100% !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+  /* A hero carrying width="430" is a hard floor for every table above it.
+     Capping it in px, not %, is what lets the layout reach 360. */
+  .hero-image, .hero-img {
+    width: 280px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  h1 { font-size: 26px !important; line-height: 32px !important; }
+  h2 { font-size: 21px !important; line-height: 27px !important; }
+  .hero-title { font-size: 26px !important; line-height: 32px !important; }
+  /* Design's own layout classes for the shared footer and feature strips.
+     These rows are what set the table's minimum width — a table cannot shrink
+     below the sum of its columns' min-content, so `width:100%` above them was
+     never going to be enough. */
+  .footer-col,
+  .footer-bottom-left,
+  .footer-bottom-right,
+  .support-left,
+  .support-right {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+  /* Feature strips read better two-up than as one tall column. */
+  .feature-cell {
+    display: inline-block !important;
+    width: 48% !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    text-align: center !important;
+  }
+  .feature-separator { display: none !important; }
+  /* The footer's two call-to-action buttons carry their own nowrap, so the
+     pair is a ~300px floor the surrounding table cannot shrink past. Letting
+     the label wrap costs one line and removes the last overflow. */
+  /* Two buttons side by side in a 340px footer wrap to three cramped lines
+     each. Stacked and centred they stay one line and stay tappable. */
+  .btn, a.btn {
+    white-space: normal !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 260px !important;
+    margin: 8px auto !important;
+    text-align: center !important;
+  }
+
+  /* `white-space:nowrap` is a hard floor: "₹1,678.00 / ₹9,875.00  17%" cannot
+     be squeezed, so the table around it cannot shrink either. On a phone it
+     is better for that to wrap onto two lines than for the whole email to
+     scroll sideways. */
+  td, th { white-space: normal !important; }
+  /* `overflow-wrap` breaks a string only when it genuinely cannot fit;
+     `word-break: break-word` breaks eagerly and turned
+     "support@chatbucket.business" into "support@chatbucket.b / usiness". */
+  td, div, p, span, a { overflow-wrap: break-word !important; }
+
+
+}
+</style>
+</head>
+
+<body>
+
+  
+
+  <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#eef0f5;">
+    <tr>
+      <td align="center" style="padding:20px 10px;">
+
+        <table role="presentation" class="container" width="620" border="0" cellpadding="0" cellspacing="0" style="
+          width:800px;
+          max-width:800px;
+          background:#ffffff;
+        ">
+
+          <!-- ============================================
+             HERO SECTION
+        ============================================= -->
+
+          <tr>
+            <td class="mobile-padding" style="
+              padding:30px 34px 2px;
+              background:#190b42;
+              background-image:linear-gradient(
+                135deg,
+                #17103d 0%,
+                #42137b 58%,
+                #160a39 100%
+              );
+            ">
+
+              <!-- LOGO -->
+
+              <img
+                src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/ChatBucket-logo.png"
+                width="180" alt="ChatBucket Business" style="
+                width:180px;
+                max-width:100%;
+                height:auto;
+              ">
+
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"
+                style="margin-top:0px;">
+                <tr>
+
+                  <!-- HERO CONTENT -->
+
+                  <td class="mobile-stack" width="55%" valign="middle" style="vertical-align:middle;">
+
+                    <span style="
+                      display:inline-block;
+                      background:#ffffff;
+                      color:#6524c8;
+                      padding:6px 13px;
+                      border-radius:20px;
+                      font-size:11px;
+                      line-height:11px;
+                      font-weight:700;
+                      letter-spacing:.3px;
+                    ">
+                      📣 &nbsp;PRESS NOTE
+                    </span>
+
+                    <div class="hero-title" style="
+                      color:#ffffff;
+                      font-size:38px;
+                      line-height:44px;
+                      font-weight:800;
+                      margin-top:16px;
+                      letter-spacing:.3px;
+                    ">
+                      {{hero_title}}
+                    </div>
+
+                    <p style="
+                      margin:10px 0 0;
+                      color:#ded8ea;
+                      font-size:13px;
+                      line-height:19px;
+                    ">
+                      {{hero_subtitle}}
+                    </p>
+
+                  </td>
+
+
+                  <!-- HERO IMAGE -->
+
+                  <td class="mobile-stack mobile-center" width="45%" align="right" valign="middle">
+
+                    <img class="hero-image"
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/hero_image.png"
+                      width="250" alt="ChatBucket Announcement" style="
+                      width:400px;
+                      max-width:100%;
+                      height:auto;
+                      margin-left:auto;
+                      mix-blend-mode: lighten;
+                    ">
+
+                  </td>
+
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+
+          <!-- ============================================
+             INFORMATION / META SECTION
+        ============================================= -->
+
+          <tr>
+            <td class="mobile-padding" style="
+              padding:26px 32px 15px;
+              background:#ffffff;
+            ">
+
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="
+                background:#faf9fe;
+                border:1px solid #eee8f8;
+                border-radius:9px;
+                 border-collapse:separate;
+                 border-spacing:0;
+              ">
+                <tr>
+
+                  <!-- DATE -->
+
+                  <td class="mobile-stack" width="25%" valign="middle" style="
+                    padding:14px 12px;
+                    border-right:1px solid #e6e0f2;
+                  ">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td valign="middle">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/date.png"
+                            width="30" height="30" alt="Date">
+
+                        </td>
+
+                        <td valign="middle" style="padding-left:9px;">
+
+                          <div style="
+                            font-size:9px;
+                            font-weight:700;
+                            color:#191525;
+                          ">
+                            DATE
+                          </div>
+
+                          <div style="
+                            font-size:10px;
+                            font-weight:700;
+                            color:#191525;
+                            margin-top:4px;
+                          ">
+                            {{date}}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+
+                  <!-- TIME -->
+
+                  <td class="mobile-stack" width="25%" valign="middle" style="
+                    padding:14px 12px;
+                    border-right:1px solid #e6e0f2;
+                  ">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td>
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/time.png"
+                            width="30" height="30" alt="Time">
+
+                        </td>
+
+                        <td style="padding-left:9px;">
+
+                          <div style="
+                            font-size:9px;
+                            font-weight:700;
+                          ">
+                            TIME
+                          </div>
+
+                          <div style="
+                            font-size:10px;
+                            font-weight:700;
+                            margin-top:4px;
+                          ">
+                            {{time}}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+
+                  <!-- CATEGORY -->
+
+                  <td class="mobile-stack" width="25%" valign="middle" style="
+                    padding:14px 12px;
+                    border-right:1px solid #e6e0f2;
+                  ">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td>
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/catagory.png"
+                            width="30" height="30" alt="Category">
+
+                        </td>
+
+                        <td style="padding-left:9px;">
+
+                          <div style="
+                            font-size:9px;
+                            font-weight:700;
+                          ">
+                            CATEGORY
+                          </div>
+
+                          <div style="
+                            font-size:10px;
+                            font-weight:700;
+                            margin-top:4px;
+                          ">
+                            {{category}}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+
+                  <!-- REFERENCE -->
+
+                  <td class="mobile-stack" width="25%" valign="middle" style="padding:14px 12px;">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td>
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/id.png"
+                            width="30" height="30" alt="Reference ID">
+
+                        </td>
+
+                        <td style="padding-left:9px;">
+
+                          <div style="
+                            font-size:9px;
+                            font-weight:700;
+                          ">
+                            REFERENCE ID
+                          </div>
+
+                          <div style="
+                            font-size:10px;
+                            font-weight:700;
+                            margin-top:4px;
+                          ">
+                            {{reference_id}}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+
+          <!-- ============================================
+             ANNOUNCEMENT
+        ============================================= -->
+
+          <tr>
+            <td class="mobile-padding" style="padding:18px 34px;">
+
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="
+                background:#120451;
+                background-image:linear-gradient(
+                  135deg,
+                  #170767,
+                  #0b0345
+                );
+                border-radius:9px;
+              ">
+
+                <tr>
+
+                  <!-- ANNOUNCEMENT IMAGE -->
+
+                  <td class="mobile-stack" width="32%" valign="middle" style="padding:16px;">
+
+                    <img
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/trophy.png"
+                      width="220" alt="Announcement" style="
+                      width:220px;
+                      max-width:100%;
+                      height:auto;
+                      border-radius:7px;
+                    ">
+
+                  </td>
+
+
+                  <!-- ANNOUNCEMENT CONTENT -->
+
+                  <td class="mobile-stack" width="68%" valign="middle" style="
+                    padding:35px 20px 25px 5px;
+                  ">
+
+                    <span style="
+                      display:inline-block;
+                      background:#6821dc;
+                      color:#ffffff;
+                      padding:5px 9px;
+                      border-radius:4px;
+                      font-size:9px;
+                      font-weight:700;
+                    ">
+                      ANNOUNCEMENT
+                    </span>
+
+                    <div style="
+                      color:#ffffff;
+                      font-size:20px;
+                      line-height:26px;
+                      font-weight:700;
+                      margin-top:10px;
+                    ">
+                      {{headline}}
+                    </div>
+
+                    <div style="
+                      color:#ddd8f2;
+                      font-size:15px;
+                      line-height:17px;
+                      margin-top:7px;
+                    ">
+                      {{summary}}
+                    </div>
+
+                    <div style="
+                      height:1px;
+                      background:#342079;
+                      margin:11px 0;
+                    "></div>
+
+                    <div style="
+                      color:#ffffff;
+                      font-size:12px;
+                      line-height:21px;
+                    ">
+
+                      {{#highlights}}
+                      <span style="color:#8d56ff;">✓</span>
+                      &nbsp;{{.}}
+
+                      <br>
+                      {{/highlights}}
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+
+
+          <!-- ============================================
+             QUOTE + ABOUT CHATBUCKET
+        ============================================= -->
+
+          <tr>
+            <td class="mobile-padding" style="padding:14px 34px;">
+
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="
+                background:#faf8ff;
+                border:1px solid #e8e0f5;
+                border-radius:9px;
+                 border-collapse:separate;
+                 border-spacing:0;
+              ">
+
+                <tr>
+
+                  <!-- QUOTE -->
+
+                  <td class="mobile-stack" width="55%" valign="middle" style="
+                    padding:18px;
+                    border-right:1px solid #ddd3ed;
+
+                  ">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td valign="top">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/quote.png"
+                            width="34" alt="Quote">
+
+                        </td>
+
+                        <td valign="top" style="
+                          padding-left:13px;
+                          color:#282238;
+                          font-size:12px;
+                          line-height:16px;
+                        ">
+
+                          {{quote}}
+
+                          <div style="
+                            font-weight:700;
+                            margin-top:13px;
+                          ">
+                            — {{quote_author}}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+
+                  <!-- ABOUT -->
+
+                  <td class="mobile-stack" width="45%" valign="middle" style="padding:18px;">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td valign="middle">
+                          
+
+                        </td>
+
+                        <td valign="middle" style="padding-left:12px;">
+
+                          <div style="
+                            color:#4d1caa;
+                            font-size:12px;
+                            font-weight:700;
+                          ">
+                            About ChatBucket
+                          </div>
+
+                          <div style="
+                            color:#302a3c;
+                            font-size:12px;
+                            line-height:14px;
+                            margin-top:5px;
+                          ">
+                            ChatBucket is an AI-powered communication
+                            platform that breaks language barriers and
+                            empowers businesses &amp; individuals to
+                            connect, communicate, and collaborate
+                            seamlessly.
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+
+
+          <!-- ============================================
+             SUPPORT / CTA
+        ============================================= -->
+
+          <tr>
+            <td class="mobile-padding" style="padding:16px 34px 20px;">
+
+              <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="
+                background:#f7f4ff;
+                border:1px solid #e8e0f7;
+                border-radius:9px;
+                 border-collapse:separate;
+                 border-spacing:0;
+              ">
+
+                <tr>
+
+                  <!-- SUPPORT -->
+
+                  <td class="mobile-stack" width="47%" valign="middle" style="padding:14px 16px;">
+
+                    <table role="presentation">
+                      <tr>
+
+                        <td>
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/support.png"
+                            width="62" alt="Support">
+
+                        </td>
+
+                        <td style="padding-left:12px;">
+
+                          <div style="
+                            font-size:14px;
+                            font-weight:700;
+                            color:#211c2c;
+                          ">
+                            Need immediate assistance?
+                          </div>
+
+                          <div style="
+                            font-size:9px;
+                            line-height:14px;
+                            margin-top:5px;
+                            color:#393344;
+                          ">
+                            Reach out to us at
+                            <br>
+
+                            <a href="mailto:{{support_email}}" style="
+                              color:#4e1aae;
+                              font-weight:700;
+                              font-size: 12px;
+                            ">
+                              {{support_email}}
+                            </a>
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    </table>
+
+                  </td>
+
+
+                  <!-- BUTTONS -->
+
+                  <td class="mobile-stack" width="53%" align="right" valign="middle" style="padding:14px 16px;">
+
+                    <a class="button" href="{{track_url}}" style="
+                      display:inline-block;
+                      background:#5b19d5;
+                      color:#ffffff;
+                      padding:13px 16px;
+                      border-radius:7px;
+                      font-size:10px;
+                      font-weight:700;
+                    ">
+                      Track Query Status &nbsp;→
+                    </a>
+
+                    &nbsp;
+
+                    <a class="button" href="{{visit_url}}" style="
+                      display:inline-block;
+                      background:#ffffff;
+                      color:#4e1aae;
+                      padding:12px 16px;
+                      border:1px solid #8a5be2;
+                      border-radius:7px;
+                      font-size:10px;
+                      font-weight:700;
+                    ">
+                      Visit ChatBucket &nbsp;→
+                    </a>
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+
+
+
+
+
+
+
+
+          <!-- ============================================
+             FOOTER
+        ============================================= -->
+
+          <!-- ============ THANK YOU LINE ============ -->
+          <tr>
+            <td align="center" style="padding:24px 20px 22px 20px;background:#ffffff;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td
+                    style="color:#4B4770;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;vertical-align:middle;">
+                    Thank you for being part of our journey.</td>
+                  <td style="padding:0 12px;color:#D9CBFF;vertical-align:middle;">|</td>
+                  <td style="vertical-align:middle;">
+                    <!-- Heart icon -->
+                    <img src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/love.png"
+                      width="16" height="16" alt="Heart"
+                      style="display:block;border:0;outline:none;text-decoration:none;max-width:100%;" />
+                  </td>
+                  <td
+                    style="padding-left:6px;color:#141033;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:800;vertical-align:middle;">
+                    Team ChatBucket</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td
+              style="background:#120730;background-image:linear-gradient(180deg,#120730 0%,#1B0B4A 100%);padding:28px 32px;color:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top" width="33%">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td valign="middle" style="padding-right:10px;">
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/announcements/ChatBucket-logo.png"
+                            width="150" height="100%" alt="Logo" style="display:block;" />
+                        </td>
+
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="top" width="34%" align="center">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+
+                      <tr>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.linkedin.com/company/chatbucket/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/contact-us/linkedin.png"
+                              width="32" height="32" alt="LinkedIn" style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              " />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://x.com/ChatbucketApp">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/contact-us/X.png"
+                              width="32" height="32" alt="X" style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              " />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.youtube.com/@chatbucket">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/contact-us/youtube.png"
+                              width="32" height="32" alt="YouTube" style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              " />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.instagram.com/chatbucket_app/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/contact-us/insta.png"
+                              width="32" height="32" alt="Website" style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              " />
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+                  </td>
+                  <td valign="top" width="33%" align="right"
+                    style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.6; padding-bottom: 15px;">
+                    <strong style="color:#fff;">ChatBucket Technologies Pvt. Ltd.</strong><br />
+                    Hyderabad, Telangana, India<br />
+                    <a href="{{visit_url}}" style="color:#A78BFA;text-decoration:none;font-weight:600;">www.chatbucket.business</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3"
+                    style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;color:rgba(255,255,255,0.6);font-size:11px; padding-top: 15px;">
+                    <table width="100%">
+                      <tr>
+                        <td>&copy; {{year}} ChatBucket Technologies Pvt. Ltd. All rights reserved.</td>
+                        <td align="right">
+                          <a href="{{privacy_policy_url}}" style="color:rgba(255,255,255,0.7);text-decoration:none;margin-left:8px;">Privacy
+                            Policy</a>
+                          <span style="opacity:0.4;margin:0 6px;">|</span>
+                          <a href="{{terms_url}}" style="color:rgba(255,255,255,0.7);text-decoration:none;">Terms of Service</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

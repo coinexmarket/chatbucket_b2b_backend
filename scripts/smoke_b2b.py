@@ -37,6 +37,7 @@ import hashlib  # noqa: E402
 import hmac  # noqa: E402
 import json  # noqa: E402
 from dataclasses import replace  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
 from decimal import Decimal  # noqa: E402
 from types import SimpleNamespace  # noqa: E402
 
@@ -148,9 +149,38 @@ def main() -> int:
         check("terms acceptance is dated + versioned", bool(j["user"].get("terms_accepted_at")) and j["user"].get("terms_version") == "v1", r.text)
         check("new account starts unverified", j["user"].get("email_verified") is False, r.text)
         verify_token = j.get("verification_token")
+        verify_code = j.get("verification_code")
         check("register returns a dev verification token", bool(verify_token), r.text)
-        check("verification email sent", any(m["subject"] == "Confirm your ChatBucket email" for m in outbox), str(outbox))
-        check("verification email carries the link", any(f"?token={verify_token}" in m["body"] for m in outbox), str(outbox))
+        check("register returns a dev verification code", bool(verify_code) and len(verify_code) == 6, r.text)
+        verification_mail = next(
+            (m for m in outbox if m["subject"] == f"{verify_code} is your ChatBucket verification code"),
+            None,
+        )
+        check("verification email sent", verification_mail is not None, str([m["subject"] for m in outbox]))
+        check("verification email carries the link", f"?token={verify_token}" in (verification_mail or {}).get("body", ""), str(verification_mail))
+        check("verification email carries the code", verify_code in (verification_mail or {}).get("body", ""), str(verification_mail))
+        # Each digit is set in its own box, so the code only appears in the
+        # HTML split apart — assert the boxes, not the joined string.
+        verification_html = (verification_mail or {}).get("html") or ""
+        check("verification email has an HTML part", verification_html.startswith("<!DOCTYPE html>"), verification_html[:80])
+        check(
+            "OTP digits rendered into the design's boxes",
+            all(
+                f'text-align:center;">{digit}</div>' in verification_html
+                for digit in verify_code or "x"
+            ),
+            verification_html[:80],
+        )
+        check("HTML carries no unrendered placeholders", "{{" not in verification_html, verification_html[:80])
+
+        welcome_mail = next((m for m in outbox if m["subject"] == "Welcome to ChatBucket"), None)
+        check("welcome email sent on register", welcome_mail is not None, str([m["subject"] for m in outbox]))
+        check("welcome email is addressed to the new account", (welcome_mail or {}).get("to") == "ops@acme.io", str(welcome_mail))
+        check(
+            "welcome email hides the credit panel when no bonus is granted",
+            "Free Credits" not in ((welcome_mail or {}).get("html") or ""),
+            str((welcome_mail or {}).get("html", ""))[:200],
+        )
 
         def register_body(**overrides):
             body = {
@@ -766,11 +796,24 @@ def main() -> int:
         # The memory backend stores the body pre-encoding, so encode it the way
         # the SMTP backend would and read it back as a mail client does. A
         # reset link that survives everything except MIME is still a dead link.
-        built = _build_message(mail.get("to", ""), mail.get("subject", ""), mail.get("body", ""))
-        decoded = built.get_content()
+        built = _build_message(
+            mail.get("to", ""), mail.get("subject", ""), mail.get("body", ""), mail.get("html"), None
+        )
+        text_part = built.get_body(preferencelist=("plain",))
+        html_part = built.get_body(preferencelist=("html",))
+        decoded = text_part.get_content()
         check("link survives MIME encode/decode", f"?token={reset_token}" in decoded, decoded[:400])
-        check("body stays 7-bit safe (no 8BITMIME needed)", built["Content-Transfer-Encoding"] != "8bit", str(built["Content-Transfer-Encoding"]))
-        check("From header uses the configured sender", built["From"] == "ChatBucket <no-reply@chatbucket.chat>", str(built["From"]))
+        check("designed HTML travels as the alternative part", html_part is not None and "<!DOCTYPE html>" in html_part.get_content(), str(built.get_content_type()))
+        # The templates carry rupee signs, em dashes and emoji. Left to choose,
+        # Python encodes those 8bit, which a server without 8BITMIME may reject.
+        for part in built.walk():
+            if part.get_content_maintype() == "text":
+                check(
+                    f"{part.get_content_subtype()} part stays 7-bit safe (no 8BITMIME needed)",
+                    part["Content-Transfer-Encoding"] != "8bit",
+                    str(part["Content-Transfer-Encoding"]),
+                )
+        check("From header uses the configured sender", built["From"] == "ChatBucket <support@chatbucket.business>", str(built["From"]))
         r = client.post("/auth/reset-password", json={"token": reset_token, "new_password": "finalsecret9"})
         check("POST /auth/reset-password ok", r.status_code == 200, r.text)
         r = client.post("/auth/login", json={"email": "ops@acme.io", "password": "finalsecret9"})
@@ -1194,6 +1237,271 @@ def main() -> int:
             for key in ("OPS_SECRET", "ENGINE_FREE_QUOTAS"):
                 os.environ.pop(key, None)
             get_settings.cache_clear()
+
+        # --- email verification by code ---------------------------------
+        outbox.clear()
+        r = client.post("/auth/register", json={
+            "name": "Otp Tester", "email": "otp@acme.io", "password": "supersecret1",
+            "mobile": "+919000000009", "acceptTerms": True,
+        })
+        otp_code = r.json().get("verification_code")
+        otp_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
+        check("register issues a six-digit code", (otp_code or "").isdigit() and len(otp_code) == 6, r.text)
+
+        r = client.post("/auth/verify-email/otp", json={"email": "otp@acme.io", "code": "000000" if otp_code != "000000" else "111111"})
+        check("wrong code -> 400", r.status_code == 400, r.text)
+        r = client.post("/auth/verify-email/otp", json={"email": "nobody@nowhere.io", "code": otp_code})
+        check("code for an unknown address -> 400", r.status_code == 400, r.text)
+        r = client.post("/auth/verify-email/otp", json={"email": "otp@acme.io", "code": "12345"})
+        check("a five-digit code -> 422", r.status_code == 422, r.text)
+        outbox.clear()
+        r = client.post("/auth/verify-email/otp", json={"email": "otp@acme.io", "code": otp_code})
+        check("POST /auth/verify-email/otp confirms the address", r.status_code == 200, r.text)
+        r = client.get("/profile", headers=otp_auth)
+        check("profile reports verified after the code", r.json()["data"]["email_verified"] is True, r.text)
+
+        # Verifying is a real change in what the account can do, not a
+        # formality, so it gets its own confirmation.
+        confirmation = next((m for m in outbox if m["to"] == "otp@acme.io"), {})
+        check("verifying sends a confirmation", confirmation.get("subject") == "Your ChatBucket email is verified", str([m["subject"] for m in outbox]))
+        check("the confirmation carries the designed HTML", (confirmation.get("html") or "").startswith("<!DOCTYPE"), str(confirmation.get("html"))[:60])
+        check("confirmation HTML has no unrendered placeholders", "{{" not in (confirmation.get("html") or ""), str(confirmation.get("html"))[:60])
+        check("the confirmation replies to support", confirmation.get("reply_to") == "support@chatbucket.business", str(confirmation.get("reply_to")))
+
+        outbox.clear()
+        r = client.post("/auth/verify-email/otp", json={"email": "otp@acme.io", "code": otp_code})
+        check("re-verifying sends no second confirmation", outbox == [], str([m["subject"] for m in outbox]))
+        r = client.post("/auth/verify-email/otp", json={"email": "otp@acme.io", "code": otp_code})
+        check("re-verifying is idempotent, not an error", r.status_code == 200 and "already" in r.json()["message"], r.text)
+
+        # The code is spent, so the link that came with it must be dead too.
+        r = client.post("/auth/register", json={
+            "name": "Both Creds", "email": "both@acme.io", "password": "supersecret1",
+            "mobile": "+919000000010", "acceptTerms": True,
+        })
+        both = r.json()
+        r = client.post("/auth/verify-email/otp", json={"email": "both@acme.io", "code": both["verification_code"]})
+        check("verifying by code succeeds", r.status_code == 200, r.text)
+        r = client.post("/auth/verify-email", json={"token": both["verification_token"]})
+        check("using the code retires the link too", r.status_code == 400, r.text)
+
+        # Guessing is capped in the database, so the cap survives a restart and
+        # holds across workers.
+        r = client.post("/auth/register", json={
+            "name": "Brute Force", "email": "brute@acme.io", "password": "supersecret1",
+            "mobile": "+919000000011", "acceptTerms": True,
+        })
+        brute_code = r.json()["verification_code"]
+        wrong = "000000" if brute_code != "000000" else "111111"
+        codes = [client.post("/auth/verify-email/otp", json={"email": "brute@acme.io", "code": wrong}).status_code for _ in range(6)]
+        check("wrong codes are refused", codes[:5] == [400] * 5, str(codes))
+        check("too many wrong codes burns the code -> 429", codes[5] == 429, str(codes))
+        r = client.post("/auth/verify-email/otp", json={"email": "brute@acme.io", "code": brute_code})
+        check("the real code no longer works after the cap", r.status_code == 429, r.text)
+
+        # --- the deposit receipt -----------------------------------------
+        outbox.clear()
+        # Whichever account `auth` is by this point in the run — the receipt
+        # must go to the holder of the account that was topped up, not to
+        # whoever this block happens to have been written around.
+        payer_email = client.get("/profile", headers=auth).json()["data"]["email"]
+        r = client.post("/billing/top-up", headers=auth, json={"amountInr": 250})
+        receipt_payment = r.json()["data"]["id"]
+        r = client.post(f"/billing/payments/{receipt_payment}/confirm", headers=secret_hdr, json={"providerPaymentId": "pay_receipt", "method": "upi"})
+        check("top-up confirmed for the receipt test", r.status_code == 200, r.text)
+        receipt = next((m for m in outbox if m["subject"].startswith("Deposit successful")), {})
+        check("a confirmed payment emails a receipt", bool(receipt), str([m["subject"] for m in outbox]))
+        check("receipt goes to the account holder", receipt.get("to") == payer_email, str(receipt.get("to")))
+        check("receipt states the amount", "250.00" in receipt.get("body", ""), receipt.get("body", ""))
+        check("receipt names the gateway payment", "pay_receipt" in receipt.get("body", ""), receipt.get("body", ""))
+        check("receipt carries the designed HTML", (receipt.get("html") or "").startswith("<!DOCTYPE html>"), str(receipt.get("html"))[:80])
+        check("receipt HTML has no unrendered placeholders", "{{" not in (receipt.get("html") or ""), str(receipt.get("html"))[:80])
+
+        outbox.clear()
+        r = client.post(f"/billing/payments/{receipt_payment}/confirm", headers=secret_hdr, json={"providerPaymentId": "pay_receipt"})
+        check("a redelivered webhook reads as a replay", r.json()["replayed"] is True, r.text)
+        check("a replayed confirmation sends no second receipt", outbox == [], str(outbox))
+
+        # --- operator broadcasts ------------------------------------------
+        os.environ["OPS_SECRET"] = "ops-secret-value"
+        get_settings.cache_clear()
+        try:
+            ops = {"X-Ops-Secret": "ops-secret-value"}
+            announcement = {
+                "subject": "ChatBucket news", "headline": "Something happened",
+                "summary": "A short summary of the thing that happened.",
+                "highlights": ["One", "Two"],
+            }
+
+            r = client.post("/notifications/announcement", json={**announcement, "confirm": True})
+            check("announcement without the ops secret -> 401", r.status_code == 401, r.text)
+            r = client.post("/notifications/announcement", headers=ops, json=announcement)
+            check("announcement with neither confirm nor testEmail -> 422", r.status_code == 422, r.text)
+
+            outbox.clear()
+            r = client.post("/notifications/announcement", headers=ops, json={**announcement, "testEmail": "reviewer@acme.io"})
+            check("a test send goes to one address only", r.status_code == 200 and len(outbox) == 1, str(outbox))
+            check("the test send says it recorded nothing", r.json()["preview"] is True, r.text)
+            check("the test copy reaches the reviewer", outbox[0]["to"] == "reviewer@acme.io", str(outbox[0]))
+            check("announcement HTML has no unrendered placeholders", "{{" not in (outbox[0].get("html") or ""), str(outbox[0].get("html"))[:80])
+            preview_reference = r.json()["reference_id"]
+
+            outbox.clear()
+            r = client.post("/notifications/announcement", headers=ops, json={**announcement, "confirm": True, "referenceId": "ANN-TEST-1"})
+            first = r.json()["data"]
+            check("a confirmed announcement reaches verified accounts", r.status_code == 200 and first["sent"] >= 1, r.text)
+            check("unverified accounts are left out", first["sent"] <= first["considered"], r.text)
+            check("every recipient got the designed HTML", all("{{" not in (m.get("html") or "x") for m in outbox), str(len(outbox)))
+            sent_first = first["sent"]
+
+            r = client.post("/notifications/announcement", headers=ops, json={**announcement, "confirm": True, "referenceId": "ANN-TEST-1"})
+            repeat = r.json()["data"]
+            check("re-running the same announcement mails nobody twice", repeat["sent"] == 0 and repeat["skipped"] == sent_first, r.text)
+            check("a preview does not consume the reference id", preview_reference != "ANN-TEST-1", preview_reference)
+
+            outbox.clear()
+            r = client.post("/notifications/maintenance", headers=ops, json={
+                "subject": "Scheduled maintenance",
+                "startsAt": "2026-09-01T02:00:00Z",
+                "endsAt": "2026-09-01T04:00:00Z",
+                "confirm": True,
+            })
+            check("maintenance notice sends", r.status_code == 200 and r.json()["data"]["sent"] >= 1, r.text)
+            check("maintenance reaches unverified accounts too", r.json()["data"]["sent"] >= sent_first, r.text)
+            check("maintenance HTML has no unrendered placeholders", all("{{" not in (m.get("html") or "x") for m in outbox), str(len(outbox)))
+
+            r = client.post("/notifications/maintenance", headers=ops, json={
+                "subject": "Backwards", "startsAt": "2026-09-01T04:00:00Z",
+                "endsAt": "2026-09-01T02:00:00Z", "confirm": True,
+            })
+            check("a window that ends before it starts -> 422", r.status_code == 422, r.text)
+
+            outbox.clear()
+            r = client.post("/notifications/onboarding-nudges", headers=ops)
+            check("the nudge run reports what it did", r.status_code == 200 and "sent" in r.json()["data"], r.text)
+
+            # --- chasing accounts that never verified ---------------------
+            # With REQUIRE_EMAIL_VERIFICATION on, an unverified account is
+            # stuck: credited, signed in, and unable to create a key.
+            client.post("/auth/register", json={
+                "name": "Never Verified", "email": "stuck@acme.io",
+                "password": "supersecret1", "mobile": "+919000000021", "acceptTerms": True,
+            })
+
+            async def age_signup():
+                await database.users_collection().update_one(
+                    {"email": "stuck@acme.io"},
+                    {"$set": {"created_at": datetime.now(timezone.utc) - timedelta(hours=30)}},
+                )
+            anyio.run(age_signup)
+
+            outbox.clear()
+            r = client.post("/notifications/verification-reminders", headers=ops)
+            check("the verification reminder run reports what it did", r.status_code == 200 and "sent" in r.json()["data"], r.text)
+            reminder = next((m for m in outbox if m["to"] == "stuck@acme.io"), {})
+            check("a stuck account is chased", bool(reminder), str([m["to"] for m in outbox]))
+            check("accounts that already verified are left alone", all(m["to"] == "stuck@acme.io" for m in outbox), str([m["to"] for m in outbox]))
+
+            # The code from signup expired within minutes, so the reminder has
+            # to mint a fresh one — resending a dead code is worse than
+            # sending nothing.
+            fresh_code = reminder.get("subject", "").split()[0]
+            check("the reminder carries a six-digit code", fresh_code.isdigit() and len(fresh_code) == 6, reminder.get("subject", ""))
+            v = client.post("/auth/verify-email/otp", json={"email": "stuck@acme.io", "code": fresh_code})
+            check("and that fresh code actually works", v.status_code == 200, v.text)
+
+            outbox.clear()
+            client.post("/notifications/verification-reminders", headers=ops)
+            check("nobody is chased twice", outbox == [], str([m["to"] for m in outbox]))
+            r = client.post("/notifications/verification-reminders")
+            check("the reminder run needs the ops secret -> 401", r.status_code == 401, r.text)
+            r = client.post("/notifications/free-credit-reminders", headers=ops)
+            check("the credit reminder run reports what it did", r.status_code == 200 and "sent" in r.json()["data"], r.text)
+            r = client.post("/notifications/monthly-reports", headers=ops, json={})
+            check("the monthly run names the month it covered", r.status_code == 200 and len(r.json()["month"]) == 7, r.text)
+            check("accounts with no usage last month get no report", r.json()["data"]["sent"] == 0, r.text)
+            r = client.post("/notifications/monthly-reports", json={})
+            check("the monthly run needs the ops secret -> 401", r.status_code == 401, r.text)
+
+            # This run's metering all landed in the current month, so asking for
+            # that month is what actually builds a report from real records.
+            outbox.clear()
+            this_month = datetime.now(timezone.utc).strftime("%Y-%m-01T00:00:00Z")
+            r = client.post("/notifications/monthly-reports", headers=ops, json={"month": this_month})
+            check("accounts with usage do get a report", r.status_code == 200 and r.json()["data"]["sent"] >= 1, r.text)
+            report_mail = next((m for m in outbox if m["subject"].startswith("Your ChatBucket usage report")), {})
+            check("the report renders from real usage records", "{{" not in (report_mail.get("html") or "x"), str(report_mail.get("html"))[:200])
+            check("the report states the reporting period", " - " in report_mail.get("subject", ""), report_mail.get("subject", ""))
+            body = report_mail.get("body", "")
+            check("the report lists the four headline metrics", body.count("vs ") == 4, body)
+            check("the report names the plan", "Plan: " in body, body)
+            check("the report ranks services by spend", "Top services by spend:" in body, body)
+
+            r = client.post("/notifications/monthly-reports", headers=ops, json={"month": this_month})
+            check("re-running a month mails nobody twice", r.json()["data"]["sent"] == 0, r.text)
+        finally:
+            os.environ.pop("OPS_SECRET", None)
+            get_settings.cache_clear()
+
+        # --- the notification scheduler ------------------------------------
+        from app import notifications  # noqa: PLC0415
+
+        # Eligibility is a pure function of the clock, so it can be asserted
+        # without waiting for one.
+        def due(dt):
+            return {job for job, _ in notifications._due_jobs(dt)}
+
+        def period_for(dt, job):
+            return next(p for j, p in notifications._due_jobs(dt) if j == job)
+
+        check("nothing is due before the configured hour", due(datetime(2026, 8, 16, 5, 59)) == set(), str(due(datetime(2026, 8, 16, 5, 59))))
+        check("the daily jobs are due after it", due(datetime(2026, 8, 16, 6, 0)) == {"free_credit_reminders", "onboarding_nudges", "verification_reminders"}, str(due(datetime(2026, 8, 16, 6, 0))))
+        check("the monthly report is due on the 1st", "monthly_reports" in due(datetime(2026, 9, 1, 6, 0)), str(due(datetime(2026, 9, 1, 6, 0))))
+        check("it reports the month that just ended", period_for(datetime(2026, 9, 1, 6, 0), "monthly_reports") == "2026-08", "")
+        check("an outage on the 1st is caught up on the 3rd", "monthly_reports" in due(datetime(2026, 9, 3, 9, 0)), "")
+        check("the catch-up run still covers the right month", period_for(datetime(2026, 9, 3, 9, 0), "monthly_reports") == "2026-08", "")
+        # Bounded so that enabling the scheduler mid-month does not fire a
+        # surprise retroactive send to the whole customer base.
+        check("no retroactive monthly send past the catch-up window", "monthly_reports" not in due(datetime(2026, 9, 8, 9, 0)), "")
+        check("the year boundary rolls correctly", period_for(datetime(2027, 1, 1, 7, 0), "monthly_reports") == "2026-12", "")
+        check("February is handled", period_for(datetime(2027, 3, 1, 7, 0), "monthly_reports") == "2027-02", "")
+
+        # The claim is what stops two workers doing the same run. Calling twice
+        # stands in for two workers waking at the same moment.
+        tick = datetime(2026, 8, 16, 6, 30)
+        first = anyio.run(notifications.run_due_jobs, tick)
+        second = anyio.run(notifications.run_due_jobs, tick)
+        check("a due tick runs the daily jobs", set(first) == {"free_credit_reminders", "onboarding_nudges", "verification_reminders"}, str(first))
+        check("a second worker on the same tick does nothing", second == {}, str(second))
+        check("a tick before the hour does nothing", anyio.run(notifications.run_due_jobs, datetime(2026, 8, 16, 5, 0)) == {}, "")
+        check("the next day is a new period and runs again", set(anyio.run(notifications.run_due_jobs, datetime(2026, 8, 17, 6, 30))) == {"free_credit_reminders", "onboarding_nudges", "verification_reminders"}, "")
+
+        async def read_job_runs():
+            return await database.job_runs_collection().find({}).to_list(length=None)
+
+        runs = anyio.run(read_job_runs)
+        check("each run is recorded once per period", len(runs) == len({(r["job"], r["period"]) for r in runs}), str([(r["job"], r["period"]) for r in runs]))
+        check("a finished run records its outcome", all("finished_at" in r and "result" in r for r in runs), str(runs[:1]))
+
+        # A failing job must hand its period back, or one bad tick would mean
+        # nobody gets that month's report at all.
+        original = notifications.send_onboarding_nudges
+
+        async def explode():
+            raise RuntimeError("simulated failure")
+
+        notifications.send_onboarding_nudges = explode
+        try:
+            anyio.run(notifications.run_due_jobs, datetime(2026, 8, 18, 6, 30))
+        finally:
+            notifications.send_onboarding_nudges = original
+        after_failure = anyio.run(read_job_runs)
+        check(
+            "a failed run releases its claim for retry",
+            not any(r["job"] == "onboarding_nudges" and r["period"] == "2026-08-18" for r in after_failure),
+            str([(r["job"], r["period"]) for r in after_failure]),
+        )
+        check("and the retry then succeeds", "onboarding_nudges" in anyio.run(notifications.run_due_jobs, datetime(2026, 8, 18, 6, 30)), "")
 
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0

@@ -72,6 +72,40 @@ services:
   - key: SALES_EMAIL
     scope: RUN_TIME
     value: Support@chatbucket.business
+  # Shown in every designed email's help block, and the Reply-To on the ones a
+  # customer might answer.
+  - key: SUPPORT_EMAIL
+    scope: RUN_TIME
+    value: Support@chatbucket.business
+  # The links the email templates share. APP_BASE_URL below is the dashboard;
+  # MARKETING_URL is the public site the policy pages live on.
+  - key: MARKETING_URL
+    scope: RUN_TIME
+    value: https://chatbucket.business
+  # Dates and times in emails render in this zone; storage stays UTC.
+  - key: DISPLAY_TIMEZONE
+    scope: RUN_TIME
+    value: Asia/Kolkata
+  # An unverified address cannot create an API key, so it cannot spend the
+  # signup credits. Without this, ₹100 free per account is farmable with
+  # throwaway addresses. Turning it on also blocks EXISTING unverified
+  # accounts until they verify — check the count before deploying.
+  - key: REQUIRE_EMAIL_VERIFICATION
+    scope: RUN_TIME
+    value: 'true'
+  # ₹100 of free usage granted to every new account. Stated here rather than
+  # left to the code default, because it is a per-signup cost and should be
+  # visible in the spec.
+  - key: SIGNUP_BONUS_CREDITS
+    scope: RUN_TIME
+    value: '100'
+  # Runs the monthly report, credit reminder and onboarding nudge on a timer.
+  # KEEP THIS false until chatbucket.business publishes SPF and DMARC — see
+  # the Mail section of DEPLOY.md. Enabling it first mails the whole customer
+  # base from an unauthenticated domain, straight into spam.
+  - key: NOTIFICATION_SCHEDULER_ENABLED
+    scope: RUN_TIME
+    value: 'false'
   - key: RAZORPAY_KEY_ID
     scope: RUN_TIME
     value: ${RAZORPAY_KEY_ID}

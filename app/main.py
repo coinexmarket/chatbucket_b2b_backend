@@ -15,7 +15,7 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from . import database
+from . import database, notifications
 from .config import get_settings
 from .routers import (
     account,
@@ -32,6 +32,9 @@ from .routers import (
     projects,
     subscriptions,
     usage,
+)
+from .routers import (
+    notifications as notifications_router,
 )
 from .routers import (
     status as status_router,
@@ -133,10 +136,25 @@ async def lifespan(app: FastAPI):
         logger.info("status probing %d service(s)", len(settings.status_probe_map))
         probe_task = asyncio.create_task(_probe_services_forever())
 
+    # The monthly report, credit reminder and onboarding nudge, on a timer.
+    # Opt-in: switching it on starts mailing real customers unattended, so a
+    # deployment says so explicitly rather than inheriting it from a default.
+    # Every worker starts a copy; `notifications` claims each run in Mongo so
+    # only one of them does the work.
+    scheduler_task: asyncio.Task | None = None
+    if settings.notification_scheduler_enabled:
+        scheduler_task = asyncio.create_task(notifications.scheduler_loop())
+    else:
+        logger.info(
+            "notification scheduler off (NOTIFICATION_SCHEDULER_ENABLED); monthly "
+            "reports, credit reminders and nudges will only run if something calls "
+            "/notifications/*"
+        )
+
     try:
         yield
     finally:
-        for task in (retry_task, probe_task):
+        for task in (retry_task, probe_task, scheduler_task):
             if task is not None:
                 task.cancel()
                 with suppress(asyncio.CancelledError):
@@ -178,6 +196,8 @@ app.include_router(projects.router)
 app.include_router(status_router.router)
 # Operator-only: what our own engines cost us, not what we charge.
 app.include_router(engines.router)
+# Operator-only: announcements, maintenance notices and the scheduled runs.
+app.include_router(notifications_router.router)
 
 # --- chatbucket-web site endpoints ---------------------------------------
 app.include_router(blogs.router)

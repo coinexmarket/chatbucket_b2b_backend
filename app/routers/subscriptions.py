@@ -13,18 +13,19 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pymongo.errors import DuplicateKeyError
 
 from ..database import subscriptions_collection
+from ..email import send_subscription_confirmation
 from ..models.requests import SubscriptionRequest
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 
 @router.post("/v1/notify-app-launch")
-async def notify_app_launch(payload: SubscriptionRequest):
+async def notify_app_launch(payload: SubscriptionRequest, background_tasks: BackgroundTasks):
     email = payload.email.lower().strip()
     collection = subscriptions_collection()
 
@@ -48,6 +49,10 @@ async def notify_app_launch(payload: SubscriptionRequest):
             status_code=409,
             content={"err_code": 409, "error": "You have already subscribed."},
         )
+
+    # Only on a genuinely new subscription — the duplicate paths above return
+    # before this, so re-submitting the form does not re-send the confirmation.
+    background_tasks.add_task(send_subscription_confirmation, email)
 
     return JSONResponse(
         status_code=201,
