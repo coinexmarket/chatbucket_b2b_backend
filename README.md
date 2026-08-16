@@ -1102,6 +1102,7 @@ payment gateway, both of which fail quietly rather than loudly).
 | `OPS_SECRET` | – | Required to read `/engines/usage` and to call anything under `/notifications`; unset ⇒ 503. |
 | `ENGINE_FREE_QUOTAS` | – | `engine=amount` pairs in the engine's unit. Empty ⇒ burn is counted, `remaining` is null. |
 | `CORS_ORIGINS` | localhost `:3000`/`:4100` (and `127.0.0.1`) + chatbucket domains | Allowed browser origins. Matched exactly — scheme, host and port all count. |
+| `LOG_LEVEL` | `INFO` | Application log level. Below `INFO` the email and notification lines this README tells you to grep for are never emitted. |
 | `ENVIRONMENT` | `development` | In `development`, `forgot-password` returns the reset token. **Set this to `production` when deploying** — the default is a dev value, so leaving it unset both exposes reset tokens and skips the `JWT_SECRET` check. |
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |
 | `SMTP_HOST` | – | Provider host. Required in production unless `EMAIL_BACKEND=disabled`. |

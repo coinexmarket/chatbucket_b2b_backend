@@ -164,6 +164,17 @@ async def lifespan(app: FastAPI):
 
 settings = get_settings()
 
+# Uvicorn configures its own loggers and leaves the root logger alone, so
+# without this every `logger.info` in this application is discarded — the
+# email backend named at boot, "sent <subject> to <address>", the scheduler's
+# state, each notification run's result. Those are the lines an operator is
+# told to look for when mail goes missing, so they have to actually be emitted.
+# Uvicorn's own loggers do not propagate to root, so nothing is duplicated.
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0",

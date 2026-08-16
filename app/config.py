@@ -343,6 +343,12 @@ class Settings(BaseSettings):
 
     app_name: str = "ChatBucket B2B Backend"
     environment: str = Field(default="development")
+    # Nothing configured logging before, so the root logger sat at WARNING and
+    # every `logger.info` in this app was dropped: the email backend named at
+    # boot, "sent <subject> to <address>", the scheduler's state, each job's
+    # result. All the lines the docs tell an operator to grep for existed only
+    # in development. DEBUG is very noisy — it includes per-request detail.
+    log_level: str = Field(default="INFO")
 
     @property
     def resolved_email_backend(self) -> str:

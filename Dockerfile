@@ -6,7 +6,14 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# pip is a build-time tool. Left in the runtime image it is both extra attack
+# surface and a standing source of CVE noise: its bundled `_vendor/vendor.txt`
+# declares msgpack and setuptools, so the image gets reported as vulnerable to
+# flaws in code the service never imports and cannot reach. Removing it after
+# the install is what actually resolves those, rather than suppressing them.
+# The app runs uvicorn and the healthcheck uses urllib; neither needs pip.
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -m pip uninstall -y pip
 
 COPY app ./app
 
