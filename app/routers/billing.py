@@ -24,7 +24,7 @@ from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pymongo.errors import DuplicateKeyError
 
-from .. import credits, invoices, money
+from .. import credits, email, invoices, money
 from .. import payments as payments_gateway
 from ..config import get_settings
 from ..database import (
@@ -352,6 +352,62 @@ async def confirm_payment(
     )
 
 
+def _amount_text(value) -> str:
+    """A money figure the way a receipt shows it: grouped, two decimals."""
+    return f"{money.to_json(value):,.2f}"
+
+
+# What the gateway calls a payment method, and what a customer calls it. The
+# gateway sends lowercase machine values; `.title()` alone turns "upi" into
+# "Upi", which is not a word anyone has ever written on a receipt.
+_METHOD_NAMES = {
+    "upi": "UPI",
+    "card": "Card",
+    "netbanking": "Net banking",
+    "wallet": "Wallet",
+    "emi": "EMI",
+    "paylater": "Pay later",
+    "bank_transfer": "Bank transfer",
+}
+
+
+def _method_text(method: str | None) -> str:
+    if not method:
+        return "Online payment"
+    key = method.strip().lower()
+    # A method we do not have a name for is shown as the gateway sent it,
+    # rather than mangled — "Visa •••• 4242" must survive intact.
+    return _METHOD_NAMES.get(key, method.strip())
+
+
+async def _send_deposit_receipt(payment: dict, owner: dict, entry: dict) -> None:
+    """Email the customer their top-up receipt.
+
+    Best effort by design: the money has moved and the credits are granted, so
+    nothing here may raise back into the settlement path. `send_email` already
+    swallows delivery failures; this guards against the rest.
+    """
+    settings = get_settings()
+    try:
+        await email.send_deposit_receipt(
+            owner.get("email", ""),
+            owner.get("name"),
+            amount=_amount_text(payment.get("amount_inr", 0)),
+            balance=_amount_text(credits.from_units(int(entry["balance_after_units"]))),
+            # The gateway's payment id is what support will be asked about; the
+            # local reference is the fallback for a settlement that carried none.
+            transaction_id=payment.get("provider_payment_id") or payment.get("reference", ""),
+            method=_method_text(payment.get("method")),
+            # The gateway reports a method ("upi", "card"), not a brand, and
+            # inventing one would put a wrong logo on a receipt.
+            provider="",
+            paid_at=payment.get("paid_at") or datetime.now(timezone.utc),
+            transaction_url=settings.dashboard_url_for,
+        )
+    except Exception as exc:
+        logger.error("could not send deposit receipt for %s: %s", payment["_id"], exc)
+
+
 async def _settle(
     oid: ObjectId,
     *,
@@ -408,7 +464,7 @@ async def _settle(
             "data": _payment_view(current),
         }
 
-    await credits.grant(
+    entry = await credits.grant(
         claimed["user_id"],
         int(claimed["credit_units"]),
         credits.KIND_PURCHASE,
@@ -434,6 +490,12 @@ async def _settle(
             {"$set": {"invoice_number": invoice["invoice_number"]}},
         )
         claimed["invoice_number"] = invoice["invoice_number"]
+
+    # Receipt to the customer. Inside the claimed branch, so a redelivered
+    # webhook does not send a second one, and awaited rather than backgrounded
+    # because the caller here is a payment gateway, not a browser waiting on a
+    # page — `send_email` swallows its own failures either way.
+    await _send_deposit_receipt(claimed, owner or {}, entry)
 
     return {
         "status": True,

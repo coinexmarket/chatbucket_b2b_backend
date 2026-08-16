@@ -172,10 +172,16 @@ def main() -> int:
         check("GET /v1/c-blogs by text", len(r.json()["blogs"]) == 1 and r.json()["blogs"][0]["slug"] == "scaling-realtime-chat", r.text)
 
         # --- subscriptions ---------------------------------------------
+        outbox.clear()
         r = client.post("/subscriptions/v1/notify-app-launch", json={"email": "a@b.com"})
         check("POST notify-app-launch 201", r.status_code == 201, r.text)
+        confirmation = next((m for m in outbox if m["to"] == "a@b.com"), {})
+        check("subscribing sends a confirmation", confirmation.get("subject") == "You're subscribed to ChatBucket", str(outbox))
+        check("confirmation carries the designed HTML", (confirmation.get("html") or "").startswith("<!DOCTYPE html>"), str(confirmation.get("html"))[:80])
         r = client.post("/subscriptions/v1/notify-app-launch", json={"email": "a@b.com"})
         check("POST notify duplicate 409 err_code", r.status_code == 409 and r.json()["err_code"] == 409, r.text)
+        # A resubmitted form must not mail the subscriber a second time.
+        check("a duplicate subscription sends no second email", len(outbox) == 1, str([m["subject"] for m in outbox]))
         r = client.post("/subscriptions/v1/notify-app-launch", json={"email": "not-an-email"})
         check("POST notify invalid email 422", r.status_code == 422, r.text)
 
@@ -235,9 +241,26 @@ def main() -> int:
         )
         check("POST /demo-requests business 201 (snake_case)", r.status_code == 201 and r.json()["data"]["type"] == "business", r.text)
 
-        # --- sales notification -----------------------------------------
-        check("both demo requests notify sales", len(outbox) == 2, str(outbox))
-        biz_mail = next((m for m in outbox if "Acme Global" in m["subject"]), {})
+        # --- sales notification + customer acknowledgement ----------------
+        # Two emails per request: one to sales, one back to the person who
+        # filled the form.
+        sales_mail = [m for m in outbox if m["to"] == "sales@chatbucket.chat"]
+        acks = [m for m in outbox if m["subject"] == "We've received your query"]
+        check("both demo requests notify sales", len(sales_mail) == 2, str([m["subject"] for m in outbox]))
+        check("both demo requests are acknowledged to the lead", len(acks) == 2, str([m["to"] for m in outbox]))
+
+        ack = next((m for m in acks if m["to"] == "alan@acme.com"), {})
+        check("acknowledgement goes to the address that was submitted", bool(ack), str([m["to"] for m in acks]))
+        check("acknowledgement quotes the lead id as the query id", ack.get("body", "").count("Your query ID: ") == 1, ack.get("body", ""))
+        check("acknowledgement carries the designed HTML", (ack.get("html") or "").startswith("<!DOCTYPE html>"), str(ack.get("html"))[:80])
+        check("acknowledgement HTML has no unrendered placeholders", "{{" not in (ack.get("html") or ""), str(ack.get("html"))[:80])
+        # The From: address is a no-reply, so a customer hitting Reply on the
+        # acknowledgement has to land somewhere a human reads.
+        check("acknowledgement replies to support, not no-reply", ack.get("reply_to") == "support@chatbucket.business", str(ack.get("reply_to")))
+
+        biz_mail = next((m for m in sales_mail if "Acme Global" in m["subject"]), {})
+        # Sales hitting Reply should reach the lead, not the no-reply mailbox.
+        check("the sales notification replies to the lead", biz_mail.get("reply_to") == "alan@acme.com", str(biz_mail.get("reply_to")))
         check("notification goes to SALES_EMAIL", biz_mail.get("to") == "sales@chatbucket.chat", str(biz_mail))
         check("notification subject names the lead", biz_mail.get("subject") == "New demo request: Alan Turing (Acme Global)", str(biz_mail))
         body = biz_mail.get("body", "")

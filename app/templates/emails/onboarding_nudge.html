@@ -1,0 +1,2722 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Welcome to ChatBucket Business</title>
+
+<!--[if mso]>
+<style type="text/css">
+table,
+td,
+div,
+p,
+a{
+    font-family:Arial,Helvetica,sans-serif !important;
+}
+</style>
+<![endif]-->
+
+<style type="text/css">
+
+body,
+table,
+td,
+a{
+    -webkit-text-size-adjust:100%;
+    -ms-text-size-adjust:100%;
+}
+
+table,
+td{
+    mso-table-lspace:0pt;
+    mso-table-rspace:0pt;
+}
+
+img{
+    border:0;
+    outline:none;
+    text-decoration:none;
+    display:block;
+    -ms-interpolation-mode:bicubic;
+}
+
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    background:#EEF0F7;
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+}
+
+a{
+    text-decoration:none;
+}
+
+.container{
+    width:800px;
+    max-width:800px;
+    background:#FFFFFF;
+}
+
+.hero-left{
+    width:50%;
+}
+
+.hero-right{
+    width:50%;
+}
+
+.hero-image{
+    width:390px;
+    max-width:100%;
+    height:auto;
+}
+
+@media only screen and (max-width:800px){
+    /* A 38px heading is ~390px on one line, which sets the minimum width of
+       every table above it — `width:100%` cannot shrink a table below its
+       content. Capping the display sizes is what actually lets the layout
+       reach 360px. */
+    h1 { font-size: 26px !important; line-height: 32px !important; }
+    h2 { font-size: 21px !important; line-height: 27px !important; }
+    .hero-title { font-size: 26px !important; line-height: 32px !important; }
+  /* Design's own layout classes for the shared footer and feature strips.
+     These rows are what set the table's minimum width — a table cannot shrink
+     below the sum of its columns' min-content, so `width:100%` above them was
+     never going to be enough. */
+  .footer-col,
+  .footer-bottom-left,
+  .footer-bottom-right,
+  .support-left,
+  .support-right {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+  /* Feature strips read better two-up than as one tall column. */
+  .feature-cell {
+    display: inline-block !important;
+    width: 48% !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    text-align: center !important;
+  }
+  .feature-separator { display: none !important; }
+  /* The footer's two call-to-action buttons carry their own nowrap, so the
+     pair is a ~300px floor the surrounding table cannot shrink past. Letting
+     the label wrap costs one line and removes the last overflow. */
+  /* Two buttons side by side in a 340px footer wrap to three cramped lines
+     each. Stacked and centred they stay one line and stay tappable. */
+  .btn, a.btn {
+    white-space: normal !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 260px !important;
+    margin: 8px auto !important;
+    text-align: center !important;
+  }
+
+  /* `white-space:nowrap` is a hard floor: "₹1,678.00 / ₹9,875.00  17%" cannot
+     be squeezed, so the table around it cannot shrink either. On a phone it
+     is better for that to wrap onto two lines than for the whole email to
+     scroll sideways. */
+  td, th { white-space: normal !important; }
+  /* `overflow-wrap` breaks a string only when it genuinely cannot fit;
+     `word-break: break-word` breaks eagerly and turned
+     "support@chatbucket.business" into "support@chatbucket.b / usiness". */
+  td, div, p, span, a { overflow-wrap: break-word !important; }
+
+
+    /* --- responsive helpers ------------------------------------------- */
+    .mobile-stack {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      /* Side-by-side columns were separated by their own width. Stacked, they
+         need vertical space or the last line of one runs into the heading of
+         the next. The right border did the same job horizontally and becomes a
+         stray edge once stacked. */
+      padding-bottom: 14px !important;
+      border-right: 0 !important;
+    }
+    .mobile-half {
+      display: inline-block !important;
+      width: 50% !important;
+      box-sizing: border-box !important;
+    }
+    .mobile-hide {
+      display: none !important;
+    }
+    .mobile-center {
+      text-align: center !important;
+    }
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+
+    .container{
+        width:100%!important;
+    }
+
+    .hero-left,
+    .hero-right{
+        display:block!important;
+        width:100%!important;
+    }
+
+    .hero-left{
+        padding:30px 24px 15px 24px!important;
+    }
+
+    .hero-right{
+        padding:10px 20px 30px 20px!important;
+        text-align:center!important;
+    }
+
+    .hero-image{
+        width:100%!important;
+        max-width:360px!important;
+        height:auto!important;
+        margin:0 auto!important;
+    }
+
+    .hero-title{
+        font-size:34px!important;
+        line-height:40px!important;
+    }
+
+    .mobile-padding{
+        padding-left:20px!important;
+        padding-right:20px!important;
+    }
+
+}
+
+
+/* --- mobile overrides (appended; absolute caps break the width cycle) --- */
+@media only screen and (max-width:800px) {
+  .container { width: 100% !important; }
+  /* An auto-layout table cannot shrink below the sum of its columns'
+     min-content, whatever width you give it. Fixed layout makes the outer
+     table honour 100% and pushes the constraint inward, where the stacking
+     rules above can act on it. Applied only to the outermost table — fixed
+     layout on nested ones would redistribute their columns by the first row
+     and distort the OTP grid and the progress bars. */
+  .container { table-layout: fixed !important; max-width: 100% !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+  /* A hero carrying width="430" is a hard floor for every table above it.
+     Capping it in px, not %, is what lets the layout reach 360. */
+  .hero-image, .hero-img {
+    width: 280px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  h1 { font-size: 26px !important; line-height: 32px !important; }
+  h2 { font-size: 21px !important; line-height: 27px !important; }
+  .hero-title { font-size: 26px !important; line-height: 32px !important; }
+}
+</style>
+
+</head>
+
+
+
+
+
+<body
+style="
+margin:0;
+padding:0;
+background:#EEF0F7;
+"
+>
+
+
+<!-- =====================================================
+PREHEADER
+===================================================== -->
+
+<div
+style="
+display:none;
+max-height:0;
+overflow:hidden;
+opacity:0;
+color:transparent;
+height:0;
+width:0;
+"
+>
+
+Let's build something amazing with ChatBucket!
+
+</div>
+
+
+<!-- =====================================================
+OUTER WRAPPER
+===================================================== -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#EEF0F7;
+"
+>
+
+<tr>
+
+<td
+align="center"
+style="
+padding:24px 12px;
+"
+>
+
+
+<!-- =====================================================
+MAIN CONTAINER
+===================================================== -->
+
+<table
+role="presentation"
+class="container"
+width="800"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+overflow:hidden;
+"
+>
+
+
+<!-- =====================================================
+HERO SECTION
+===================================================== -->
+
+<tr>
+
+<td
+style="
+background:#09052F;
+background-image:linear-gradient(
+120deg,
+#08042D 0%,
+#130542 42%,
+#28076B 72%,
+#11063D 100%
+);
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+
+<!-- =================================================
+HERO LEFT CONTENT
+================================================= -->
+
+<td
+class="hero-left mobile-stack"
+width="40%"
+valign="top"
+style="
+padding:38px 10px 40px 42px;
+vertical-align:top;
+"
+>
+
+
+<!-- =================================================
+CHATBUCKET BUSINESS LOGO
+================================================= -->
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/ChatBucket-logo.png"
+width="225"
+alt="ChatBucket Business"
+style="
+display:block;
+width:225px;
+max-width:100%;
+height:auto;
+"
+>
+
+
+<!-- =================================================
+HERO GREETING
+================================================= -->
+
+<div
+style="
+margin-top:20px;
+font-size:29px;
+line-height:36px;
+font-weight:400;
+color:#FFFFFF;
+"
+>
+
+Hi
+
+<strong>
+{{name}}
+</strong>
+
+<span
+style="
+font-size:26px;
+"
+>
+
+👋
+
+</span>
+
+</div>
+
+
+<!-- =================================================
+HERO MAIN TITLE
+================================================= -->
+
+<div
+class="hero-title"
+style="
+margin-top:2px;
+font-size:28px;
+line-height:39px;
+font-weight:400;
+color:#FFFFFF;
+"
+>
+
+Let's build something
+
+<br>
+
+<span
+style="
+font-weight:700;
+"
+>
+
+amazing with ChatBucket!
+
+</span>
+
+</div>
+
+
+<!-- =================================================
+INTRODUCTION
+================================================= -->
+
+<div
+style="
+    margin-top: 14px;
+    max-width: 350px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #D7D3E6;
+"
+>
+
+We noticed you recently registered with ChatBucket
+but haven't explored the platform yet.
+
+<br>
+
+Here's a quick guide to help you get started and
+experience the power of AI Agents in action.
+
+</div>
+
+
+<!-- =================================================
+LOGIN CTA
+================================================= -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:16px;
+"
+>
+
+<tr>
+
+<td
+style="
+border-radius:22px;
+background:#8738D8;
+background-image:linear-gradient(
+90deg,
+#8232D2,
+#9B3CE0
+);
+"
+>
+
+<a
+href="{{login_url}}"
+style="
+display: inline-block;
+    padding: 11px 28px;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    line-height: 24px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 22px;
+"
+>
+
+Log in to ChatBucket
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+
+<!-- =================================================
+HERO RIGHT IMAGE
+================================================= -->
+
+<td
+class="hero-right mobile-stack"
+width="50%"
+align="center"
+valign="middle"
+style="
+padding:15px 18px 15px 0;
+vertical-align:middle;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/hero-img.png"
+class="hero-image"
+width="390"
+alt="ChatBucket AI Agents"
+style="
+mix-blend-mode: lighten;
+display:block;
+width:390px;
+max-width:100%;
+height:auto;
+"
+>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 2 STARTS HERE
+
+Create a Chatbot with Appointment Scheduling
+Build a Voice Agent in Just 2 Minutes
+
+===================================================== -->
+<!-- =====================================================
+PART 2
+
+Create a Chatbot with Appointment Scheduling
+Build a Voice Agent in Just 2 Minutes
+
+===================================================== -->
+
+
+<!-- =====================================================
+APPOINTMENT SCHEDULING CARD
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:38px 42px 12px 42px;
+background:#FFFFFF;
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#F9F8FF;
+border:1px solid #E7E2F4;
+border-radius:11px;
+"
+>
+
+<tr>
+
+
+<!-- =================================================
+APPOINTMENT ICON
+================================================= -->
+
+<td class="mobile-stack"
+width="80"
+valign="top"
+style="
+width:80px;
+padding:18px 0 18px 18px;
+vertical-align:top;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer54.png"
+width="52"
+height="52"
+alt="Appointment Scheduling"
+style="
+display:block;
+width:52px;
+height:52px;
+"
+>
+
+</td>
+
+
+<!-- =================================================
+APPOINTMENT CONTENT
+================================================= -->
+
+<td class="mobile-stack"
+width="38%"
+valign="top"
+style="
+padding:18px 10px 18px 5px;
+vertical-align:top;
+"
+>
+
+
+<!-- TITLE -->
+
+<div
+style="
+font-size:17px;
+line-height:22px;
+font-weight:800;
+color:#17142B;
+"
+>
+
+Create a Chatbot with
+
+<br>
+
+<span
+style="
+color:#5424D0;
+"
+>
+
+Appointment Scheduling
+
+</span>
+
+</div>
+
+
+<!-- TIME BADGE -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:7px;
+"
+>
+
+<tr>
+
+<td
+style="
+background:#EEE6FF;
+border-radius:12px;
+padding:4px 8px;
+font-size:10px;
+line-height:12px;
+font-weight:700;
+color:#6127D1;
+"
+>
+
+◷ &nbsp; Done in 2 Minutes!
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- DESCRIPTION -->
+
+<div
+style="
+margin-top:8px;
+font-size:11px;
+line-height:15px;
+color:#5E586B;
+font-weight: 500;
+"
+>
+
+Build a smart chatbot that books,
+reschedules and manages appointments
+automatically.
+
+</div>
+
+
+<!-- HOW TO CREATE BUTTON -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:11px;
+"
+>
+
+<tr>
+
+<td
+style="
+background:#12044B;
+border-radius:5px;
+"
+>
+
+<a
+href="{{appointment_url}}"
+style="
+display:inline-block;
+padding:8px 13px;
+font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+font-size:9px;
+line-height:13px;
+font-weight:700;
+color:#FFFFFF;
+text-decoration:none;
+border-radius:5px;
+"
+>
+
+How to Create
+
+&nbsp;
+
+<span
+style="
+font-size:9px;
+"
+>
+▶
+</span>
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+APPOINTMENT CHECKLIST
+================================================= -->
+
+<td class="mobile-stack"
+width="25%"
+valign="middle"
+style="
+width:25%;
+padding:18px 8px;
+border-left:1px solid #E4DFEC;
+vertical-align:middle;
+"
+>
+
+<!-- CHECK 1 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Collect customer details
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 2 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Check availability in real-time
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 3 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Book &amp; confirm appointments
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 4 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Send reminders automatically
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+APPOINTMENT SCREEN IMAGE
+================================================= -->
+
+<td class="mobile-stack"
+width="27%"
+align="right"
+valign="middle"
+style="
+width:27%;
+padding:12px 15px 12px 4px;
+vertical-align:middle;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer55.png"
+width="190"
+alt="Appointment Scheduling"
+style="
+display:block;
+width:190px;
+max-width:100%;
+height:auto;
+margin-left:auto;
+"
+>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+VOICE AGENT CARD
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:12px 42px 20px 42px;
+background:#FFFFFF;
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#F9F8FF;
+border:1px solid #E7E2F4;
+border-radius:11px;
+"
+>
+
+<tr>
+
+
+<!-- =================================================
+VOICE ICON
+================================================= -->
+
+<td class="mobile-stack"
+width="80"
+valign="top"
+style="
+width:80px;
+padding:18px 0 18px 18px;
+vertical-align:top;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer56.png"
+width="52"
+height="52"
+alt="Voice Agent"
+style="
+display:block;
+width:52px;
+height:52px;
+"
+>
+
+</td>
+
+
+<!-- =================================================
+VOICE CONTENT
+================================================= -->
+
+<td class="mobile-stack"
+width="38%"
+valign="top"
+style="
+padding:18px 10px 18px 5px;
+vertical-align:top;
+"
+>
+
+
+<!-- TITLE -->
+
+<div
+style="
+font-size:17px;
+line-height:22px;
+font-weight:800;
+color:#17142B;
+"
+>
+
+Build a
+
+<span
+style="
+color:#5424D0;
+"
+>
+
+Voice Agent
+
+</span>
+
+<br>
+
+in Just 2 Minutes
+
+</div>
+
+
+<!-- DESCRIPTION -->
+
+<div
+style="
+margin-top:8px;
+font-size:11px;
+line-height:15px;
+color:#5E586B;
+font-weight: 500;
+"
+>
+
+Create a voice assistant that answers calls,
+handles queries and takes actions.
+
+</div>
+
+
+<!-- HOW TO CREATE BUTTON -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:11px;
+"
+>
+
+<tr>
+
+<td
+style="
+background:#12044B;
+border-radius:5px;
+"
+>
+
+<a
+href="{{voice_agent_url}}"
+style="
+display:inline-block;
+padding:8px 13px;
+font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+font-size:10px;
+line-height:13px;
+font-weight:700;
+color:#FFFFFF;
+text-decoration:none;
+border-radius:5px;
+"
+>
+
+How to Create
+
+&nbsp;
+
+<span
+style="
+font-size:9px;
+"
+>
+▶
+</span>
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+VOICE CHECKLIST
+================================================= -->
+
+<td class="mobile-stack"
+width="25%"
+valign="middle"
+style="
+width:25%;
+padding:18px 8px;
+border-left:1px solid #E4DFEC;
+vertical-align:middle;
+"
+>
+
+
+<!-- CHECK 1 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Answer incoming calls
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 2 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Understand &amp; respond naturally
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 3 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Collect information
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- CHECK 4 -->
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:5px;
+"
+>
+
+<tr>
+
+<td
+width="20"
+valign="top"
+style="
+width:20px;
+vertical-align:top;
+"
+>
+
+<span
+style="
+font-size:12px;
+font-weight:800;
+color:#6230D8;
+"
+>
+✓
+</span>
+
+</td>
+
+<td
+style="
+font-size:10px;
+line-height:14px;
+color:#403A4C;
+font-weight: 500;
+"
+>
+
+Integrate with your systems
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+<!-- =================================================
+VOICE SCREEN IMAGE
+================================================= -->
+
+<td class="mobile-stack"
+width="27%"
+align="right"
+valign="middle"
+style="
+width:27%;
+padding:12px 15px 12px 4px;
+vertical-align:middle;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer57.png"
+width="175"
+alt="Voice Agent"
+style="
+display:block;
+width:175px;
+max-width:100%;
+height:auto;
+margin-left:auto;
+"
+>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 3 STARTS HERE
+
+Get Started with a Prompt
+Why Businesses Love Our AI Chatbots
+Support CTA
+
+===================================================== -->
+<!-- =====================================================
+PART 3
+
+Get Started with a Prompt
+Why Businesses Love Our AI Chatbots
+
+===================================================== -->
+
+
+<!-- =====================================================
+GET STARTED WITH A PROMPT
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:0 42px 16px 42px;
+background:#FFFFFF;
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#F8F6FF;
+border:1px solid #DDD3F6;
+border-radius:11px;
+"
+>
+
+<tr>
+
+
+<!-- =================================================
+PROMPT ICON
+================================================= -->
+
+<td
+width="70"
+valign="middle"
+style="
+width:70px;
+padding:15px 0 15px 18px;
+vertical-align:middle;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer58.png"
+width="48"
+height="48"
+alt="Get Started with a Prompt"
+style="
+display: block;
+    width: 55px;
+    height: 55px;
+"
+>
+
+</td>
+
+
+<!-- =================================================
+PROMPT TEXT
+================================================= -->
+
+<td
+width="34%"
+valign="middle"
+style="
+padding:15px 10px 15px 8px;
+vertical-align:middle;
+"
+>
+
+<div
+style="
+font-size:15px;
+line-height:20px;
+font-weight:800;
+color:#17142B;
+"
+>
+
+Get Started
+
+<span
+style="
+color:#5424D0;
+"
+>
+
+with a Prompt
+
+</span>
+
+</div>
+
+<div
+style="
+margin-top:5px;
+font-size:10.5px;
+line-height:15px;
+color:#625C70;
+font-weight: 500;
+"
+>
+
+Just describe what you want your agent to do.
+
+<br>
+
+Our AI will build it for you instantly!
+
+</div>
+
+</td>
+
+
+<!-- =================================================
+PROMPT EXAMPLE
+================================================= -->
+
+<td
+valign="middle"
+style="
+padding:12px 8px;
+vertical-align:middle;
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+<td
+style="
+background:#FFFFFF;
+border:1px solid #DCD5EB;
+border-radius:7px;
+padding:11px 13px;
+"
+>
+
+<div
+style="
+font-size:10px;
+line-height:16px;
+color:#7d7c7e;
+"
+>
+
+Create a chatbot that books appointments for
+my dental clinic and sends reminders.
+
+</div>
+
+</td>
+
+<td
+width="48"
+align="center"
+valign="middle"
+style="
+width:48px;
+padding-left:8px;
+vertical-align:middle;
+"
+>
+
+<a
+href="{{prompt_url}}"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer59.png"
+width="40"
+height="40"
+alt="Start with Prompt"
+style="
+display:block;
+width: 65px;
+    height: 65px;
+"
+>
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+WHY BUSINESSES LOVE OUR AI CHATBOTS
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:12px 42px 18px 42px;
+background:#FFFFFF;
+"
+>
+
+
+<!-- =================================================
+SECTION TITLE
+================================================= -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+<td
+align="center"
+style="
+padding-bottom:16px;
+"
+>
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+>
+
+<tr>
+
+<td
+style="
+font-size:16px;
+line-height:22px;
+font-weight:800;
+color:#17142B;
+white-space:nowrap;
+"
+>
+
+✦
+
+&nbsp;
+
+Why Businesses
+
+<span
+style="
+color:#5424D0;
+"
+>
+
+Love Our AI Chatbots
+
+</span>
+
+&nbsp;
+
+✦
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!-- =================================================
+THREE BENEFIT COLUMNS
+================================================= -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#FAF9FF;
+border:1px solid #E7E1F1;
+border-radius:11px;
+"
+>
+
+<tr>
+
+
+<!-- =================================================
+SAVE TIME & EFFORT
+================================================= -->
+
+<td class="mobile-stack"
+width="33.33%"
+align="center"
+valign="top"
+style="
+width:33.33%;
+padding:20px 17px 22px 17px;
+border-right:1px solid #E4DEEC;
+vertical-align:top;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer60.png"
+width="52"
+height="52"
+alt="Save Time and Effort"
+style="
+display:block;
+width:52px;
+height:52px;
+margin:0 auto;
+"
+>
+
+
+<div
+style="
+margin-top:10px;
+font-size:11px;
+line-height:16px;
+font-weight:800;
+color:#201A38;
+"
+>
+
+Save Time &amp; Effort
+
+</div>
+
+
+<div
+style="
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #625C70;
+    font-weight: 500;
+"
+>
+
+Automate repetitive tasks and
+let your chatbot handle FAQs,
+bookings, and more.
+
+</div>
+
+
+<div
+style="
+margin:12px auto 0 auto;
+width:27px;
+height:2px;
+background:#6B31D9;
+font-size:0;
+line-height:0;
+"
+>
+
+&nbsp;
+
+</div>
+
+</td>
+
+
+<!-- =================================================
+24/7 AVAILABILITY
+================================================= -->
+
+<td class="mobile-stack"
+width="33.33%"
+align="center"
+valign="top"
+style="
+width:33.33%;
+padding:20px 17px 22px 17px;
+border-right:1px solid #E4DEEC;
+vertical-align:top;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer61.png"
+width="52"
+height="52"
+alt="24/7 Availability"
+style="
+display:block;
+width:52px;
+height:52px;
+margin:0 auto;
+"
+>
+
+
+<div
+style="
+margin-top:10px;
+font-size:11px;
+line-height:16px;
+font-weight:800;
+color:#201A38;
+"
+>
+
+24/7 Availability
+
+</div>
+
+
+<div
+style="
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #625C70;
+    font-weight: 500;
+"
+>
+
+Your chatbot is always online,
+engaging with customers and
+never missing a query.
+
+</div>
+
+
+<div
+style="
+margin:12px auto 0 auto;
+width:27px;
+height:2px;
+background:#6B31D9;
+font-size:0;
+line-height:0;
+"
+>
+
+&nbsp;
+
+</div>
+
+</td>
+
+
+<!-- =================================================
+BOOST ENGAGEMENT
+================================================= -->
+
+<td class="mobile-stack"
+width="33.33%"
+align="center"
+valign="top"
+style="
+width:33.33%;
+padding:20px 17px 22px 17px;
+vertical-align:top;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/Layer62.png"
+width="52"
+height="52"
+alt="Boost Engagement"
+style="
+display:block;
+width:52px;
+height:52px;
+margin:0 auto;
+"
+>
+
+
+<div
+style="
+margin-top:10px;
+font-size:11px;
+line-height:16px;
+font-weight:800;
+color:#201A38;
+"
+>
+
+Boost Engagement
+
+</div>
+
+
+<div
+style="
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #625C70;
+    font-weight: 500;
+"
+>
+
+Provide instant responses,
+personalized interactions, and
+better customer experiences.
+
+</div>
+
+
+<div
+style="
+margin:12px auto 0 auto;
+width:27px;
+height:2px;
+background:#6B31D9;
+font-size:0;
+line-height:0;
+"
+>
+
+&nbsp;
+
+</div>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+PART 4 STARTS HERE
+
+Support CTA
+Thank You
+Footer
+Closing HTML
+
+===================================================== -->
+<!-- =====================================================
+PART 4
+
+Support Section
+Thank You
+Footer
+Closing HTML
+
+===================================================== -->
+
+
+<!-- =====================================================
+SUPPORT / NEED IMMEDIATE ASSISTANCE
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:18px 42px 12px 42px;
+background:#FFFFFF;
+"
+>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#F4F0FF;
+border:1px solid #E5DCF8;
+border-radius:10px;
+"
+>
+
+<tr>
+
+
+<!-- =================================================
+SUPPORT IMAGE
+================================================= -->
+
+<td
+width="120"
+align="center"
+valign="middle"
+style="
+width:120px;
+padding:12px 5px 12px 12px;
+vertical-align:middle;
+"
+>
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/support.png"
+width="105"
+alt="ChatBucket Support"
+style="
+display:block;
+width:80px;
+max-width:100%;
+height:auto;
+margin:0 auto;
+"
+>
+
+</td>
+
+
+<!-- =================================================
+SUPPORT TEXT
+================================================= -->
+
+<td
+width="34%"
+valign="middle"
+style="
+padding:12px 8px 12px 4px;
+vertical-align:middle;
+"
+>
+
+<div
+style="
+font-size: 15px;
+    line-height: 17px;
+    font-weight: 800;
+    color: #201A38;
+"
+>
+
+Need immediate assistance?
+
+</div>
+
+<div
+style="
+margin-top: 3px;
+    font-size: 15px;
+    line-height: 15px;
+    color: #5F586D;
+"
+>
+
+Reach out to us at
+
+</div>
+
+<a
+href="mailto:{{support_email}}"
+style="
+    display: inline-block;
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 15px;
+    font-weight: 800;
+    color: #5524D0;
+    text-decoration: none;
+"
+>
+
+{{support_email}}
+
+</a>
+
+</td>
+
+
+<!-- =================================================
+TRACK QUERY STATUS BUTTON
+================================================= -->
+
+<td
+width="150"
+align="center"
+valign="middle"
+style="
+width:150px;
+padding:12px 5px;
+vertical-align:middle;
+"
+>
+
+<a
+href="{{track_url}}"
+style="
+display: inline-block;
+    width: 158px;
+    box-sizing: border-box;
+    padding: 18px 10px;
+    background: #5420D0;
+    background-image: linear-gradient(90deg, #4E1BC5, #7029E5);
+    border-radius: 26px;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-decoration: none;
+    text-align: center
+"
+>
+
+Track Query Status
+
+&nbsp; →
+
+</a>
+
+</td>
+
+
+<!-- =================================================
+VISIT CHATBUCKET BUTTON
+================================================= -->
+
+<td
+width="150"
+align="center"
+valign="middle"
+style="
+width:150px;
+padding:12px 15px 12px 5px;
+vertical-align:middle;
+"
+>
+
+<a
+href="{{visit_url}}"
+style="
+display: inline-block;
+    width: 158px;
+    box-sizing: border-box;
+    padding: 18px 10px;
+    background: #FFFFFF;
+    border: 1px solid #6630D5;
+    border-radius: 26px;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 14px;
+    font-weight: 700;
+    color: #5524D0;
+    text-decoration: none;
+    text-align: center;
+"
+>
+
+Visit ChatBucket
+
+&nbsp; →
+
+</a>
+
+</td>
+
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+<!-- =====================================================
+THANK YOU MESSAGE
+===================================================== -->
+
+<tr>
+
+<td
+  align="center"
+  style="
+    padding:20px 20px 25px;
+    background:#ffffff;
+    color:#312b3e;
+    font-size:11px;
+  "
+>
+
+Thank you for being part of our journey.
+
+&nbsp;&nbsp;
+
+<img
+  src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/love.png"
+  width="14"
+  height="14"
+  alt="Heart"
+  style="
+    display:inline-block;
+    vertical-align:middle;
+  "
+>
+
+&nbsp;
+
+<strong>Team ChatBucket</strong>
+
+</td>
+
+</tr>
+
+
+<!-- ==================================================
+               FOOTER
+          =================================================== -->
+
+          <tr>
+
+            <td style="
+              background:#10072E;
+              background-image:linear-gradient(
+                180deg,
+                #10072E 0%,
+                #17073F 100%
+              );
+              padding:28px 32px;
+              color:#ffffff;
+            ">
+
+
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+              >
+
+                <tr>
+
+
+                  <!-- LOGO -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="33%"
+                  >
+
+                    <img
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/ChatBucket-logo.png"
+                      class="footer-logo"
+                      width="180"
+                      alt="ChatBucket Business"
+                      style="
+                        display:block;
+                        width:180px;
+                        max-width:100%;
+                        height:auto;
+                      "
+                    />
+
+                  </td>
+
+
+
+                  <!-- SOCIAL -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="34%"
+                    align="center"
+                  >
+
+                    <div style="
+                     font-family: 'Segoe UI', Arial, sans-serif;
+                     font-size: 13px;
+                     color: #ffffff;
+                    margin-bottom: 15px;
+                    ">
+
+                      Follow us
+
+                    </div>
+
+
+                    <table
+                      role="presentation"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      align="center"
+                    >
+
+                      <tr>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.linkedin.com/company/chatbucket/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/linkedin.png"
+                              width="32"
+                              height="32"
+                              alt="LinkedIn"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://x.com/ChatbucketApp">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/X.png"
+                              width="32"
+                              height="32"
+                              alt="X"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.youtube.com/@chatbucket">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/youtube.png"
+                              width="32"
+                              height="32"
+                              alt="YouTube"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.instagram.com/chatbucket_app/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/ideal-user/insta.png"
+                              width="32"
+                              height="32"
+                              alt="Website"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+
+
+                  <!-- COMPANY -->
+
+                  <td
+                    class="footer-col mobile-stack"
+                    valign="top"
+                    width="33%"
+                    align="right"
+                    style="
+                      color:rgba(255,255,255,0.75);
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      line-height:17px;
+                    "
+                  >
+
+                    <strong style="
+                      color:#ffffff;
+                      font-weight:600;
+                    ">
+
+                      ChatBucket Technologies Pvt. Ltd.
+
+                    </strong>
+
+                    <br/>
+
+                    Hyderabad, Telangana, India
+
+                    <br/>
+
+                    <a
+                      href="https://www.instagram.com/chatbucket_app/"
+                      style="
+                        color:#A78BFA;
+                        font-weight:600;
+                      "
+                    >
+
+                      www.chatbucket.business
+
+                    </a>
+
+                  </td>
+
+
+                </tr>
+
+
+
+                <!-- DIVIDER -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="padding-top:18px;"
+                  >
+
+                    <div style="
+                      height:1px;
+                      background:rgba(255,255,255,0.10);
+                      font-size:0;
+                      line-height:0;
+                    ">
+
+                      &nbsp;
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+
+
+                <!-- COPYRIGHT -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="
+                          padding-top: 14px;
+                          color: rgba(255, 255, 255, 0.60);
+                           font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 13px;
+                    "
+                  >
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+
+                      <tr>
+
+
+                        <td
+                          class="footer-bottom-left"
+                          align="left"
+                        >
+
+                          &copy; {{year}} ChatBucket Technologies Pvt. Ltd.
+                          All rights reserved.
+
+                        </td>
+
+
+                        <td
+                          class="footer-bottom-right"
+                          align="right"
+                        >
+
+                          <a
+                            href="{{privacy_policy_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Privacy Policy
+
+                          </a>
+
+                          <span style="
+                            opacity:0.4;
+                            margin:0 8px;
+                          ">
+
+                            |
+
+                          </span>
+
+                          <a
+                            href="{{terms_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Terms of Service
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+
+              </table>
+
+            </td>
+
+          </tr>
+
+
+        </table>
+        <!-- END MAIN CONTAINER -->
+
+
+
+<!-- =====================================================
+END MAIN CONTAINER
+===================================================== -->
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</body>
+
+</html>

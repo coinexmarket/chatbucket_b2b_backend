@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>{{maintenance_type}} - ChatBucket Business</title>
+
+<!--[if mso]>
+<style type="text/css">
+table,td,div,p,a{
+font-family:Arial,Helvetica,sans-serif !important;
+}
+v\:roundrect{
+behavior:url(#default#VML);
+}
+</style>
+<![endif]-->
+
+<style type="text/css">
+
+body,
+table,
+td,
+a{
+-webkit-text-size-adjust:100%;
+-ms-text-size-adjust:100%;
+}
+
+table,
+td{
+mso-table-lspace:0;
+mso-table-rspace:0;
+}
+
+img{
+border:0;
+outline:none;
+text-decoration:none;
+display:block;
+-ms-interpolation-mode:bicubic;
+}
+
+body{
+margin:0;
+padding:0;
+width:100%;
+background:#eef1f7;
+font-family:'Segoe UI',Arial,sans-serif;
+}
+
+.container{
+width:800px;
+max-width:800px;
+background:#ffffff;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+@media only screen and (max-width:800px){
+    /* A 38px heading is ~390px on one line, which sets the minimum width of
+       every table above it — `width:100%` cannot shrink a table below its
+       content. Capping the display sizes is what actually lets the layout
+       reach 360px. */
+    h1 { font-size: 26px !important; line-height: 32px !important; }
+    h2 { font-size: 21px !important; line-height: 27px !important; }
+    .hero-title { font-size: 26px !important; line-height: 32px !important; }
+  /* Design's own layout classes for the shared footer and feature strips.
+     These rows are what set the table's minimum width — a table cannot shrink
+     below the sum of its columns' min-content, so `width:100%` above them was
+     never going to be enough. */
+  .footer-col,
+  .footer-bottom-left,
+  .footer-bottom-right,
+  .support-left,
+  .support-right {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+  /* Feature strips read better two-up than as one tall column. */
+  .feature-cell {
+    display: inline-block !important;
+    width: 48% !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    text-align: center !important;
+  }
+  .feature-separator { display: none !important; }
+  /* The footer's two call-to-action buttons carry their own nowrap, so the
+     pair is a ~300px floor the surrounding table cannot shrink past. Letting
+     the label wrap costs one line and removes the last overflow. */
+  /* Two buttons side by side in a 340px footer wrap to three cramped lines
+     each. Stacked and centred they stay one line and stay tappable. */
+  .btn, a.btn {
+    white-space: normal !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 260px !important;
+    margin: 8px auto !important;
+    text-align: center !important;
+  }
+
+  /* `white-space:nowrap` is a hard floor: "₹1,678.00 / ₹9,875.00  17%" cannot
+     be squeezed, so the table around it cannot shrink either. On a phone it
+     is better for that to wrap onto two lines than for the whole email to
+     scroll sideways. */
+  td, th { white-space: normal !important; }
+  /* `overflow-wrap` breaks a string only when it genuinely cannot fit;
+     `word-break: break-word` breaks eagerly and turned
+     "support@chatbucket.business" into "support@chatbucket.b / usiness". */
+  td, div, p, span, a { overflow-wrap: break-word !important; }
+
+
+    /* --- responsive helpers ------------------------------------------- */
+    .mobile-stack {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      /* Side-by-side columns were separated by their own width. Stacked, they
+         need vertical space or the last line of one runs into the heading of
+         the next. The right border did the same job horizontally and becomes a
+         stray edge once stacked. */
+      padding-bottom: 14px !important;
+      border-right: 0 !important;
+    }
+    .mobile-half {
+      display: inline-block !important;
+      width: 50% !important;
+      box-sizing: border-box !important;
+    }
+    .mobile-hide {
+      display: none !important;
+    }
+    .mobile-center {
+      text-align: center !important;
+    }
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+
+.container{
+width:100%!important;
+}
+
+.hero-left,
+.hero-right{
+display:block!important;
+width:100%!important;
+}
+
+.hero-left{
+padding:28px 24px 12px 24px!important;
+}
+
+.hero-right{
+padding:10px 20px 28px 20px!important;
+text-align:center!important;
+}
+
+.hero-title{
+font-size:32px!important;
+line-height:38px!important;
+}
+
+.hero-image{
+width:100%!important;
+max-width:340px!important;
+height:auto!important;
+margin:0 auto!important;
+}
+
+.mobile-padding{
+padding-left:20px!important;
+padding-right:20px!important;
+}
+
+}
+
+
+/* --- mobile overrides (appended; absolute caps break the width cycle) --- */
+@media only screen and (max-width:800px) {
+  .container { width: 100% !important; }
+  /* An auto-layout table cannot shrink below the sum of its columns'
+     min-content, whatever width you give it. Fixed layout makes the outer
+     table honour 100% and pushes the constraint inward, where the stacking
+     rules above can act on it. Applied only to the outermost table — fixed
+     layout on nested ones would redistribute their columns by the first row
+     and distort the OTP grid and the progress bars. */
+  .container { table-layout: fixed !important; max-width: 100% !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+  /* A hero carrying width="430" is a hard floor for every table above it.
+     Capping it in px, not %, is what lets the layout reach 360. */
+  .hero-image, .hero-img {
+    width: 280px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  h1 { font-size: 26px !important; line-height: 32px !important; }
+  h2 { font-size: 21px !important; line-height: 27px !important; }
+  .hero-title { font-size: 26px !important; line-height: 32px !important; }
+}
+</style>
+
+</head>
+
+
+
+<body style="margin:0;padding:0;background:#eef1f7;">
+
+<div style="
+display:none;
+max-height:0;
+overflow:hidden;
+opacity:0;
+color:transparent;
+height:0;
+width:0;
+">
+
+Scheduled maintenance is currently in progress.
+Some ChatBucket services may be temporarily unavailable.
+
+</div>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="background:#eef1f7;"
+>
+
+<tr>
+
+<td align="center" style="padding:24px 12px;">
+
+<table
+role="presentation"
+class="container"
+border="0"
+cellpadding="0"
+cellspacing="0"
+width="800">
+
+<!-- ======================================================
+HERO SECTION
+====================================================== -->
+
+<tr>
+
+<td
+style="
+background:#140A36;
+background-image:linear-gradient(
+120deg,
+#140A36 0%,
+#2B145C 45%,
+#6C39CC 75%,
+#190B43 100%);
+">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<!-- LEFT CONTENT -->
+
+<td
+class="hero-left mobile-stack"
+width="50%"
+valign="top"
+style="
+padding:36px 18px 38px 42px;
+">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/ChatBucket-logo.png"
+width="190"
+alt="ChatBucket Business"
+style="
+display:block;
+width:190px;
+max-width:100%;
+height:auto;
+">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="margin-top:34px;">
+
+<tr>
+
+<td
+style="
+font-size:27px;
+font-weight:400;
+color:#ffffff;
+">
+
+Hi
+
+<strong style="font-weight:700;">
+{{name}}
+</strong>
+
+</td>
+
+<td style="padding-left:6px;">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/wave.png"
+width="28"
+height="28"
+alt=""
+style="
+display:block;
+width:28px;
+height:28px;
+">
+
+</td>
+
+</tr>
+
+</table>
+
+<div
+class="hero-title"
+style="
+margin-top:8px;
+font-size:44px;
+line-height:48px;
+font-weight:400;
+color:#ffffff;
+">
+
+We're Under
+
+<br>
+
+<strong style="font-weight:800;">
+
+Maintenance
+
+</strong>
+
+</div>
+
+<p
+style="
+margin:18px 0 0;
+font-size:15px;
+line-height:20px;
+color:#DDD7F1;
+">
+
+We are currently performing scheduled
+maintenance to improve the performance
+and reliability of ChatBucket.
+
+<br>
+
+Some services may be temporarily
+unavailable.
+
+Thank you for your patience
+and support.
+
+</p>
+
+</td>
+
+<!-- HERO IMAGE -->
+
+<td
+class="hero-right mobile-stack"
+width="50%"
+align="center"
+valign="middle"
+style="
+padding:18px 24px 18px 0;
+">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/hero-img.png"
+class="hero-image"
+width="380"
+alt="Maintenance"
+style="
+mix-blend-mode: luminosity;
+display:block;
+width:380px;
+max-width:100%;
+height:auto;
+">
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<!-- ======================================================
+
+PART 2 STARTS HERE
+
+Maintenance Details
+What's Affected?
+
+====================================================== -->
+<!-- =====================================================
+PART 2
+
+Maintenance Details
+What's Affected?
+
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:34px 42px 18px 42px;
+background:#ffffff;
+">
+
+<!-- =========================
+MAINTENANCE DETAILS
+========================= -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#FCFBFF;
+border:1px solid #E5DEF6;
+border-radius:14px;
+">
+
+<tr>
+
+<td style="padding:22px;">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/maintenance-details.png"
+width="26"
+height="26"
+alt=""
+style="
+display:block;
+width:26px;
+height:26px;
+">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+font-size:18px;
+font-weight:700;
+color:#5726CA;
+">
+
+Maintenance Details
+
+</td>
+
+</tr>
+
+</table>
+
+<div
+style="
+height:1px;
+background:#E7DFF5;
+margin:18px 0;
+font-size:0;
+line-height:0;
+">
+
+&nbsp;
+
+</div>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<!-- START -->
+
+<td class="mobile-stack" width="25%" valign="top">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/time.png"
+width="42"
+height="42"
+alt="">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+vertical-align:top;
+">
+
+<div
+style="
+font-size:11px;
+font-weight:700;
+color:#3C3650;
+">
+
+Start Time
+
+</div>
+
+<div
+style="
+margin-top:6px;
+font-size:14px;
+font-weight:700;
+color:#2A2536;
+">
+
+{{start_date}}
+
+</div>
+
+<div
+style="
+margin-top:3px;
+font-size:14px;
+font-weight:700;
+color:#2A2536;
+">
+
+{{start_time}}
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- END -->
+
+<td class="mobile-stack" width="25%" valign="top">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/time.png"
+width="42"
+height="42"
+alt="">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+vertical-align:top;
+">
+
+<div
+style="
+font-size:11px;
+font-weight:700;
+color:#3C3650;
+">
+
+Expected End Time
+
+</div>
+
+<div
+style="
+margin-top:6px;
+font-size:14px;
+font-weight:700;
+color:#2A2536;
+">
+
+{{end_date}}
+</div>
+
+<div
+style="
+margin-top:3px;
+font-size:14px;
+font-weight:700;
+color:#2A2536;
+">
+
+{{end_time}}
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- TYPE -->
+
+<td class="mobile-stack" width="25%" valign="top">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/type.png"
+width="42"
+height="42"
+alt="">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+vertical-align:top;
+">
+
+<div
+style="
+font-size:11px;
+font-weight:700;
+color:#3C3650;
+">
+
+Type
+
+</div>
+
+<div
+style="
+margin-top:6px;
+font-size:14px;
+font-weight:700;
+color:#5C2BD1;
+">
+
+{{maintenance_type}}
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- REFERENCE -->
+
+<td class="mobile-stack" width="25%" valign="top">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/id.png"
+width="42"
+height="42"
+alt="">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+vertical-align:top;
+">
+
+<div
+style="
+font-size:11px;
+font-weight:700;
+color:#3C3650;
+">
+
+Reference ID
+
+</div>
+
+<div
+style="
+margin-top:6px;
+font-size:13px;
+font-weight:700;
+color:#5C2BD1;
+">
+
+{{reference_id}}
+
+</div>
+
+<div
+style="
+margin-top:4px;
+font-size:10px;
+line-height:16px;
+color:#6F697E;
+">
+
+Please keep this ID
+for your reference.
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+<!-- =========================
+WHAT'S AFFECTED
+========================= -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:28px;
+background:#12063D;
+background-image:linear-gradient(
+180deg,
+#12063D 0%,
+#1C0957 100%);
+border-radius:14px;
+">
+
+<tr>
+
+<td style="padding:24px;">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<!-- LEFT -->
+
+<td class="mobile-stack"
+width="45%"
+valign="top">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/notification.png"
+width="78"
+height="78"
+alt=""
+style="
+display:block;
+width:78px;
+height:78px;
+">
+
+</td>
+
+<td
+style="
+padding-left:16px;
+vertical-align:top;
+">
+
+<div
+style="
+font-size:22px;
+font-weight:700;
+color:#ffffff;
+">
+
+What's Affected?
+
+</div>
+
+<div
+style="
+
+font-size:13px;
+line-height:16px;
+color:#D4CCEB;
+">
+
+During this maintenance window,
+you may experience intermittent
+downtime or limited access to
+the following services.
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- SERVICES -->
+
+<td class="mobile-stack"
+width="56%"
+align="center"
+valign="top">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td class="mobile-half mobile-center" align="center">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/message.png"
+width="30"
+height="30"
+alt="">
+
+<div style="
+margin-top:8px;
+font-size:12px;
+font-weight:600;
+color:#ffffff;
+">
+
+Messaging
+
+</div>
+
+</td>
+
+<td class="mobile-half mobile-center" align="center">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/Call.png"
+width="30"
+height="30"
+alt="">
+
+<div style="
+margin-top:8px;
+font-size:12px;
+font-weight:600;
+color:#ffffff;
+">
+
+Voice &amp;<br>
+Video Calls
+
+</div>
+
+</td>
+
+<td class="mobile-half mobile-center" align="center">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/translation.png"
+width="30"
+height="30"
+alt="">
+
+<div style="
+margin-top:8px;
+font-size:12px;
+font-weight:600;
+color:#ffffff;
+">
+
+Real-Time<br>
+Translation
+
+</div>
+
+</td>
+
+<td class="mobile-half mobile-center" align="center">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/agent.png"
+width="30"
+height="30"
+alt="">
+
+<div style="
+margin-top:8px;
+font-size:12px;
+font-weight:600;
+color:#ffffff;
+">
+
+AI Chat &amp;<br>
+Agents
+
+</div>
+
+</td>
+
+<td class="mobile-half mobile-center" align="center">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/Analysis.png"
+width="30"
+height="30"
+alt="">
+
+<div style="
+margin-top:8px;
+font-size:12px;
+font-weight:600;
+color:#ffffff;
+">
+
+Analytics &amp;<br>
+Reports
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="2" style="padding-top:20px;">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#2A176A;
+border-radius:8px;
+">
+
+<tr>
+
+<td style="padding:14px 18px;">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/safe.png"
+width="24"
+height="24"
+alt="">
+
+</td>
+
+<td
+style="
+padding-left:10px;
+font-size:13px;
+font-weight:600;
+color:#F1EDFF;
+">
+
+Your data is safe and secure.
+We are working to restore all services
+as quickly as possible.
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<!-- =====================================================
+PART 3 STARTS HERE
+
+What to Expect
+Support Section
+
+===================================================== -->
+
+<!-- =====================================================
+PART 3
+
+What to Expect
+Support Section
+
+===================================================== -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:0 42px 24px 42px;
+background:#ffffff;
+">
+
+<!-- =========================
+WHAT TO EXPECT
+========================= -->
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td align="center">
+
+<div
+style="
+font-size:24px;
+font-weight:800;
+color:#5B2BD1;
+">
+
+What to Expect
+
+</div>
+
+<div
+style="
+margin-top:8px;
+font-size:13px;
+line-height:22px;
+color:#6D687A;
+">
+
+Here's what our engineering team is doing
+during the maintenance window.
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="margin-top:28px;">
+
+<tr>
+
+<!-- STEP 1 -->
+
+<td class="mobile-stack"
+width="18%"
+align="center"
+valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/notification2.png"
+width="50"
+height="50"
+alt=""
+style="
+display:block;
+margin:0 auto;
+width:50px;
+height:50px;
+">
+
+<div
+style="
+margin-top:12px;
+font-size:13px;
+font-weight:700;
+color:#241F31;
+">
+
+1. Maintenance Begins
+</div>
+
+<div
+style="
+margin-top:5px;
+font-size:11px;
+line-height:16px;
+color:#70697E;
+">
+
+We start the scheduled maintenance at the mentioned time.
+
+</div>
+
+</td>
+
+<!-- ARROW -->
+
+<td class="mobile-hide"
+width="8%"
+align="center"
+valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/arrow.png"
+width="28"
+alt=""
+style="
+display:block;
+margin:0 auto;
+">
+
+</td>
+
+<!-- STEP 2 -->
+
+<td class="mobile-stack"
+width="18%"
+align="center"
+valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/update.png"
+width="50"
+height="50"
+alt=""
+style="
+display:block;
+margin:0 auto;
+width:50px;
+height:50px;
+">
+
+<div
+style="
+margin-top:12px;
+font-size:13px;
+font-weight:700;
+color:#241F31;
+">
+
+2. System update
+
+</div>
+
+<div
+style="
+margin-top:5px;
+font-size:11px;
+line-height:16px;
+color:#70697E;
+">
+
+Performance
+enhancements and
+feature updates.
+
+</div>
+
+</td>
+
+<!-- ARROW -->
+
+<td class="mobile-hide"
+width="8%"
+align="center"
+valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/arrow.png"
+width="28"
+alt=""
+style="
+display:block;
+margin:0 auto;
+">
+
+</td>
+
+<!-- STEP 3 -->
+
+<td class="mobile-stack"
+width="18%"
+align="center"
+valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/restored.png"
+width="50"
+height="50"
+alt=""
+style="
+display:block;
+margin:0 auto;
+width:50px;
+height:50px;
+">
+
+<div
+style="
+margin-top:12px;
+font-size:13px;
+font-weight:700;
+color:#241F31;
+">
+
+3. Services Restored
+
+</div>
+
+<div
+style="
+margin-top:5px;
+font-size:11px;
+line-height:18px;
+color:#70697E;
+">
+
+Every service is
+verified before
+going live.
+
+</div>
+
+</td>
+
+<!-- ARROW -->
+
+<td class="mobile-hide"
+width="8%"
+align="center"
+valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/arrow.png"
+width="28"
+alt=""
+style="
+display:block;
+margin:0 auto;
+">
+
+</td>
+
+<!-- STEP 4 -->
+
+<td class="mobile-stack"
+width="32%"
+align="center"
+valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/notified.png"
+width="50"
+height="50"
+alt=""
+style="
+display:block;
+margin:0 auto;
+width:50px;
+height:50px;
+">
+
+<div
+style="
+margin-top:12px;
+font-size:13px;
+font-weight:700;
+color:#241F31;
+">
+
+4. You are notified
+
+</div>
+
+<div
+style="
+margin-top:5px;
+font-size:11px;
+line-height:16px;
+color:#70697E;
+">
+
+All ChatBucket
+services return
+to normal.
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<!-- =========================
+SUPPORT SECTION
+========================= -->
+
+<tr>
+
+<td
+class="mobile-padding"
+style="
+padding:10px 42px 24px 42px;
+background:#ffffff;
+">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#F4EEFF;
+border-radius:12px;
+">
+
+<tr>
+
+<td style="padding:20px;">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<!-- LEFT -->
+
+<td class="mobile-stack"
+width="48%"
+valign="middle">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/support.png"
+width="74"
+alt=""
+style="
+display:block;
+width:74px;
+height:auto;
+">
+
+</td>
+
+<td
+style="
+padding-left:14px;
+vertical-align:middle;
+">
+
+<div
+style="
+font-size:14px;
+font-weight:700;
+color:#231D31;
+">
+
+Need Assistance?
+
+</div>
+
+<div
+style="
+margin-top:6px;
+font-size:11px;
+line-height:16px;
+color:#6C667B;
+">
+
+If you have any urgent questions,
+our support team is here to help.
+
+</div>
+
+<a
+href="mailto:{{support_email}}"
+style="
+display:inline-block;
+margin-top:8px;
+font-size:12px;
+font-weight:700;
+color:#5B2BD1;
+text-decoration:none;
+">
+
+{{support_email}}
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- RIGHT -->
+
+<td class="mobile-stack"
+width="52%"
+align="right"
+valign="middle">
+
+<a
+href="{{track_url}}"
+style="
+display:inline-block;
+background:#5B2BD1;
+color:#ffffff;
+padding:12px 20px;
+border-radius:8px;
+font-size:13px;
+font-weight:700;
+text-decoration:none;
+margin-left:8px;
+">
+
+Track Status →
+
+</a>
+
+<a
+href="{{visit_url}}"
+style="
+display:inline-block;
+background:#ffffff;
+border:1px solid #B39CE9;
+color:#5B2BD1;
+padding:11px 18px;
+border-radius:8px;
+font-size:13px;
+font-weight:700;
+text-decoration:none;
+margin-left:8px;
+">
+
+Visit ChatBucket →
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<!-- =====================================================
+
+PART 4 STARTS HERE
+
+Thank You
+Footer
+Closing HTML
+
+===================================================== -->
+<!-- =====================================================
+PART 4
+
+Thank You
+Footer
+Closing HTML
+
+===================================================== -->
+
+<!-- =========================
+THANK YOU
+========================= -->
+
+<tr>
+
+<td
+align="center"
+style="
+padding:26px 20px 22px 20px;
+background:#ffffff;
+">
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td
+style="
+font-size:12px;
+color:#5C5668;
+vertical-align:middle;
+">
+
+Thank you for your patience and understanding.
+
+</td>
+
+<td
+style="
+padding:0 12px;
+color:#D3C6F8;
+vertical-align:middle;
+">
+
+|
+
+</td>
+
+<td valign="middle">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/love.png"
+width="15"
+height="15"
+alt=""
+style="
+display:block;
+width:15px;
+height:15px;
+">
+
+</td>
+
+<td
+style="
+padding-left:7px;
+font-size:12px;
+font-weight:700;
+color:#231E31;
+vertical-align:middle;
+">
+
+Team ChatBucket
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+
+
+<!-- =========================
+FOOTER
+========================= -->
+
+<tr>
+
+<td
+style="
+background:#11072F;
+background-image:linear-gradient(
+180deg,
+#11072F 0%,
+#1B0845 100%);
+padding:30px 34px;
+">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<!-- LOGO -->
+
+<td
+class="footer-col mobile-stack"
+width="33%"
+valign="top">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/ChatBucket-logo.png"
+width="185"
+class="footer-logo"
+alt="ChatBucket Business"
+style="
+display:block;
+width:185px;
+max-width:100%;
+height:auto;
+">
+
+</td>
+
+
+
+<!-- SOCIAL -->
+
+<td
+class="footer-col mobile-stack"
+width="34%"
+align="center"
+valign="top">
+
+<div
+style="
+color:#ffffff;
+font-family:'Segoe UI',Arial,sans-serif;
+font-size:11px;
+margin-bottom:10px;
+">
+
+Follow Us
+
+</div>
+
+<table
+role="presentation"
+border="0"
+cellpadding="0"
+cellspacing="0"
+align="center">
+
+<tr>
+
+<td style="padding:0 4px;">
+
+<a href="https://www.linkedin.com/company/chatbucket/">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/linkedin.png"
+width="32"
+height="32"
+alt="LinkedIn"
+style="
+display:block;
+width:32px;
+height:32px;
+">
+
+</a>
+
+</td>
+
+<td style="padding:0 4px;">
+
+<a href="https://x.com/ChatbucketApp">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/X.png"
+width="32"
+height="32"
+alt="Twitter"
+style="
+display:block;
+width:32px;
+height:32px;
+">
+
+</a>
+
+</td>
+
+<td style="padding:0 4px;">
+
+<a href="https://www.youtube.com/@chatbucket">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/youtube.png"
+width="32"
+height="32"
+alt="YouTube"
+style="
+display:block;
+width:32px;
+height:32px;
+">
+
+</a>
+
+</td>
+
+<td style="padding:0 4px;">
+
+<a href="https://www.instagram.com/chatbucket_app/">
+
+<img
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/maintenance/insta.png"
+width="32"
+height="32"
+alt="Website"
+style="
+display:block;
+width:32px;
+height:32px;
+">
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+
+
+<!-- COMPANY -->
+
+<td
+class="footer-col mobile-stack"
+width="33%"
+align="right"
+valign="top"
+style="
+font-size:10px;
+line-height:17px;
+font-family:'Segoe UI',Arial,sans-serif;
+color:rgba(255,255,255,.75);
+">
+
+<strong
+style="
+color:#ffffff;
+font-weight:600;
+">
+
+ChatBucket Technologies Pvt. Ltd.
+
+</strong>
+
+<br>
+
+Hyderabad, Telangana, India
+
+<br>
+
+<a
+href="https://www.instagram.com/chatbucket_app/"
+style="
+color:#B48FFF;
+font-weight:600;
+text-decoration:none;
+">
+
+www.chatbucket.business
+
+</a>
+
+</td>
+
+</tr>
+
+
+
+<!-- DIVIDER -->
+
+<tr>
+
+<td
+colspan="3"
+style="padding-top:20px;">
+
+<div
+style="
+height:1px;
+background:rgba(255,255,255,.12);
+font-size:0;
+line-height:0;
+">
+
+&nbsp;
+
+</div>
+
+</td>
+
+</tr>
+
+
+
+<!-- COPYRIGHT -->
+
+<tr>
+
+<td
+colspan="3"
+style="
+padding-top:15px;
+font-size:10px;
+font-family:'Segoe UI',Arial,sans-serif;
+color:rgba(255,255,255,.60);
+">
+
+<table
+role="presentation"
+width="100%"
+border="0"
+cellpadding="0"
+cellspacing="0">
+
+<tr>
+
+<td
+class="footer-bottom-left"
+align="left">
+
+&copy; {{year}} ChatBucket Technologies Pvt. Ltd.
+
+All rights reserved.
+
+</td>
+
+<td
+class="footer-bottom-right"
+align="right">
+
+<a
+href="{{privacy_policy_url}}"
+style="
+color:rgba(255,255,255,.72);
+text-decoration:none;
+">
+
+Privacy Policy
+
+</a>
+
+<span
+style="
+opacity:.35;
+margin:0 8px;
+">
+
+|
+
+</span>
+
+<a
+href="{{terms_url}}"
+style="
+color:rgba(255,255,255,.72);
+text-decoration:none;
+">
+
+Terms of Service
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+<!-- END MAIN CONTAINER -->
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+</html>

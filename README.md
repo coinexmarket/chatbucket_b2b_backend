@@ -21,6 +21,10 @@ app/
   sessions.py        Refresh tokens: rotation + reuse detection
   ratelimit.py       Mongo-backed fixed-window request limits
   email.py           The ONLY module that sends mail (SMTP + dev/test backends)
+  emailtemplates.py  Loads + renders the designed HTML emails; shared footer values
+  reports.py         The monthly usage report's figures, from the usage records
+  verification.py    Email-verification credentials: minting, expiry, marking verified
+  notifications.py   Lifecycle email jobs: broadcasts, reports, reminders, nudges
   money.py           Exact INR amounts: Decimal -> Decimal128 -> float (JSON)
   pricing.py         Rate card + cost calculation (single source of truth)
   analytics.py       Chart time-bucketing: granularities, ranges, zero-fill
@@ -36,7 +40,10 @@ app/
     usage.py         Usage-metering body
     billing.py       Top-up / auto-recharge / webhook bodies
     projects.py      Project create / update bodies
+    notifications.py Announcement / maintenance / monthly-report bodies
     requests.py      Subscription + contest + demo-request bodies
+  templates/
+    emails/          13 HTML emails: the 12 design shipped, plus email_verified
   routers/
     auth.py          register, login, forgot-password, reset-password
     profile.py       get/update profile, change password
@@ -47,14 +54,15 @@ app/
     projects.py      projects CRUD (Create API Key modal)
     status.py        service status (API Status page)
     engines.py       engine burn vs allowance (operator-only)
+    notifications.py announcements, maintenance notices, report runs (operator-only)
     billing.py       credits, top-ups, ledger, gateway webhook
     demo.py          demo requests (Personal / Business modal)
     blogs.py / subscriptions.py / contest.py   (chatbucket-web site)
 scripts/
   seed.py            Sample blog data
-  smoke_test.py      End-to-end test for the site endpoints (61 checks)
+  smoke_test.py      End-to-end test for the site endpoints (71 checks)
   set_status.py      Set every system's status by hand
-  smoke_b2b.py       End-to-end test for the B2B platform (346 checks)
+  smoke_b2b.py       End-to-end test for the B2B platform (433 checks)
 ```
 
 ## Billing model (usage-based, INR)
@@ -93,7 +101,33 @@ are unchanged: `cost` is still a plain JSON number like `2.275`.
 | POST | `/auth/refresh` | – | `{refresh_token}` → a new access token; the refresh token is **rotated** |
 | POST | `/auth/logout` | Bearer JWT | `{refresh_token?, all_sessions?}` → revoke one session or all |
 | POST | `/auth/verify-email` | – | `{token}` → confirm the address (single use) |
-| POST | `/auth/verify-email/resend` | Bearer JWT | Send a fresh link to the signed-in address |
+| POST | `/auth/verify-email/otp` | – | `{email,code}` → confirm the address from the 6-digit code |
+| POST | `/auth/verify-email/resend` | Bearer JWT | Send a fresh link **and** code to the signed-in address |
+
+#### Verifying an email address
+
+The verification email carries **two credentials for one job**, with different
+lifetimes on purpose. The link lasts `VERIFICATION_TOKEN_EXPIRE_HOURS` (48)
+because it may be opened from a mail client days later. The six-digit code lasts
+`EMAIL_OTP_EXPIRE_MINUTES` (10), because six digits is only a secret while the
+window to guess it is small — it exists for the person typing it back into a
+form they already have open, usually on a phone.
+
+Either one verifies the address, and using one spends both. `/verify-email/otp`
+is unauthenticated for the same reason `/verify-email` is — someone verifying on
+a phone has no session — so it takes the address alongside the code. Three
+things stop that being a way to brute-force a million codes: an attempt counter
+on the user document that burns the code after `EMAIL_OTP_MAX_ATTEMPTS` (5), and
+per-IP *and* per-address rate limits on top of it. The counter lives in the
+database, not in process memory, so the cap holds across workers and restarts.
+
+Codes are stored as an **HMAC under `JWT_SECRET`**, not a bare SHA-256: a plain
+digest of six digits is reversed by a laptop in seconds, so storing one would be
+the same as storing the code. The key is in the environment, not the database.
+
+In development both the token and the code come back in the response body
+(`verification_token`, `verification_code`), because the console backend leaves
+no inbox to read them out of.
 
 #### Signup form fields
 
@@ -767,11 +801,20 @@ not code, and needs no extra dependency.
 | `memory` | Append to `email.outbox` (used by the smoke tests). |
 | `disabled` | Drop silently. |
 
-Two messages are sent today: the **password-reset link** and the **demo-request
-notification** to sales.
+Customer-facing mail goes out as **multipart/alternative**: the designed HTML
+from `app/templates/emails`, plus a hand-written plain-text part saying the same
+thing. The text part is not a courtesy — it is what screen readers, text-only
+clients and spam filters actually read, so every link in the HTML appears in it
+too. Mail to *us* (the sales notification) stays plain text: it goes to a
+colleague, and a designed template only gets in the way of pasting it into a CRM.
 
-Both are dispatched as FastAPI background tasks, after the response. That is not
-just for latency — `forgot-password` returns an identical response whether or
+Both parts are encoded **quoted-printable** rather than letting Python choose.
+The templates are full of non-ASCII — the rupee sign, em dashes, emoji — and the
+default choice for those is `8bit`, which an SMTP server that does not advertise
+`8BITMIME` may reject outright.
+
+Messages are dispatched as FastAPI background tasks, after the response. That is
+not just for latency — `forgot-password` returns an identical response whether or
 not the email exists, and awaiting an SMTP round trip only for real accounts
 would leak the difference in the response *time*, reinstating the enumeration
 oracle the endpoint is written to avoid.
@@ -786,9 +829,144 @@ otherwise reset links would be written to the log and silently never delivered,
 which looks exactly like a working password reset. Set `EMAIL_BACKEND=disabled`
 to state that a deployment intentionally sends none.
 
-Email bodies are deliberately ASCII-only: a non-ASCII character makes Python
-pick `8bit` transfer encoding, which SMTP servers that do not advertise
-`8BITMIME` may reject.
+### The designed templates
+
+The twelve HTML emails live as files under `app/templates/emails/`, so a
+designer can re-export one without touching Python. `app/emailtemplates.py`
+renders them with a small Mustache subset — `{{key}}` (HTML-escaped), `{{&key}}`
+(raw), `{{#key}}…{{/key}}` (repeat a list / show-if-truthy), `{{^key}}…{{/key}}`
+— written here rather than added as a dependency.
+
+Escaping is on by default because these emails interpolate customer-supplied
+text: a display name, a company, an announcement body. **A missing context value
+raises**, because every caller builds its own context and a blank is how a reset
+button ends up with an empty `href`; `email.py` catches it, logs it, and sends
+the plain-text part alone rather than nothing.
+
+| Template | Sent when | Trigger |
+| --- | --- | --- |
+| `welcome.html` | an account is created | `POST /auth/register` |
+| `email_verification.html` | signup, and on resend | `POST /auth/register`, `POST /auth/verify-email/resend` |
+| `password_reset.html` | a reset is requested | `POST /auth/forgot-password` |
+| `contact_received.html` | a demo/contact form is submitted | `POST /demo-requests` |
+| `subscribed.html` | a new address subscribes | `POST /subscriptions/v1/notify-app-launch` |
+| `deposit.html` | a top-up is settled | gateway webhook / checkout callback |
+| `monthly_report.html` | a month ends | `POST /notifications/monthly-reports` |
+| `free_credits_expiring.html` | a trial window is closing | `POST /notifications/free-credit-reminders` |
+| `onboarding_nudge.html` | registered, never called the API | `POST /notifications/onboarding-nudges` |
+| `announcement.html` | someone has news | `POST /notifications/announcement` |
+| `maintenance.html` | a window is scheduled | `POST /notifications/maintenance` |
+| `email_verified.html` | an address is confirmed | `POST /auth/verify-email`, `/verify-email/otp` |
+| `withdrawal.html` | — | **not wired**: this service has no payouts feature. `email.send_withdrawal_request` is written and tested; call it from whatever creates the withdrawal record. |
+
+The header and footer values every template shares — the marketing link, the
+"Track Query Status" link, the dashboard CTA, the policy links, the support
+address, the year and the currency symbol — come from
+`emailtemplates.base_context()`, so no send site repeats them and staging can
+point them somewhere else. Dates and times render in `DISPLAY_TIMEZONE`
+(default `Asia/Kolkata`); storage stays UTC, because a receipt has to match the
+clock the customer paid by.
+
+Two things in the shipped designs were changed rather than reproduced. The
+monthly report's donut chart was a fixed picture of invented percentages; it is
+now a stacked bar drawn from the same figures as the legend beside it, so the
+chart cannot disagree with the numbers. And the report's quota bars were dropped
+in favour of each service's share of the month's spend — this product is prepaid
+credit, so there is no monthly allowance for a progress bar to fill.
+
+To preview any of them, send yourself a copy:
+
+```bash
+curl -X POST localhost:8000/notifications/announcement \
+  -H "X-Ops-Secret: $OPS_SECRET" -H 'Content-Type: application/json' \
+  -d '{"subject":"Test","headline":"Test","summary":"Preview.","testEmail":"you@example.com"}'
+```
+
+### Operator-triggered mail  `/notifications`  (X-Ops-Secret)
+
+Six of the templates have no customer action that produces them. These
+endpoints are where a person or a scheduler starts them.
+
+    POST /notifications/announcement            press note / product news
+    POST /notifications/maintenance             a maintenance window
+    POST /notifications/monthly-reports         usage report for a month
+    POST /notifications/onboarding-nudges       registered, never called the API
+    POST /notifications/verification-reminders  registered, never verified
+    POST /notifications/free-credit-reminders   trial window closing
+
+Gated by `OPS_SECRET`, not a user session, on the same principle as the
+engine-burn view: the caller is an operator or a cron job, and nothing a
+customer can authenticate as should be able to mail the entire customer base.
+Unset means **503**, not open.
+
+Both broadcasts require either `testEmail` — one copy to that address, nothing
+recorded — or `confirm: true`. There is no way to reach real customers by
+leaving a field out. Announcements go to confirmed addresses only by default
+(`verifiedOnly`); maintenance notices do not, because an account with an
+unconfirmed address can still be calling the API during the window.
+
+**Every run is send-once.** Each recipient claims a row in `notifications`,
+unique on `(user, kind, key)`, before the message goes out; the claim is
+released again if the send fails. So a retried run, an overlapping schedule or a
+manual re-run fills in whoever was missed and skips the rest, and every response
+reports `{considered, sent, skipped, failed, truncated}` — `truncated` meaning
+the run stopped at `BROADCAST_MAX_RECIPIENTS` with more to do. Recipients are
+worked through `BROADCAST_CONCURRENCY` at a time; one SMTP connection per
+customer in parallel is the quickest way to get a sending domain throttled.
+
+### The scheduler
+
+The three recurring jobs — monthly report, free-credit reminder, onboarding
+nudge — run on a timer inside the app. The endpoints above stay available for
+running one by hand; the scheduler is what makes them happen on their own.
+
+```
+NOTIFICATION_SCHEDULER_ENABLED=true    # off by default
+NOTIFICATION_SCHEDULER_HOUR=6          # daily jobs, in DISPLAY_TIMEZONE
+NOTIFICATION_MONTHLY_REPORT_DAY=1      # report covers the previous month
+```
+
+**Off by default deliberately.** Switching it on starts mailing real customers
+unattended, so a deployment opts in rather than inheriting it. Do not turn it
+on before the sending domain passes SPF and DKIM — a monthly report to the
+whole base from an unauthenticated domain lands in spam at scale and damages
+the domain's reputation while it does. The app logs which state it is in at
+boot, so an inert scheduler is one log line to diagnose rather than a mystery.
+
+Timing is read in `DISPLAY_TIMEZONE`, not UTC: "the 1st at 6am" means the
+customer's, and in IST those differ by five and a half hours.
+
+**Two workers, one run.** `--workers 2` means two copies of the loop. Each run
+is claimed in `job_runs` under a unique `(job, period)` index, so one worker
+wins the insert and the rest skip. The period is what the job *covers* — a date
+for the daily jobs, `YYYY-MM` for the report — so a catch-up run on the 3rd
+still reports August rather than whatever "last month" means when it executes.
+
+**Failure releases the claim.** If a run raises, its claim is deleted and the
+next tick retries. A Mongo blip during the monthly run must not mean nobody
+gets a report that month.
+
+**The monthly catch-up window is bounded to 7 days.** An outage on the 1st is
+made up on the 3rd; enabling the scheduler on the 20th does *not* fire a
+retroactive send to the entire customer base. That asymmetry is the point.
+
+If you would rather drive it externally, leave the scheduler off and point cron
+at the endpoints instead:
+
+```cron
+0 6 1 * * curl -fsS -X POST https://api.example/notifications/monthly-reports \
+  -H "X-Ops-Secret: $OPS_SECRET" -H 'Content-Type: application/json' -d '{}'
+0 7 * * * curl -fsS -X POST https://api.example/notifications/free-credit-reminders \
+  -H "X-Ops-Secret: $OPS_SECRET"
+0 8 * * * curl -fsS -X POST https://api.example/notifications/onboarding-nudges \
+  -H "X-Ops-Secret: $OPS_SECRET"
+```
+
+The monthly report skips accounts with no usage in the month: a report of zeroes
+is not information, and nobody opted into a monthly email about not using the
+service. Its figures are computed in `app/reports.py` from records this service
+actually stored — requests, spend, voice minutes and agent interactions — not
+from the sample metric names the design shipped with.
 
 ### Health
 `GET /` (liveness) and `GET /health` — checks DB connectivity and returns
@@ -869,8 +1047,8 @@ Interactive docs: <http://localhost:8000/docs>
 
 ```bash
 pip install -r requirements-dev.txt
-python -m scripts.smoke_b2b     # 346 checks: accounts, keys, usage, credits, billing, email
-python -m scripts.smoke_test    # 61 checks: blogs, subscriptions, contest, demo, status
+python -m scripts.smoke_b2b     # 433 checks: accounts, keys, usage, credits, billing, email
+python -m scripts.smoke_test    # 71 checks: blogs, subscriptions, contest, demo, status
 ```
 
 **Both suites ignore your `.env`.** They set `CHATBUCKET_IGNORE_DOTENV=1` before
@@ -909,21 +1087,22 @@ payment gateway, both of which fail quietly rather than loudly).
 | `CURRENCY` | `INR` | Billing currency label. |
 | `RATE_LIMIT_ENABLED` | `true` | Enforce the limits above. |
 | `ENFORCE_PLAN_RATE_LIMITS` | `true` | Apply each plan's req/min to `POST /usage`. |
-| `REQUIRE_EMAIL_VERIFICATION` | `false` | Block API-key creation until the address is confirmed. |
+| `REQUIRE_EMAIL_VERIFICATION` | `false` (`true` in production) | Block API-key creation until the address is confirmed — which is what stops `SIGNUP_BONUS_CREDITS` being farmed with throwaway addresses. The code default stays `false` on purpose: flipping it blocks every *existing* unverified account, so a deployment must opt in knowingly rather than inherit it from an upgrade. |
 | `VERIFICATION_TOKEN_EXPIRE_HOURS` | `48` | Verification-link lifetime. |
 | `TRUST_PROXY_HEADERS` | `false` | Believe `X-Forwarded-For`. Only behind a proxy you control. |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | `30` | Refresh-token lifetime. |
 | `ENFORCE_CREDIT_BALANCE` | `true` | Debit credits on `POST /usage` and 402 when exhausted. |
-| `SIGNUP_BONUS_CREDITS` | `0` | Credits granted to a new account. |
+| `SIGNUP_BONUS_CREDITS` | `100` | Credits granted to a new account. 1 credit = ₹1, so this is ₹100 of free usage per signup — a real cost, and worth pairing with `REQUIRE_EMAIL_VERIFICATION=true`. Set to 0 to require a top-up first. |
 | `BILLING_WEBHOOK_SECRET` | – | Required by the payment-confirm webhook; unset ⇒ 503. |
 | `TERMS_VERSION` | `v1` | Stamped on each account at signup. Bump when the terms change. |
 | `STATUS_WEBHOOK_SECRET` | – | Required to write any status; unset ⇒ 503. |
 | `STATUS_STALE_AFTER_SECONDS` | `300` | Silence beyond this reads `unknown`. |
 | `STATUS_PROBE_URLS` | – | `key=url` pairs to poll. Empty disables probing. |
 | `STATUS_PROBE_INTERVAL_SECONDS` | `60` | How often to poll them. |
-| `OPS_SECRET` | – | Required to read `/engines/usage`; unset ⇒ 503. |
+| `OPS_SECRET` | – | Required to read `/engines/usage` and to call anything under `/notifications`; unset ⇒ 503. |
 | `ENGINE_FREE_QUOTAS` | – | `engine=amount` pairs in the engine's unit. Empty ⇒ burn is counted, `remaining` is null. |
 | `CORS_ORIGINS` | localhost `:3000`/`:4100` (and `127.0.0.1`) + chatbucket domains | Allowed browser origins. Matched exactly — scheme, host and port all count. |
+| `LOG_LEVEL` | `INFO` | Application log level. Below `INFO` the email and notification lines this README tells you to grep for are never emitted. |
 | `ENVIRONMENT` | `development` | In `development`, `forgot-password` returns the reset token. **Set this to `production` when deploying** — the default is a dev value, so leaving it unset both exposes reset tokens and skips the `JWT_SECRET` check. |
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |
 | `SMTP_HOST` | – | Provider host. Required in production unless `EMAIL_BACKEND=disabled`. |
@@ -932,11 +1111,31 @@ payment gateway, both of which fail quietly rather than loudly).
 | `SMTP_USE_SSL` | `false` | Set `true` (and `SMTP_STARTTLS=false`) for port 465. |
 | `SMTP_STARTTLS` | `true` | Upgrade a plaintext connection; correct for port 587. |
 | `SMTP_TIMEOUT_SECONDS` | `15` | Per-send socket timeout. |
-| `EMAIL_FROM` | `no-reply@chatbucket.chat` | `From:` address — must be verified with your provider. |
+| `EMAIL_FROM` | `support@chatbucket.business` | `From:` address. Must be on the domain the SMTP account authenticates as — a mismatch is a DMARC rejection, not just a spam score. |
 | `EMAIL_FROM_NAME` | `ChatBucket` | Display name on the `From:` header. |
 | `SALES_EMAIL` | – | Where demo requests are sent. Empty skips the notification. |
+| `SUPPORT_EMAIL` | `support@chatbucket.business` | Shown in every template's help block, and set as `Reply-To` on mail a customer might answer. |
 | `APP_BASE_URL` | `http://localhost:3000` | Site hosting the reset page; used to build the reset link. |
 | `PASSWORD_RESET_PATH` | `/reset-password` | Path appended to `APP_BASE_URL`. |
+| `MARKETING_URL` | `https://chatbucket.business` | The "Visit ChatBucket" button, and the base for the policy links. |
+| `DASHBOARD_PATH` | `/dashboard` | The dashboard CTA in the emails. Absolute `https://…` also accepted. |
+| `LOGIN_PATH` | `/login` | The sign-in link in the onboarding nudge. |
+| `TRACK_QUERY_PATH` | `/support/tickets` | "Track Query Status" in every footer. |
+| `PRIVACY_POLICY_PATH` / `TERMS_PATH` | `/privacy-policy`, `/terms-of-service` | Resolved against `MARKETING_URL`. |
+| `DISPLAY_TIMEZONE` | `Asia/Kolkata` | Zone that dates and times in emails render in. Storage stays UTC. |
+| `EMAIL_OTP_EXPIRE_MINUTES` | `10` | Verification-code lifetime. |
+| `EMAIL_OTP_MAX_ATTEMPTS` | `5` | Wrong codes before the code is burned. |
+| `FREE_CREDIT_VALIDITY_DAYS` | `30` | The window the welcome email states and the reminder counts down to. Nothing expires credits. |
+| `FREE_CREDIT_REMINDER_DAYS` | `7` | Send the reminder once this much of the window is left. |
+| `ONBOARDING_NUDGE_AFTER_DAYS` | `3` | Nudge accounts registered this long ago with no metered usage. |
+| `VERIFICATION_REMINDER_AFTER_HOURS` | `24` | Chase accounts registered this long ago that never verified. Mints a fresh code. |
+| `BROADCAST_MAX_RECIPIENTS` | `5000` | Ceiling on one run; exceeding it reports `truncated: true`. |
+| `BROADCAST_CONCURRENCY` | `5` | Messages in flight at once during a broadcast or report run. |
+| `NOTIFICATION_SCHEDULER_ENABLED` | `false` | Run the recurring jobs on a timer. **Off by default** — turning it on mails customers unattended. |
+| `NOTIFICATION_SCHEDULER_INTERVAL_SECONDS` | `900` | How often the loop checks whether anything is due. |
+| `NOTIFICATION_SCHEDULER_HOUR` | `6` | Hour (in `DISPLAY_TIMEZONE`) the daily jobs run. |
+| `NOTIFICATION_MONTHLY_REPORT_DAY` | `1` | Day of the month the previous month's report goes out. |
+| `SMTP_DEBUG` | `false` | Log the full SMTP conversation incl. the provider's queue id. Never on in production — it includes the AUTH line. |
 
 ## Notes
 

@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Email Verified</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    background:#EEF0F5;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+table{
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+img{
+    border:0;
+    display:block;
+    outline:none;
+    text-decoration:none;
+}
+
+a{
+    text-decoration:none;
+}
+
+@media only screen and (max-width:800px){
+
+.container{
+    width:100%!important;
+}
+
+.mobile-stack{
+    display:block!important;
+    width:100%!important;
+}
+
+.mobile-padding{
+    padding-left:20px!important;
+    padding-right:20px!important;
+}
+
+.mobile-center{
+    text-align:center!important;
+}
+
+.hero-title{
+    font-size:34px!important;
+    line-height:38px!important;
+}
+
+.hero-image{
+    width:250px!important;
+    margin:20px auto 0!important;
+}
+
+}
+
+
+/* --- mobile overrides (appended; absolute caps break the width cycle) --- */
+@media only screen and (max-width:800px) {
+  .container { width: 100% !important; }
+  /* An auto-layout table cannot shrink below the sum of its columns'
+     min-content, whatever width you give it. Fixed layout makes the outer
+     table honour 100% and pushes the constraint inward, where the stacking
+     rules above can act on it. Applied only to the outermost table — fixed
+     layout on nested ones would redistribute their columns by the first row
+     and distort the OTP grid and the progress bars. */
+  .container { table-layout: fixed !important; max-width: 100% !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+  /* A hero carrying width="430" is a hard floor for every table above it.
+     Capping it in px, not %, is what lets the layout reach 360. */
+  .hero-image, .hero-img {
+    width: 280px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  h1 { font-size: 26px !important; line-height: 32px !important; }
+  h2 { font-size: 21px !important; line-height: 27px !important; }
+  .hero-title { font-size: 26px !important; line-height: 32px !important; }
+  /* Design's own layout classes for the shared footer and feature strips.
+     These rows are what set the table's minimum width — a table cannot shrink
+     below the sum of its columns' min-content, so `width:100%` above them was
+     never going to be enough. */
+  .footer-col,
+  .footer-bottom-left,
+  .footer-bottom-right,
+  .support-left,
+  .support-right {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding-bottom: 10px !important;
+  }
+  /* Feature strips read better two-up than as one tall column. */
+  .feature-cell {
+    display: inline-block !important;
+    width: 48% !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    text-align: center !important;
+  }
+  .feature-separator { display: none !important; }
+  /* The footer's two call-to-action buttons carry their own nowrap, so the
+     pair is a ~300px floor the surrounding table cannot shrink past. Letting
+     the label wrap costs one line and removes the last overflow. */
+  /* Two buttons side by side in a 340px footer wrap to three cramped lines
+     each. Stacked and centred they stay one line and stay tappable. */
+  .btn, a.btn {
+    white-space: normal !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 260px !important;
+    margin: 8px auto !important;
+    text-align: center !important;
+  }
+
+  /* `white-space:nowrap` is a hard floor: "₹1,678.00 / ₹9,875.00  17%" cannot
+     be squeezed, so the table around it cannot shrink either. On a phone it
+     is better for that to wrap onto two lines than for the whole email to
+     scroll sideways. */
+  td, th { white-space: normal !important; }
+  /* `overflow-wrap` breaks a string only when it genuinely cannot fit;
+     `word-break: break-word` breaks eagerly and turned
+     "support@chatbucket.business" into "support@chatbucket.b / usiness". */
+  td, div, p, span, a { overflow-wrap: break-word !important; }
+
+
+}
+</style>
+
+</head>
+
+<body style="margin:0;background:#EEF0F5;">
+
+<!-- PREHEADER -->
+
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+Your email is verified. Your ChatBucket account is now fully active.
+</div>
+
+
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#EEF0F5">
+
+<tr>
+
+<td align="center" style="padding:20px 10px;">
+
+<table class="container"
+
+width="800"
+
+cellpadding="0"
+
+cellspacing="0"
+
+border="0"
+
+style="width:800px; max-width:800px; background:#ffffff; border-radius: 20px 20px 0 0;">
+
+<!-- HERO -->
+
+<tr>
+
+<td
+
+class="mobile-padding"
+
+style="
+
+padding:20px 34px;
+
+background:#17093B;
+
+background-image:linear-gradient(135deg,#17103D 0%,#5524B5 60%,#1B0A45 100%); border-radius: 20px 20px 0 0;
+
+">
+
+<!-- LOGO -->
+
+<img
+
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/ChatBucket-logo.png"
+
+width="190"
+
+alt="ChatBucket"
+
+style="width:190px;height:auto; margin-top: 20px;">
+
+<table
+
+width="100%"
+
+cellpadding="0"
+
+cellspacing="0"
+
+border="0"
+
+style="margin-top:0px;">
+
+<tr>
+
+<!-- LEFT -->
+
+<td
+
+class="mobile-stack"
+
+width="50%"
+
+valign="middle">
+
+<div
+
+class="hero-title"
+
+style="
+
+font-size:46px;
+
+line-height:48px;
+
+font-weight:700;
+
+color:#ffffff;
+
+">
+
+Your Email
+
+<br>
+
+is Verified!
+
+</div>
+
+<div
+
+style="
+
+margin-top:18px;
+
+font-size:15px;
+
+line-height:20px;
+
+color:#DDD7EA;
+
+">
+
+Thanks for confirming your email address.
+
+<br>
+
+Your account is now fully active — <br> create a key and start building.
+
+</div>
+
+<!-- STATUS CARD -->
+
+<table
+
+cellpadding="0"
+
+cellspacing="0"
+
+border="0"
+
+style="margin-top:28px;">
+
+<tr>
+
+<td
+
+style="
+
+background:#ffffff;
+
+border-radius:18px;
+
+padding:12px 18px;
+
+">
+
+<table cellpadding="0" cellspacing="0" border="0">
+
+<tr>
+
+<td>
+
+<img
+
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/check.png"
+
+width="34"
+
+height="34"
+
+alt="Subscribed">
+
+</td>
+
+<td style="padding-left:12px;">
+
+<div
+
+style="
+
+font-size:12px;
+
+font-weight:600;
+
+color:#2E2938;
+
+">
+
+Account Status
+
+</div>
+
+<div
+
+style="
+
+margin-top:4px;
+
+font-size:16px;
+
+font-weight:700;
+
+color:#6A2DDB;
+
+">
+
+Verified &amp; Active
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<!-- RIGHT -->
+
+<td
+
+class="mobile-stack mobile-center"
+
+width="50%"
+
+align="right"
+
+valign="middle">
+
+<img
+
+class="hero-image"
+
+src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/hero-img.png"
+
+width="380"
+
+alt="Subscription"
+
+style="
+
+width:380px;
+
+max-width:100%;
+
+height:auto;
+
+margin-left:auto;
+
+mix-blend-mode: lighten;
+margin-bottom: -20px;
+
+">
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+<!-- ===========================================
+PART 2 STARTS HERE
+"What to Expect?"
+=========================================== -->
+<!-- =====================================================
+     PART 2
+     WHAT TO EXPECT?
+====================================================== -->
+
+<tr>
+
+            <td
+              class="px"
+              style="
+                padding:18px 44px 16px 44px;
+                background:#ffffff;
+              ">
+
+
+              <table
+                role="presentation"
+                width="100%"
+                border="0"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                  background:#ffffff;
+                  border:1px solid #E8E2F5;
+                  border-radius:14px;
+                  border-collapse: separate;
+                  margin-top: 20px;
+                ">
+
+
+                <!-- TITLE -->
+                <tr>
+
+                  <td
+                    align="center"
+                    style="
+                      padding:40px 10px 7px 10px;
+                      
+                     
+                    ">
+
+                    <table
+                      role="presentation"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0">
+
+                      <tr>
+
+                        <td   width="48"
+                          style="
+                            width:70px;
+                            
+        height:1px;
+        background:#bfa8ed;
+        font-size:0;
+        line-height:1px;
+                          ">
+                          &nbsp;
+                        </td>
+
+                        <td
+                          style="
+                             padding:0 14px;
+        vertical-align:middle;
+        text-align:center;
+        color:#4d16b1;
+        font-family:'Segoe UI',Arial,sans-serif;
+        font-size:17px;
+        line-height:1px;
+        font-weight:700;
+        white-space:nowrap;
+                          ">
+
+                          What's Next?
+
+
+                        </td>
+
+                        <td  width="48"
+                          style="
+                            width:70px;
+        height:1px;
+        background:#bfa8ed;
+        font-size:0;
+        line-height:1px;
+                          ">
+                          &nbsp;
+                        </td>
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+
+                <!-- SUBTITLE -->
+                <tr>
+
+                  <td
+                    align="center"
+                    style="
+                      padding:10px 15px 14px 15px;
+                      color:#373148;
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      line-height:20px;
+                      margin-top: 20px;
+                    ">
+
+                    
+                    Everything is unlocked. Here's where to start:
+                  </td>
+
+                </tr>
+
+
+
+                <!-- FEATURES -->
+                <tr>
+
+                  <td style="padding:10px 16px 12px 16px;">
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0">
+
+                      <tr>
+
+
+                        <!-- AI CHAT MODELS -->
+                        <td
+                          class="feature-cell"
+                          width="20%"
+                          align="center"
+                          valign="top"
+                          style="
+                            padding:5px 10px;
+                            vertical-align:top;
+                          ">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/updates.png"
+                            width="45"
+                            height="45"
+                            alt="AI Chat Models"
+                            style="
+                              display:block;
+                              margin:0 auto;
+                              width:45px;
+                              height:45px;
+                            ">
+
+                          <div
+                            style="
+                              color:#1D1733;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:12px;
+                              font-weight:700;
+                              margin-top:9px;
+                               line-height:12px;
+                            ">
+
+                            Create an API Key
+
+
+                          </div>
+
+                          <div
+                            style="
+                              color:#625C72;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:10px;
+                              line-height:12px;
+                              margin-top:4px;
+                              font-weight: 600;
+                            ">
+
+                            Generate a key <br> from the dashboard
+
+
+                          </div>
+
+                        </td>
+
+
+                        <td
+                          class="feature-separator"
+                          width="1"
+                          style="
+                            border-left:1px solid #EEEAF5;
+                          ">
+                          &nbsp;
+                        </td>
+
+
+
+                        <!-- VOICE & TTS -->
+                        <td
+                          class="feature-cell"
+                          width="20%"
+                          align="center"
+                          valign="top"
+                          style="
+                            padding:5px 10px;
+                            vertical-align:top;
+                          ">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/launch.png"
+                            width="45"
+                            height="45"
+                            alt="Voice and TTS"
+                            style="
+                              display:block;
+                              margin:0 auto;
+                              width:45px;
+                              height:45px;
+                            ">
+
+                          <div
+                            style="
+                              color:#1D1733;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:12px;
+                              font-weight:700;
+                              margin-top:9px;
+                               line-height:15px;
+                            ">
+
+                           Use Your Free Credits
+
+
+                          </div>
+
+                          <div
+                            style="
+                              color:#625C72;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:10px;
+                              line-height:11px;
+                              margin-top:4px;
+                              font-weight: 600;
+                            ">
+
+                            {{currency_symbol}}{{credits}} ready<br>
+                            to spend
+
+                          </div>
+
+                        </td>
+
+
+                        <td
+                          class="feature-separator"
+                          width="1"
+                          style="
+                            border-left:1px solid #EEEAF5;
+                          ">
+                          &nbsp;
+                        </td>
+
+
+
+                        <!-- TRANSLATION -->
+                        <td
+                          class="feature-cell"
+                          width="20%"
+                          align="center"
+                          valign="top"
+                          style="
+                            padding:5px 10px;
+                            vertical-align:top;
+                          ">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/offer.png"
+                            width="45"
+                            height="45"
+                            alt="Translation"
+                            style="
+                              display:block;
+                              margin:0 auto;
+                              width:45px;
+                              height:45px;
+                            ">
+
+                          <div
+                            style="
+                              color:#1D1733;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:12px;
+                              font-weight:700;
+                              margin-top:9px;
+                            ">
+
+                           Explore the AI Models
+
+
+                          </div>
+
+                          <div
+                            style="
+                              color:#625C72;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:10px;
+                              line-height:15px;
+                              margin-top:4px;
+                              font-weight: 600;
+                            ">
+
+                            Speech, voice, translation and agents
+
+                          </div>
+
+                        </td>
+
+
+                        <td
+                          class="feature-separator"
+                          width="1"
+                          style="
+                            border-left:1px solid #EEEAF5;
+                          ">
+                          &nbsp;
+                        </td>
+
+
+
+                        <!-- AI AGENTS -->
+                        <td
+                          class="feature-cell"
+                          width="20%"
+                          align="center"
+                          valign="top"
+                          style="
+                            padding:5px 10px;
+                            vertical-align:top;
+                          ">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/contact-us/agent.png"
+                            width="45"
+                            height="45"
+                            alt="AI Agents"
+                            style="
+                              display:block;
+                              margin:0 auto;
+                              width:45px;
+                              height:45px;
+                            ">
+
+                          <div
+                            style="
+                              color:#1D1733;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:12px;
+                              font-weight:700;
+                              margin-top:9px;
+                            ">
+
+                            Read the Docs
+
+                          </div>
+
+                          <div
+                            style="
+                              color:#625C72;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:10px;
+                              line-height:15px;
+                              margin-top:4px;
+                              font-weight: 600;
+                            ">
+
+                            Everything the API can do
+
+                          </div>
+
+                        </td>
+
+
+                        <td
+                          class="feature-separator"
+                          width="1"
+                          style="
+                            border-left:1px solid #EEEAF5;
+                          ">
+                          &nbsp;
+                        </td>
+
+
+
+                        <!-- ANALYTICS -->
+                        <td
+                          class="feature-cell"
+                          width="20%"
+                          align="center"
+                          valign="top"
+                          style="
+                            padding:5px 10px;
+                            vertical-align:top;
+                          ">
+
+                          <img
+                            src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/analytics.png"
+                            width="45"
+                            height="45"
+                            alt="Analytics"
+                            style="
+                              display:block;
+                              margin:0 auto;
+                              width:45px;
+                              height:45px;
+                            ">
+
+                          <div
+                            style="
+                              color:#1D1733;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:12px;
+                              font-weight:700;
+                              margin-top:9px;
+                            ">
+
+                            Need a Hand?
+
+                          </div>
+
+                          <div
+                            style="
+                              color:#625C72;
+                              font-family:'Segoe UI',Arial,sans-serif;
+                              font-size:10px;
+                              line-height:15px;
+                              margin-top:4px;
+                            ">
+
+                            Our team is one reply away
+
+                          </div>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+
+
+                <!-- DASHBOARD CTA -->
+                <tr>
+
+                  <td
+                    align="center"
+                    style="
+                      padding:3px 20px 20px 20px;
+                    ">
+
+
+                    <!--[if mso]>
+                    <v:roundrect
+                      xmlns:v="urn:schemas-microsoft-com:vml"
+                      xmlns:w="urn:schemas-microsoft-com:office:word"
+                      href="{{dashboard_url}}"
+                      style="
+                        height:42px;
+                        v-text-anchor:middle;
+                        width:210px;
+                      "
+                      arcsize="20%"
+                      strokecolor="#5721DB"
+                      fillcolor="#5721DB">
+
+                      <w:anchorlock/>
+
+                      <center
+                        style="
+                          color:#ffffff;
+                          font-family:Arial,sans-serif;
+                          font-size:12px;
+                          font-weight:bold;
+                        ">
+
+                        Go to Dashboard &#8594;
+
+                      </center>
+
+                    </v:roundrect>
+                    <![endif]-->
+
+
+                    <!--[if !mso]><!-->
+
+                    <!-- <a
+                      href="{{dashboard_url}}"
+                      style="
+                        display:inline-block;
+                        min-width:190px;
+                        background:#5721DB;
+                        background-image:linear-gradient(90deg,#4B1ACB,#6925E7);
+                        color:#ffffff;
+                        font-family:'Segoe UI',Arial,sans-serif;
+                        font-size:12px;
+                        font-weight:700;
+                        text-align:center;
+                        padding:12px 24px;
+                        border-radius:8px;
+                      ">
+
+                      Go to Dashboard
+                      &nbsp;&nbsp;&#8594;
+
+                    </a> -->
+
+                    <!--<![endif]-->
+
+
+                  </td>
+
+                </tr>
+
+
+              </table>
+
+            </td>
+
+          </tr>
+
+<!-- ===========================================
+PART 3 STARTS HERE
+Support + Footer
+=========================================== -->
+
+<!-- =====================================================
+     PART 3
+     SUPPORT + THANK YOU + FOOTER
+====================================================== -->
+
+<!-- SUPPORT SECTION -->
+<tr>
+
+            <td
+              class="px"
+              style="
+                padding:12px 44px 10px 44px;
+                background:#ffffff;
+              ">
+
+              <table
+                role="presentation"
+                width="100%"
+                border="0"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                  background:#F1EBFF;
+                  border-radius:10px;
+                ">
+
+                <tr>
+
+                  <td style="padding:18px 22px;">
+
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0">
+
+                      <tr>
+
+
+                        <!-- SUPPORT -->
+                        <td
+                          class="support-left"
+                          width="45%"
+                          valign="middle"
+                          style="vertical-align:middle;">
+
+
+                          <table
+                            role="presentation"
+                            border="0"
+                            cellpadding="0"
+                            cellspacing="0">
+
+                            <tr>
+
+                              <td
+                                valign="middle"
+                                style="vertical-align:middle;">
+
+                                <img
+                                  src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/support.png"
+                                  width="78"
+                                  alt="Support"
+                                  style="
+                                    display:block;
+                                    width:78px;
+                                    max-width:100%;
+                                    height:auto;
+                                  ">
+
+                              </td>
+
+
+                              <td
+                                style="
+                                  padding-left:14px;
+                                  vertical-align:middle;
+                                ">
+
+                                <div
+                                  style="
+                                    color:#1D1733;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:13px;
+                                    font-weight:800;
+                                  ">
+
+                                  Need immediate assistance?
+
+                                </div>
+
+                                <div
+                                  style="
+                                    color:#575168;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:11px;
+                                    margin-top:4px;
+                                  ">
+
+                                  Reach out to us at
+
+                                </div>
+
+                                <a
+                                  href="mailto:{{support_email}}"
+                                  style="
+                                    color:#4C22C8;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:11px;
+                                    font-weight:700;
+                                  ">
+
+                                  {{support_email}}
+
+                                </a>
+
+                              </td>
+
+                            </tr>
+
+                          </table>
+
+                        </td>
+
+
+
+                        <!-- BUTTONS -->
+                        <td
+                          class="support-right"
+                          width="55%"
+                          align="right"
+                          valign="middle"
+                          style="vertical-align:middle;">
+
+                          <table
+                            role="presentation"
+                            border="0"
+                            cellpadding="0"
+                            cellspacing="0"
+                            align="right">
+
+                            <tr>
+
+
+                              <!-- TRACK -->
+                              <td
+                                class="btn-cell"
+                                style="padding:0 6px;">
+
+                                <a
+                                  href="{{track_url}}"
+                                  class="btn"
+                                  style="
+                                    display:inline-block;
+                                    background:#5721DB;
+                                    color:#ffffff;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:12px;
+                                    font-weight:700;
+                                    padding:12px 17px;
+                                    border-radius:7px;
+                                    white-space:nowrap;
+                                  ">
+
+                                  Track Query Status
+                                  &nbsp;&#8594;
+
+                                </a>
+
+                              </td>
+
+
+
+                              <!-- VISIT -->
+                              <td
+                                class="btn-cell"
+                                style="padding:0 6px;">
+
+                                <a
+                                  href="{{visit_url}}"
+                                  class="btn"
+                                  style="
+                                    display:inline-block;
+                                    background:#ffffff;
+                                    color:#5423D6;
+                                    border:1px solid #8E6DE7;
+                                    font-family:'Segoe UI',Arial,sans-serif;
+                                    font-size:12px;
+                                    font-weight:700;
+                                    padding:11px 17px;
+                                    border-radius:7px;
+                                    white-space:nowrap;
+                                  ">
+
+                                  Visit ChatBucket
+                                  &nbsp;&#8594;
+
+                                </a>
+
+                              </td>
+
+
+                            </tr>
+
+                          </table>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+
+          </tr>
+
+
+
+          <!-- =====================================================
+               THANK YOU
+          ====================================================== -->
+
+          <tr>
+
+            <td
+              align="center"
+              style="
+                padding:25px 20px 23px 20px;
+                background:#ffffff;
+              ">
+
+              <table
+                role="presentation"
+                border="0"
+                cellpadding="0"
+                cellspacing="0">
+
+                <tr>
+
+                  <td
+                    style="
+                      color:#4B4770;
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      vertical-align:middle;
+                    ">
+
+                    Thank you for being part of our journey.
+
+                  </td>
+
+
+                  <td
+                    style="
+                      padding:0 12px;
+                      color:#D9CBFF;
+                      vertical-align:middle;
+                    ">
+
+                    |
+
+                  </td>
+
+
+                  <td
+                    style="vertical-align:middle;">
+
+                    <img
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/love.png"
+                      width="15"
+                      height="15"
+                      alt="Heart"
+                      style="
+                        display:block;
+                        width:15px;
+                        height:15px;
+                      ">
+
+                  </td>
+
+
+                  <td
+                    style="
+                      padding-left:7px;
+                      color:#1D1733;
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      font-weight:800;
+                      vertical-align:middle;
+                    ">
+
+                    Team ChatBucket
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+            </td>
+
+          </tr>
+
+<!-- FOOTER -->
+
+<tr>
+
+            <td style="
+              background:#10072E;
+              background-image:linear-gradient(
+                180deg,
+                #10072E 0%,
+                #17073F 100%
+              );
+              padding:28px 32px;
+              color:#ffffff;
+            ">
+
+
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+              >
+
+                <tr>
+
+
+                  <!-- LOGO -->
+
+                  <td
+                    class="footer-col"
+                    valign="top"
+                    width="33%"
+                  >
+
+                    <img
+                      src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/ChatBucket-logo.png"
+                      class="footer-logo"
+                      width="180"
+                      alt="ChatBucket Business"
+                      style="
+                        display:block;
+                        width:180px;
+                        max-width:100%;
+                        height:auto;
+                      "
+                    />
+
+                  </td>
+
+
+
+                  <!-- SOCIAL -->
+
+                  <td
+                    class="footer-col"
+                    valign="top"
+                    width="34%"
+                    align="center"
+                  >
+
+                    <div style="
+                     font-family: 'Segoe UI', Arial, sans-serif;
+                     font-size: 13px;
+                     color: #ffffff;
+                    margin-bottom: 15px;
+                    ">
+
+                      Follow us
+
+                    </div>
+
+
+                    <table
+                      role="presentation"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      align="center"
+                    >
+
+                      <tr>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.linkedin.com/company/chatbucket/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/linkedin.png"
+                              width="32"
+                              height="32"
+                              alt="LinkedIn"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://x.com/ChatbucketApp">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/X.png"
+                              width="32"
+                              height="32"
+                              alt="X"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.youtube.com/@chatbucket">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/youtube.png"
+                              width="32"
+                              height="32"
+                              alt="YouTube"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                        <td style="padding:0 4px;">
+
+                          <a href="https://www.instagram.com/chatbucket_app/">
+
+                            <img
+                              src="https://chatbucketcdn.lon1.cdn.digitaloceanspaces.com/cb-dashboard/subscribe/insta.png"
+                              width="32"
+                              height="32"
+                              alt="Website"
+                              style="
+                                display:block;
+                                width:32px;
+                                height:32px;
+                              "
+                            />
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+
+
+                  <!-- COMPANY -->
+
+                  <td
+                    class="footer-col"
+                    valign="top"
+                    width="33%"
+                    align="right"
+                    style="
+                      color:rgba(255,255,255,0.75);
+                      font-family:'Segoe UI',Arial,sans-serif;
+                      font-size:12px;
+                      line-height:17px;
+                    "
+                  >
+
+                    <strong style="
+                      color:#ffffff;
+                      font-weight:600;
+                    ">
+
+                      ChatBucket Technologies Pvt. Ltd.
+
+                    </strong>
+
+                    <br/>
+
+                    Hyderabad, Telangana, India
+
+                    <br/>
+
+                    <a
+                      href="https://www.instagram.com/chatbucket_app/"
+                      style="
+                        color:#A78BFA;
+                        font-weight:600;
+                      "
+                    >
+
+                      www.chatbucket.business
+
+                    </a>
+
+                  </td>
+
+
+                </tr>
+
+
+
+                <!-- DIVIDER -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="padding-top:18px;"
+                  >
+
+                    <div style="
+                      height:1px;
+                      background:rgba(255,255,255,0.10);
+                      font-size:0;
+                      line-height:0;
+                    ">
+
+                      &nbsp;
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+
+
+                <!-- COPYRIGHT -->
+
+                <tr>
+
+                  <td
+                    colspan="3"
+                    style="
+                          padding-top: 14px;
+                          color: rgba(255, 255, 255, 0.60);
+                           font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 13px;
+                    "
+                  >
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                    >
+
+                      <tr>
+
+
+                        <td
+                          class="footer-bottom-left"
+                          align="left"
+                        >
+
+                          &copy; {{year}} ChatBucket Technologies Pvt. Ltd.
+                          All rights reserved.
+
+                        </td>
+
+
+                        <td
+                          class="footer-bottom-right"
+                          align="right"
+                        >
+
+                          <a
+                            href="{{privacy_policy_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Privacy Policy
+
+                          </a>
+
+                          <span style="
+                            opacity:0.4;
+                            margin:0 8px;
+                          ">
+
+                            |
+
+                          </span>
+
+                          <a
+                            href="{{terms_url}}"
+                            style="color:rgba(255,255,255,0.70);"
+                          >
+
+                            Terms of Service
+
+                          </a>
+
+                        </td>
+
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+
+                </tr>
+
+
+              </table>
+
+            </td>
+
+          </tr>
+
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+</html>

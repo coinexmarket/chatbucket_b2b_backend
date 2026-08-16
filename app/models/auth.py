@@ -109,6 +109,20 @@ class VerifyEmailRequest(BaseModel):
     token: str = Field(min_length=1)
 
 
+class VerifyEmailOtpRequest(BaseModel):
+    """The six digits from the verification email, plus who they belong to.
+
+    The address is required because this endpoint is unauthenticated, like the
+    token one: someone verifying from their phone has no session. Six digits
+    alone would be a code anybody's account might match.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
 class RefreshRequest(BaseModel):
     # camelCase accepted alongside snake_case, as on the other client-facing
     # bodies — the dashboard should not have to remember which is which.

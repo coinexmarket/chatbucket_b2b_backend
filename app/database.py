@@ -137,6 +137,18 @@ async def ensure_indexes() -> None:
     # Not unique: a repeat demo request is a real sales lead, not an error.
     await demo_requests_collection().create_index([("created_at", -1)])
     await demo_requests_collection().create_index("email")
+    # What makes a lifecycle email send-once. `key` distinguishes instances of
+    # the same kind — the month for a report, the window id for a reminder —
+    # so "monthly report for July" and "for August" are two different sends
+    # while a re-run of either is a duplicate the database refuses.
+    await notifications_collection().create_index(
+        [("user_id", 1), ("kind", 1), ("key", 1)], unique=True
+    )
+    await notifications_collection().create_index([("sent_at", -1)])
+    # The scheduler's mutual exclusion. Unique on (job, period), so of the two
+    # workers that wake at the same moment, exactly one insert succeeds and the
+    # other reads its own duplicate-key error as "somebody else has this".
+    await job_runs_collection().create_index([("job", 1), ("period", 1)], unique=True)
     _mongo.indexes_ready = True
 
 
@@ -253,6 +265,21 @@ def counters_collection():
 def demo_requests_collection():
     # Sales leads, so they live with the B2B data rather than the site content.
     return get_b2b_db()["demo_requests"]
+
+
+def notifications_collection():
+    # One document per lifecycle email actually sent, so a job that runs twice
+    # (a retry, an overlapping cron, a manual re-run) does not mail the same
+    # customer the same thing twice.
+    return get_b2b_db()["notifications"]
+
+
+def job_runs_collection():
+    # One document per scheduled job per period. The app runs more than one
+    # worker, each with its own scheduler loop, so this is what stops both of
+    # them running the same monthly report — and it doubles as the record of
+    # when each job last ran.
+    return get_b2b_db()["job_runs"]
 
 
 def blogs_collection():
