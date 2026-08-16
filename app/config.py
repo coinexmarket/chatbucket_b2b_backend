@@ -142,7 +142,10 @@ class Settings(BaseSettings):
             "http://127.0.0.1:4100,"
             "https://chatbucket.chat,"
             "https://www.chatbucket.chat,"
-            "https://chatbucket.business"
+            "https://chatbucket.business,"
+            # Both apex and www: they are two different origins to a
+            # browser, and whichever is missing is the one someone opens.
+            "https://www.chatbucket.business"
         ),
         description="Comma-separated list of allowed CORS origins.",
     )
@@ -365,6 +368,24 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        """Any localhost port, in development only. None in production.
+
+        An origin is matched exactly, so a dev server that came up on a port
+        nobody listed is a failed preflight with no message on the server side
+        — and `next dev` quietly picks 3001 when 3000 is busy, which is the
+        usual way this bites. Allowing any loopback port in development removes
+        the whole class of it.
+
+        Deliberately gated on `is_dev`: this pairs with `allow_credentials`, so
+        in production the exact list is the only thing standing between a
+        customer's session and any site that asks for it.
+        """
+        if not self.is_dev:
+            return None
+        return r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 
     @property
     def is_dev(self) -> bool:

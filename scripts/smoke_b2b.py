@@ -1443,6 +1443,38 @@ def main() -> int:
             os.environ.pop("OPS_SECRET", None)
             get_settings.cache_clear()
 
+        # --- CORS ------------------------------------------------------------
+        # The suite runs as `development`, so the loopback rule is live here.
+        def preflight(origin):
+            return client.options("/pricing", headers={
+                "Origin": origin, "Access-Control-Request-Method": "GET",
+            }).headers.get("access-control-allow-origin")
+
+        check("a listed origin is allowed", preflight("http://localhost:3000") is not None, "")
+        # `next dev` quietly picks 3001 when 3000 is busy; that used to be a
+        # failed preflight with nothing said on the server side.
+        check("in dev, any localhost port is allowed", preflight("http://localhost:3001") is not None, "")
+        check("in dev, any loopback IP port is allowed", preflight("http://127.0.0.1:5173") is not None, "")
+        check("an unknown site is still refused", preflight("https://evil.example.com") is None, "")
+        check("a lookalike host is refused", preflight("https://chatbucket.business.evil.com") is None, "")
+
+        # The loopback rule must never reach production, where it pairs with
+        # allow_credentials and would hand any local page a customer session.
+        from app.config import Settings  # noqa: PLC0415
+
+        # A production Settings needs a real secret and an SMTP host, or the
+        # config validator refuses to build it — which is itself the behaviour
+        # asserted further up.
+        production = dict(
+            environment="production",
+            jwt_secret="not-the-placeholder-" + "x" * 24,
+            smtp_host="smtp.example.com",
+        )
+        dev_regex = Settings(environment="development").cors_origin_regex
+        prod_regex = Settings(**production).cors_origin_regex
+        check("the loopback rule exists in development", dev_regex is not None, str(dev_regex))
+        check("and is absent in production", prod_regex is None, str(prod_regex))
+
         # --- the notification scheduler ------------------------------------
         from app import notifications  # noqa: PLC0415
 

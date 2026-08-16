@@ -62,7 +62,7 @@ scripts/
   seed.py            Sample blog data
   smoke_test.py      End-to-end test for the site endpoints (71 checks)
   set_status.py      Set every system's status by hand
-  smoke_b2b.py       End-to-end test for the B2B platform (433 checks)
+  smoke_b2b.py       End-to-end test for the B2B platform (440 checks)
 ```
 
 ## Billing model (usage-based, INR)
@@ -1047,7 +1047,7 @@ Interactive docs: <http://localhost:8000/docs>
 
 ```bash
 pip install -r requirements-dev.txt
-python -m scripts.smoke_b2b     # 433 checks: accounts, keys, usage, credits, billing, email
+python -m scripts.smoke_b2b     # 440 checks: accounts, keys, usage, credits, billing, email
 python -m scripts.smoke_test    # 71 checks: blogs, subscriptions, contest, demo, status
 ```
 
@@ -1101,7 +1101,7 @@ payment gateway, both of which fail quietly rather than loudly).
 | `STATUS_PROBE_INTERVAL_SECONDS` | `60` | How often to poll them. |
 | `OPS_SECRET` | – | Required to read `/engines/usage` and to call anything under `/notifications`; unset ⇒ 503. |
 | `ENGINE_FREE_QUOTAS` | – | `engine=amount` pairs in the engine's unit. Empty ⇒ burn is counted, `remaining` is null. |
-| `CORS_ORIGINS` | localhost `:3000`/`:4100` (and `127.0.0.1`) + chatbucket domains | Allowed browser origins. Matched exactly — scheme, host and port all count. |
+| `CORS_ORIGINS` | localhost `:3000`/`:4100` (and `127.0.0.1`) + chatbucket domains | Allowed browser origins. Matched exactly — scheme, host and port all count. **In development only**, any `localhost`/`127.0.0.1` port is additionally allowed, because a dev server that came up on an unlisted port is otherwise a failed preflight with nothing said server-side. Never in production, where this pairs with `allow_credentials`. A refused origin is logged by name. |
 | `LOG_LEVEL` | `INFO` | Application log level. Below `INFO` the email and notification lines this README tells you to grep for are never emitted. |
 | `ENVIRONMENT` | `development` | In `development`, `forgot-password` returns the reset token. **Set this to `production` when deploying** — the default is a dev value, so leaving it unset both exposes reset tokens and skips the `JWT_SECRET` check. |
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |
