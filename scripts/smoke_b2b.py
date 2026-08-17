@@ -20,6 +20,12 @@ os.environ["CHATBUCKET_IGNORE_DOTENV"] = "1"
 # that owns it instead of somewhere in the middle of the billing block. Set
 # before `app` is imported, because settings are built (and cached) at import.
 os.environ["EMAIL_BACKEND"] = "memory"  # capture mail instead of sending it
+os.environ["SMS_BACKEND"] = "memory"  # ditto for texts — an SMS costs money
+# The registered OTP template ends with a second variable. Pinned here so the
+# suite asserts the intended production configuration: with this unset the
+# variable renders empty, the text no longer matches the registered template,
+# and the operator would drop every message while the gateway still says 200.
+os.environ["SMS_TEMPLATE_SUFFIX"] = "ChatBucket"
 os.environ["APP_BASE_URL"] = "https://app.example.com"
 os.environ["BILLING_WEBHOOK_SECRET"] = "test-webhook-secret"
 # Off by default so the suite can register and log in freely; the dedicated
@@ -36,6 +42,7 @@ import asyncio  # noqa: E402
 import hashlib  # noqa: E402
 import hmac  # noqa: E402
 import json  # noqa: E402
+import re  # noqa: E402
 from dataclasses import replace  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
 from decimal import Decimal  # noqa: E402
@@ -50,6 +57,7 @@ from app import credits, database, payments, pricing, ratelimit  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.email import _build_message, outbox  # noqa: E402
 from app.main import app  # noqa: E402
+from app.sms import outbox as sms_outbox  # noqa: E402
 
 PASS = 0
 FAIL = 0
@@ -134,8 +142,13 @@ def main() -> int:
                 "password": "supersecret1",
                 "company": "Acme",
                 # As the signup form sends it: dial code included, user-typed
-                # spacing, camelCase keys.
-                "mobile": "+91 98765-43210",
+                # spacing, camelCase keys. A NON-Indian number on purpose —
+                # an Indian one verifies by SMS and is sent no email code, so
+                # this account would stop exercising the email-verification
+                # path that the rest of this block asserts. The Indian branch,
+                # and Indian number formatting, are covered in the phone
+                # verification block further down.
+                "mobile": "+1 (415) 555-0142",
                 "howDidYouHear": "Google search",
                 "acceptTerms": True,
             },
@@ -144,7 +157,7 @@ def main() -> int:
         token = j.get("access_token", "")
         check("POST /auth/register 201 + token", r.status_code == 201 and bool(token), r.text)
         check("register response hides password_hash", "password_hash" not in j["user"], r.text)
-        check("mobile normalised to E.164", j["user"].get("phone") == "+919876543210", r.text)
+        check("mobile normalised to E.164", j["user"].get("phone") == "+14155550142", r.text)
         check("register stores how-did-you-hear", j["user"].get("how_did_you_hear") == "Google search", r.text)
         check("terms acceptance is dated + versioned", bool(j["user"].get("terms_accepted_at")) and j["user"].get("terms_version") == "v1", r.text)
         check("new account starts unverified", j["user"].get("email_verified") is False, r.text)
@@ -290,9 +303,12 @@ def main() -> int:
 
         # Cross-tenant: another customer's key must be untouchable even with a
         # valid id, for rename and revoke alike.
+        # Non-Indian numbers throughout this suite except the phone block:
+        # an Indian number verifies by SMS and is never sent an email code,
+        # so an Indian fixture cannot assert anything about email verification.
         r = client.post("/auth/register", json={
             "name": "Rival", "email": "rival@other.io", "password": "supersecret1",
-            "mobile": "+919000000001", "acceptTerms": True})
+            "mobile": "+14155550101", "acceptTerms": True})
         rival_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
         r = client.post("/api-keys", headers=rival_auth, json={"name": "Rival key"})
         rival_key_id = r.json()["data"]["id"]
@@ -966,7 +982,7 @@ def main() -> int:
         r = client.post("/auth/login", json={"email": "rival@other.io", "password": "supersecret1"})
         check("deleted account cannot sign in", r.status_code == 401, r.text)
         # The freed address must be reusable by a genuine future signup.
-        r = client.post("/auth/register", json={"name": "New Owner", "email": "rival@other.io", "password": "supersecret1", "mobile": "+919000000002", "acceptTerms": True})
+        r = client.post("/auth/register", json={"name": "New Owner", "email": "rival@other.io", "password": "supersecret1", "mobile": "+14155550102", "acceptTerms": True})
         check("deleted account's email can be reused", r.status_code == 201, r.text)
 
         async def read_closed():
@@ -1085,7 +1101,7 @@ def main() -> int:
         # its key and token died with it.
         r = client.post("/auth/register", json={
             "name": "Engine Co", "email": "engine@acme.io", "password": "hunter2secret",
-            "mobile": "+919876500123", "acceptTerms": True,
+            "mobile": "+14155550123", "acceptTerms": True,
         })
         eng_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
         # The plaintext key is top-level and shown exactly once.
@@ -1242,7 +1258,7 @@ def main() -> int:
         outbox.clear()
         r = client.post("/auth/register", json={
             "name": "Otp Tester", "email": "otp@acme.io", "password": "supersecret1",
-            "mobile": "+919000000009", "acceptTerms": True,
+            "mobile": "+14155550109", "acceptTerms": True,
         })
         otp_code = r.json().get("verification_code")
         otp_auth = {"Authorization": f"Bearer {r.json()['access_token']}"}
@@ -1277,7 +1293,7 @@ def main() -> int:
         # The code is spent, so the link that came with it must be dead too.
         r = client.post("/auth/register", json={
             "name": "Both Creds", "email": "both@acme.io", "password": "supersecret1",
-            "mobile": "+919000000010", "acceptTerms": True,
+            "mobile": "+14155550110", "acceptTerms": True,
         })
         both = r.json()
         r = client.post("/auth/verify-email/otp", json={"email": "both@acme.io", "code": both["verification_code"]})
@@ -1289,7 +1305,7 @@ def main() -> int:
         # holds across workers.
         r = client.post("/auth/register", json={
             "name": "Brute Force", "email": "brute@acme.io", "password": "supersecret1",
-            "mobile": "+919000000011", "acceptTerms": True,
+            "mobile": "+14155550111", "acceptTerms": True,
         })
         brute_code = r.json()["verification_code"]
         wrong = "000000" if brute_code != "000000" else "111111"
@@ -1385,7 +1401,7 @@ def main() -> int:
             # stuck: credited, signed in, and unable to create a key.
             client.post("/auth/register", json={
                 "name": "Never Verified", "email": "stuck@acme.io",
-                "password": "supersecret1", "mobile": "+919000000021", "acceptTerms": True,
+                "password": "supersecret1", "mobile": "+14155550121", "acceptTerms": True,
             })
 
             async def age_signup():
@@ -1442,6 +1458,147 @@ def main() -> int:
         finally:
             os.environ.pop("OPS_SECRET", None)
             get_settings.cache_clear()
+
+        # --- phone verification (Indian numbers) -----------------------------
+        # An Indian number verifies by SMS and is sent no email code; every
+        # other country verifies by email. One channel, never both.
+        outbox.clear()
+        sms_outbox.clear()
+        r = client.post("/auth/register", json={
+            "name": "Indian User", "email": "in@acme.io", "password": "supersecret1",
+            "mobile": "+91 98765-43299", "acceptTerms": True,
+        })
+        india = r.json()
+        india_auth = {"Authorization": f"Bearer {india['access_token']}"}
+        check("an Indian signup verifies by sms", india.get("verification_channel") == "sms", r.text)
+        check("the number is normalised to E.164", client.get("/profile", headers=india_auth).json()["data"]["phone"] == "+919876543299", "")
+        check("a code is texted to that number", [t["to"] for t in sms_outbox] == ["+919876543299"], str(sms_outbox))
+        check("the text carries a six-digit code", india["phone_code"].isdigit() and len(india["phone_code"]) == 6, str(india.get("phone_code")))
+        # The operator matches the delivered text against the DLT-registered
+        # template and silently drops anything that differs — a reworded message
+        # fails with a 200 from the gateway and nothing in any log. So the
+        # assertion is against the registered text itself, character for
+        # character, with only the variables free.
+        REGISTERED = (
+            "ChatBucket: {#var#} is your OTP for secure access to ChatBucket. "
+            "It's valid for one attempt only. Don't share this OTP is confidential. {#var#}"
+        )
+        pattern = "^" + re.escape(REGISTERED).replace(re.escape("{#var#}"), "(.+?)") + "$"
+        matched = re.match(pattern, sms_outbox[0]["body"])
+        check("the text matches the DLT-registered template exactly", matched is not None, sms_outbox[0]["body"])
+        check("and the first variable is the code", matched and matched.group(1) == india["phone_code"], str(matched and matched.groups()))
+        check("the text fits one SMS segment", len(sms_outbox[0]["body"]) <= 160, str(len(sms_outbox[0]["body"])))
+        # The whole point of the branch: no email code for an Indian account.
+        check("no email verification code is sent", not any("verification code" in m["subject"] for m in outbox), str([m["subject"] for m in outbox]))
+        check("but the welcome email still is", any(m["subject"] == "Welcome to ChatBucket" for m in outbox), str([m["subject"] for m in outbox]))
+
+        wrong = "000000" if india["phone_code"] != "000000" else "111111"
+        r = client.post("/auth/verify-phone", json={"mobile": "+919876543299", "code": wrong})
+        check("a wrong texted code -> 400", r.status_code == 400, r.text)
+        r = client.post("/auth/verify-phone", json={"mobile": "+919999999999", "code": india["phone_code"]})
+        check("a code for an unknown number -> 400", r.status_code == 400, r.text)
+        r = client.post("/auth/verify-phone", json={"mobile": "+919876543299", "code": india["phone_code"]})
+        check("POST /auth/verify-phone confirms the number", r.status_code == 200, r.text)
+        r = client.post("/auth/verify-phone", json={"mobile": "+919876543299", "code": india["phone_code"]})
+        check("re-verifying a number is idempotent", r.status_code == 200 and "already" in r.json()["message"], r.text)
+
+        # The gate must accept whichever channel the account actually uses, or
+        # turning REQUIRE_EMAIL_VERIFICATION on would block every Indian account
+        # permanently — they are never sent an email code to act on.
+        os.environ["REQUIRE_EMAIL_VERIFICATION"] = "true"
+        get_settings.cache_clear()
+        try:
+            r = client.post("/api-keys", headers=india_auth, json={"name": "IN"})
+            check("a phone-verified Indian account can create a key", r.status_code == 201, r.text)
+        finally:
+            os.environ["REQUIRE_EMAIL_VERIFICATION"] = "false"
+            get_settings.cache_clear()
+
+        # A foreign number takes the other branch.
+        outbox.clear()
+        sms_outbox.clear()
+        r = client.post("/auth/register", json={
+            "name": "Foreign User", "email": "us@acme.io", "password": "supersecret1",
+            "mobile": "+14155550199", "acceptTerms": True,
+        })
+        check("a foreign signup verifies by email", r.json().get("verification_channel") == "email", r.text)
+        check("and gets an email code", any("verification code" in m["subject"] for m in outbox), str([m["subject"] for m in outbox]))
+        check("and no SMS is sent", sms_outbox == [], str(sms_outbox))
+
+        # Changing your phone must not cost you a verification you already
+        # have — an email-verified customer who edits their number to an Indian
+        # one would otherwise silently lose the ability to create a key.
+        r = client.put("/profile", headers=india_auth, json={"phone": "+919000000888"})
+        check("phone can be changed", r.json()["data"]["phone"] == "+919000000888", r.text)
+
+        async def read_india():
+            return await database.users_collection().find_one({"email": "in@acme.io"})
+        moved = anyio.run(read_india)
+        # The new number is not the proven one, so the flag goes...
+        check("changing the number clears phone_verified", not moved.get("phone_verified"), str(moved.get("phone_verified")))
+        # ...and the old code cannot be replayed against the new number.
+        r = client.post("/auth/verify-phone", json={"mobile": "+919000000888", "code": india["phone_code"]})
+        check("the old code does not verify the new number", r.status_code == 400, r.text)
+
+        # --- The signup form's order: prove the number, then create the account.
+        #
+        # The form asks for the mobile and verifies it while the rest of the
+        # form is still being filled in, so a code has to be issued for a number
+        # with no account behind it. That is what `phone_verifications` is for.
+        sms_outbox.clear()
+        r = client.post("/auth/verify-phone/resend", json={"mobile": "+919000000777"})
+        unknown_body = r.json()
+        check("an unregistered number is texted a code", len(sms_outbox) == 1, str(sms_outbox))
+        pending_code = unknown_body["phone_code"]
+
+        # A wrong code must not verify it, and must not spend the right one.
+        r = client.post("/auth/verify-phone", json={"mobile": "+919000000777", "code": "000000"})
+        check("a wrong pre-signup code is refused", r.status_code == 400, r.text)
+        r = client.post("/auth/verify-phone", json={"mobile": "+919000000777", "code": pending_code})
+        check("the right pre-signup code verifies the number", r.status_code == 200, r.text)
+
+        # Registering with a number just proven should not text a second code —
+        # that is another message billed for asking the same question twice.
+        sms_outbox.clear()
+        r = client.post("/auth/register", json={
+            "name": "Pre Verified", "email": "pre@acme.io", "password": "supersecret1",
+            "mobile": "+919000000777", "acceptTerms": True,
+        })
+        check("signup with a pre-verified number succeeds", r.status_code == 201, r.text)
+        check("and no second code is texted", sms_outbox == [], str(sms_outbox))
+
+        async def read_pre():
+            return await database.users_collection().find_one({"email": "pre@acme.io"})
+        pre = anyio.run(read_pre)
+        check("the account is created already phone-verified", pre.get("phone_verified") is True, str(pre.get("phone_verified")))
+
+        # One proof, one account. Otherwise a single number could be verified
+        # once and spent repeatedly, each signup collecting the free credits.
+        async def read_pending():
+            return await database.phone_verifications_collection().find_one({"phone": "+919000000777"})
+        check("the proof is consumed by the signup", anyio.run(read_pending) is None, str(anyio.run(read_pending)))
+
+        # Resending costs money per call, so it must not re-text a number
+        # already proven, and is throttled hard.
+        r = client.post("/auth/verify-phone/resend", json={"mobile": "+919000000888"})
+        moved_code = r.json()["phone_code"]
+        r = client.post("/auth/verify-phone", json={"mobile": "+919000000888", "code": moved_code})
+        check("the moved number can be proven again", r.status_code == 200, r.text)
+        sms_outbox.clear()
+        r2 = client.post("/auth/verify-phone/resend", json={"mobile": "+919000000888"})
+        check("an already-verified number is not texted again", sms_outbox == [], str(sms_outbox))
+        # Told, not stonewalled. Answering "a code has been sent" and sending
+        # nothing left people on the signup form waiting for a message that was
+        # never coming — and it kept no secret, because `register` already
+        # refuses a taken number with a 409.
+        check("and the caller is told it is already registered", r2.status_code == 409, r2.text)
+        check("with a message that says what to do instead", "log in" in r2.json()["detail"].lower(), r2.text)
+
+        # A number outside the SMS countries must never cost a message, even
+        # when asked for directly — that account verifies by email.
+        r = client.post("/auth/verify-phone/resend", json={"mobile": "+14155550123"})
+        check("a non-SMS country is never texted", sms_outbox == [], str(sms_outbox))
+        check("and is answered the same way regardless", r.json()["message"] == unknown_body["message"], r.text)
 
         # --- CORS ------------------------------------------------------------
         # The suite runs as `development`, so the loopback rule is live here.

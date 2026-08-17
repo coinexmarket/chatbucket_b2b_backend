@@ -31,9 +31,11 @@ from ..models.auth import (
     LogoutRequest,
     RefreshRequest,
     RegisterRequest,
+    ResendPhoneCodeRequest,
     ResetPasswordRequest,
     VerifyEmailOtpRequest,
     VerifyEmailRequest,
+    VerifyPhoneRequest,
 )
 from ..plans import DEFAULT_PLAN
 from ..security import (
@@ -46,6 +48,7 @@ from ..security import (
     verify_password_async,
 )
 from ..serialization import public_user
+from ..sms import send_phone_verification
 
 logger = logging.getLogger("chatbucket_b2b.auth")
 
@@ -72,6 +75,11 @@ _DUPLICATE_EMAIL = HTTPException(
     detail="An account with this email already exists.",
 )
 
+_DUPLICATE_PHONE = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="An account with this mobile number already exists.",
+)
+
 
 @router.post(
     "/register",
@@ -89,6 +97,20 @@ async def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
     # duplicate account (which would then make `login` pick an arbitrary one).
     if not indexes_ready() and await users_collection().find_one({"email": email}):
         raise _DUPLICATE_EMAIL
+
+    # A number must identify one account: `verify-phone` looks an account up by
+    # it, and the signup bonus would otherwise be farmable by re-registering the
+    # same mobile against new addresses. Checked explicitly as well as by the
+    # unique index, because that index cannot be created on data that already
+    # holds duplicates.
+    if await users_collection().find_one({"phone": payload.mobile}):
+        raise _DUPLICATE_PHONE
+
+    # Did the signup form already prove this number by SMS? Checked before the
+    # insert so the account can be created verified, rather than written
+    # unverified and corrected a moment later — a window in which a crash would
+    # leave someone who *did* verify holding an unverified account.
+    phone_pre_verified = await verification.phone_recently_verified(payload.mobile)
 
     how_heard = (payload.how_did_you_hear or "").strip() or None
     document = {
@@ -111,10 +133,14 @@ async def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
         "created_at": now,
         "updated_at": now,
     }
+    if phone_pre_verified:
+        document["phone_verified"] = True
+        document["phone_verified_at"] = now
     try:
         result = await users_collection().insert_one(document)
-    except DuplicateKeyError:
-        raise _DUPLICATE_EMAIL
+    except DuplicateKeyError as exc:
+        # Two concurrent signups; which unique index tripped decides the message.
+        raise _DUPLICATE_PHONE if "phone" in str(exc) else _DUPLICATE_EMAIL
     document["_id"] = result.inserted_id
 
     # Open the credit account, and grant the trial balance if one is
@@ -134,11 +160,28 @@ async def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
     except Exception as exc:
         logger.error("could not open credit account for %s: %s", document["_id"], exc)
 
-    # Queued after the response, like the reset email.
-    token, code = await _issue_verification(document, background_tasks)
+    # One channel or the other, never both: an Indian number verifies by SMS
+    # and is not sent an email code, every other country verifies by email.
+    # `verification.channel_for` owns that rule.
+    channel = verification.channel_for(document["phone"])
+    token = code = phone_code = None
+    if channel == verification.CHANNEL_SMS:
+        if phone_pre_verified:
+            # Already proven on the form. Sending a second code would cost
+            # another message and ask the customer to do the same thing twice.
+            # The record is consumed here so one proof cannot create a second
+            # account on the same number.
+            await verification.claim_pending_phone(document["phone"])
+        else:
+            phone_code = await verification.issue_phone_code(document["_id"])
+            background_tasks.add_task(
+                send_phone_verification, document["phone"], phone_code
+            )
+    else:
+        token, code = await _issue_verification(document, background_tasks)
 
-    # Also queued: a welcome email is worth sending, but not worth making the
-    # customer wait on an SMTP round trip before their account appears.
+    # Queued either way: a welcome email is worth sending, but not worth making
+    # the customer wait on an SMTP round trip before their account appears.
     background_tasks.add_task(
         send_welcome,
         document["email"],
@@ -149,10 +192,16 @@ async def register(payload: RegisterRequest, background_tasks: BackgroundTasks):
     )
 
     body = await _token_response(document)
+    # Which channel the client should now prompt for. Without this the frontend
+    # has to re-derive the dial-code rule, and the two would drift.
+    body["verification_channel"] = channel
     if settings.is_dev:
-        # No inbox to read the link or the code out of under the console backend.
-        body["verification_token"] = token
-        body["verification_code"] = code
+        # Nothing to read the code out of under the console backends.
+        if token is not None:
+            body["verification_token"] = token
+            body["verification_code"] = code
+        if phone_code is not None:
+            body["phone_code"] = phone_code
     return body
 
 
@@ -354,6 +403,145 @@ async def verify_email_otp(
 
     await _confirm_and_notify(user, background_tasks)
     return {"status": True, "message": "Email verified."}
+
+
+@router.post(
+    "/verify-phone",
+    dependencies=[Depends(ratelimit.by_ip("verify_phone_ip"))],
+)
+async def verify_phone(payload: VerifyPhoneRequest):
+    """Confirm a mobile number from the six digits that were texted to it.
+
+    Public, like the email routes: someone reading the SMS on their phone may
+    not have a session. Two things stop it being a way to brute-force six
+    digits — an attempt counter on the account that burns the code, and per-IP
+    and per-number rate limits on top.
+    """
+    settings = get_settings()
+    # Per-number as well as per-IP: a per-IP cap alone lets a spread-out
+    # attacker work through one number's million codes.
+    await ratelimit.enforce("verify_phone_number", payload.mobile, "verify_phone_number")
+
+    invalid = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid or expired verification code.",
+    )
+
+    # Newest first: the number is unique going forward, but data written before
+    # the index existed may hold duplicates, and the live code belongs to the
+    # most recent signup.
+    user = await users_collection().find_one(
+        {"phone": payload.mobile}, sort=[("created_at", -1)]
+    )
+    if user is None:
+        # No account yet — this is the signup form proving the number before it
+        # creates one. The code lives in `phone_verifications`, keyed by the
+        # number, and `register` reads the result.
+        outcome = await verification.check_pending_phone_code(
+            payload.mobile, payload.code
+        )
+        if outcome == verification.OUTCOME_LOCKED:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many incorrect codes. Request a new one.",
+            )
+        if outcome != verification.OUTCOME_OK:
+            raise invalid
+        return {"status": True, "message": "Mobile number verified."}
+    if user.get("phone_verified"):
+        # Idempotent for someone who taps twice, and it reveals nothing: they
+        # already told us this number by typing it.
+        return {"status": True, "message": "Mobile number is already verified."}
+
+    stored = user.get("phone_code_hash")
+    expires = _as_utc(user.get("phone_code_expires"))
+    attempts = int(user.get("phone_code_attempts", 0))
+    if not stored or expires is None or expires < datetime.now(timezone.utc):
+        raise invalid
+    if attempts >= settings.phone_otp_max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many incorrect codes. Request a new one.",
+        )
+
+    if not secrets.compare_digest(stored, hash_email_otp(payload.code)):
+        # Counted in the database so the cap holds across workers and restarts.
+        await users_collection().update_one(
+            {"_id": user["_id"]}, {"$inc": {"phone_code_attempts": 1}}
+        )
+        raise invalid
+
+    await users_collection().update_one(
+        {"_id": user["_id"]}, verification.mark_phone_verified_update()
+    )
+    return {"status": True, "message": "Mobile number verified."}
+
+
+@router.post(
+    "/verify-phone/resend",
+    dependencies=[Depends(ratelimit.by_ip("verify_phone_send_ip"))],
+)
+async def resend_phone_code(
+    payload: ResendPhoneCodeRequest, background_tasks: BackgroundTasks
+):
+    """Text a code to a mobile number, whether or not it has an account yet.
+
+    Serves both halves of the flow:
+
+    * **Signup** — the form proves the number *before* creating the account, so
+      there is no user document to hang the code off. It goes in
+      `phone_verifications`, keyed by the number, and `register` reads it.
+    * **An existing unverified account** — the code goes on the account, as the
+      email codes do.
+
+    Limited far harder than the email resend, because every call costs real
+    money: an unthrottled endpoint that sends an SMS is someone else's phone
+    bill.
+
+    One case answers differently on purpose: a number already registered *and
+    verified* gets a 409 rather than the generic reply. Silence there was worse
+    than useless — `register` already rejects a taken number with a 409, so it
+    kept no secret, and it left the signup form claiming a code had been sent
+    when none had.
+    """
+    settings = get_settings()
+    await ratelimit.enforce("verify_phone_send_number", payload.mobile, "verify_phone_send_number")
+
+    # Same response in every branch — see the docstring.
+    response: dict = {
+        "status": True,
+        "message": "If that number needs verifying, a code has been sent.",
+    }
+
+    # Not an SMS country (or SMS is switched off): a text would cost money and
+    # prove nothing, because that account verifies by email instead.
+    if verification.channel_for(payload.mobile) != verification.CHANNEL_SMS:
+        return response
+
+    user = await users_collection().find_one(
+        {"phone": payload.mobile}, sort=[("created_at", -1)]
+    )
+    if user is not None and user.get("phone_verified"):
+        # Say so, rather than answering "a code has been sent" and sending
+        # nothing. There is no secret left to keep: `POST /auth/register`
+        # already refuses a taken number with a 409, so staying quiet here
+        # discloses nothing extra — it only leaves somebody on the signup form
+        # waiting for a message that was never going to arrive.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This mobile number is already registered and verified. "
+                   "Please log in instead.",
+        )
+
+    if user is None:
+        code = await verification.issue_pending_phone_code(payload.mobile)
+    else:
+        code = await verification.issue_phone_code(user["_id"])
+
+    background_tasks.add_task(send_phone_verification, payload.mobile, code)
+    if settings.is_dev:
+        response["phone_code"] = code
+    return response
 
 
 @router.post("/verify-email/resend")

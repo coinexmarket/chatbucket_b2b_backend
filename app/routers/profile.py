@@ -34,7 +34,22 @@ async def update_profile(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update."
         )
     updates["updated_at"] = datetime.now(timezone.utc)
-    await users_collection().update_one({"_id": user["_id"]}, {"$set": updates})
+
+    # Moving to a different number un-proves it. Without this, someone could
+    # verify one mobile and then swap in another, and the account would still
+    # read as phone-verified for a number nobody confirmed. Not applied when the
+    # number is unchanged, so re-saving the same profile does not cost the
+    # customer their verification.
+    unset: dict = {}
+    if "phone" in updates and updates["phone"] != user.get("phone"):
+        unset = {"phone_verified": "", "phone_verified_at": "",
+                 "phone_code_hash": "", "phone_code_expires": "",
+                 "phone_code_attempts": ""}
+
+    await users_collection().update_one(
+        {"_id": user["_id"]},
+        {"$set": updates, **({"$unset": unset} if unset else {})},
+    )
     fresh = await users_collection().find_one({"_id": user["_id"]})
     return {"status": True, "data": public_user(fresh)}
 
