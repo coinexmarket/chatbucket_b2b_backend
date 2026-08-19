@@ -39,7 +39,7 @@ from ..models.billing import (
     AutoRechargeRequest,
     BillingDetailsRequest,
     PaymentConfirmation,
-    RazorpayCheckoutResult,
+    CheckoutCallback,
     TopUpRequest,
 )
 from ..plans import PURCHASABLE, get_plan
@@ -265,7 +265,7 @@ async def create_top_up(payload: TopUpRequest, user: dict = Depends(get_current_
     result = await payments_collection().insert_one(document)
     document["_id"] = result.inserted_id
 
-    # Create the matching Razorpay order, if a gateway is configured. Done
+    # Create the matching gateway order, if one is configured. Done
     # after the local record exists so a gateway outage leaves a pending
     # top-up to retry rather than a charge with nothing pointing at it.
     checkout = None
@@ -274,7 +274,7 @@ async def create_top_up(payload: TopUpRequest, user: dict = Depends(get_current_
             amount, document["currency"], document["reference"]
         )
     except payments_gateway.PaymentGatewayError as exc:
-        logger.error("razorpay order failed for payment %s: %s", document["_id"], exc)
+        logger.error("gateway order failed for payment %s: %s", document["_id"], exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Payment gateway is unavailable. The top-up was not started.",
@@ -285,7 +285,7 @@ async def create_top_up(payload: TopUpRequest, user: dict = Depends(get_current_
             {"_id": document["_id"]}, {"$set": {"provider_order_id": order["id"]}}
         )
         document["provider_order_id"] = order["id"]
-        # Everything Razorpay Checkout needs on the client. The key id is
+        # Everything the checkout widget needs on the client. The key id is
         # public by design; the secret never leaves this service.
         checkout = {
             "provider": "razorpay",
@@ -419,7 +419,7 @@ async def _settle(
     """Mark a payment paid, grant its credits, upgrade the plan, invoice it.
 
     The single settlement path. Every route that can confirm a payment — the
-    shared-secret endpoint, the Razorpay checkout callback and the Razorpay
+    shared-secret endpoint, the checkout callback and the gateway
     webhook — funnels here **after** it has verified the caller, so there is
     one place where credits are granted and one place to reason about
     double-crediting.
@@ -509,10 +509,10 @@ async def _settle(
 @router.post("/payments/{payment_id}/verify")
 async def verify_checkout(
     payment_id: str,
-    payload: RazorpayCheckoutResult,
+    payload: CheckoutCallback,
     user: dict = Depends(get_current_user),
 ):
-    """Confirm a top-up from the Razorpay Checkout callback.
+    """Confirm a top-up from the checkout callback.
 
     The three values come back through the customer's browser, so they are
     untrusted: the HMAC over `order_id|payment_id` is the only thing that makes
@@ -555,8 +555,8 @@ async def verify_checkout(
 
 
 @router.post("/webhook/razorpay")
-async def razorpay_webhook(request: Request):
-    """Razorpay webhook — the authoritative confirmation.
+async def payment_webhook(request: Request):
+    """The gateway webhook — the authoritative confirmation.
 
     Verified against `RAZORPAY_WEBHOOK_SECRET` over the **raw** body; a
     re-serialised payload hashes differently and every delivery would be
@@ -567,7 +567,7 @@ async def razorpay_webhook(request: Request):
     if not settings.razorpay_webhook_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Razorpay webhook is not configured (RAZORPAY_WEBHOOK_SECRET unset).",
+            detail="Payment webhook is not configured (RAZORPAY_WEBHOOK_SECRET unset).",
         )
 
     raw = await request.body()
@@ -591,7 +591,7 @@ async def razorpay_webhook(request: Request):
     )
     order_id = entity.get("order_id")
     if event.get("event") not in ("payment.captured", "payment.authorized"):
-        # Acknowledge anything else so Razorpay stops retrying — an
+        # Acknowledge anything else so the gateway stops retrying — an
         # unrecognised event is not a failure on our side.
         return {"status": True, "ignored": event.get("event")}
     if not order_id:
@@ -601,9 +601,9 @@ async def razorpay_webhook(request: Request):
 
     payment = await payments_collection().find_one({"provider_order_id": order_id})
     if payment is None:
-        # 200, not 404: an order we do not recognise is not something Razorpay
+        # 200, not 404: an order we do not recognise is not something the gateway
         # can fix by retrying, and a 4xx would have it retry for days.
-        logger.warning("razorpay webhook for unknown order %s", order_id)
+        logger.warning("gateway webhook for unknown order %s", order_id)
         return {"status": True, "ignored": "unknown_order"}
 
     return await _settle(

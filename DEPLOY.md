@@ -116,7 +116,8 @@ an existing one back, so a lost credential is replaced rather than recovered.
 
 ## What is deliberately unset
 
-* **Razorpay runs on test keys** (`rzp_test_…`), so no real money moves. The
+* **The payment gateway runs on test keys** (`rzp_test_…`), so no real money
+  moves. The
   whole path works — order creation, Checkout, webhook, credits, invoice — but
   only with test cards. Going live is swapping `RAZORPAY_KEY_ID` and
   `RAZORPAY_KEY_SECRET` for their `rzp_live_` counterparts and re-registering
@@ -194,7 +195,7 @@ a domain the sending account cannot authenticate for.
 
 ## Payments
 
-The webhook is registered in the Razorpay dashboard against
+The webhook is registered in the gateway's dashboard against
 `https://api.b2b.chatbucket.business/billing/webhook/razorpay`, subscribed to
 `payment.captured` and `payment.authorized` — the only two events the handler
 acts on; anything else is acknowledged and ignored.

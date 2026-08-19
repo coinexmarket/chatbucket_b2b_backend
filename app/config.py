@@ -380,11 +380,14 @@ class Settings(BaseSettings):
     # Day of the month the monthly report goes out, covering the month before.
     notification_monthly_report_day: int = Field(default=1, ge=1, le=28)
 
-    # --- Razorpay ----------------------------------------------------------
+    # --- Payment gateway ----------------------------------------------------
+    # These field names are also the environment-variable names, and they are
+    # set on the running apps, so they keep the gateway's name where renaming
+    # them would mean a coordinated config change for no behavioural gain.
     # Order creation authenticates with key id + secret (HTTP Basic).
     razorpay_key_id: str = Field(default="")
     razorpay_key_secret: str = Field(default="")
-    # A SEPARATE value, set in the Razorpay dashboard when registering the
+    # A SEPARATE value, set in the gateway's dashboard when registering the
     # webhook. Webhook payloads are signed with this, not with the key secret;
     # using the wrong one silently rejects every callback.
     razorpay_webhook_secret: str = Field(default="")

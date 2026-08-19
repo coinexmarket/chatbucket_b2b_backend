@@ -1,4 +1,4 @@
-"""Razorpay — order creation and signature verification.
+"""The payment gateway — order creation and signature verification.
 
 The only module that talks to the payment gateway, the way `database.py` is the
 only one that talks to Mongo and `email.py` the only one that sends mail.
@@ -6,20 +6,24 @@ only one that talks to Mongo and `email.py` the only one that sends mail.
 Two ways a payment gets confirmed, and **both must be verified cryptographically
 before a single credit is granted**:
 
-* **Checkout callback** — the browser returns `razorpay_payment_id`,
-  `razorpay_order_id` and `razorpay_signature`. The signature is
-  ``HMAC_SHA256(order_id|payment_id, key_secret)``. It comes from the customer's
-  browser, so it is untrusted input; the HMAC is the only thing that makes it
-  believable.
-* **Webhook** — Razorpay POSTs the event with `X-Razorpay-Signature`, which is
+* **Checkout callback** — the browser returns the order id, payment id and
+  signature. The signature is ``HMAC_SHA256(order_id|payment_id, key_secret)``.
+  It comes from the customer's browser, so it is untrusted input; the HMAC is
+  the only thing that makes it believable.
+* **Webhook** — the gateway POSTs the event with a signature header, which is
   ``HMAC_SHA256(raw_body, webhook_secret)``. Note **webhook_secret**, a separate
   value from the key secret — signing with the wrong one rejects every callback.
 
 The webhook is the authority: a customer can close the browser before the
-callback fires, but Razorpay will still deliver the webhook. The callback exists
+callback fires, but the gateway still delivers the webhook. The callback exists
 so the dashboard can show credits immediately rather than waiting.
 
-Uses the stdlib over HTTP rather than the Razorpay SDK — it is one POST and two
+The field and header names below are the gateway's own, fixed by its checkout
+widget and its webhook delivery, so they are the one place its name is
+unavoidable; everything else here is written in terms of the seam rather than
+the supplier behind it.
+
+Uses the stdlib over HTTP rather than the vendor SDK — it is one POST and two
 HMACs, and this keeps the deployed dependency set unchanged.
 """
 from __future__ import annotations
@@ -44,7 +48,7 @@ _ORDERS_URL = "https://api.razorpay.com/v1/orders"
 
 
 class PaymentGatewayError(RuntimeError):
-    """Razorpay could not be reached, or refused the order."""
+    """The payment gateway could not be reached, or refused the order."""
 
 
 def _create_order_blocking(amount_paise: int, currency: str, receipt: str) -> dict:
@@ -54,7 +58,7 @@ def _create_order_blocking(amount_paise: int, currency: str, receipt: str) -> di
             "amount": amount_paise,
             "currency": currency,
             "receipt": receipt,
-            # Razorpay retries an order with the same receipt rather than
+            # The gateway retries an order with the same receipt rather than
             # creating a duplicate, which makes a retried top-up safe.
             "payment_capture": 1,
         }
@@ -79,13 +83,15 @@ def _create_order_blocking(amount_paise: int, currency: str, receipt: str) -> di
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")[:500]
-        raise PaymentGatewayError(f"Razorpay rejected the order ({exc.code}): {detail}")
+        raise PaymentGatewayError(
+            f"The payment gateway rejected the order ({exc.code}): {detail}"
+        )
     except Exception as exc:
-        raise PaymentGatewayError(f"Could not reach Razorpay: {exc}")
+        raise PaymentGatewayError(f"Could not reach the payment gateway: {exc}")
 
 
 async def create_order(amount: Decimal, currency: str, receipt: str) -> dict | None:
-    """Create a Razorpay order. Returns None when Razorpay is not configured.
+    """Create a gateway order. Returns None when no gateway is configured.
 
     Returning None rather than raising keeps the service usable without a
     gateway — the top-up is recorded locally and can be confirmed by the
