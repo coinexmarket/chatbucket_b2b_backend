@@ -16,4 +16,4 @@ PyJWT==2.13.0
 # have and the slim base image does not install. Emails render dates and times
 # in DISPLAY_TIMEZONE, so without this every receipt silently falls back to UTC
 # — five and a half hours out for an Indian customer, and wrong on the day.
-tzdata==2025.2
+tzdata==2026.3
