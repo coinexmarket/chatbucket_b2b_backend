@@ -35,6 +35,7 @@ from ..database import (
     users_collection,
 )
 from ..deps import get_current_user
+from ..logsafe import log_safe
 from ..models.billing import (
     AutoRechargeRequest,
     BillingDetailsRequest,
@@ -42,7 +43,6 @@ from ..models.billing import (
     PaymentConfirmation,
     TopUpRequest,
 )
-from ..notifications import log_safe
 from ..plans import PURCHASABLE, get_plan
 from ..serialization import iso
 
@@ -449,8 +449,8 @@ async def _settle(
         # point of that index — never credit the same money twice.
         logger.error(
             "gateway payment %s already settled another order; refusing %s",
-            provider_payment_id,
-            oid,
+            log_safe(provider_payment_id),
+            log_safe(oid),
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

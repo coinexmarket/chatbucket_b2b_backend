@@ -53,7 +53,7 @@ from bson import ObjectId  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from mongomock_motor import AsyncMongoMockClient  # noqa: E402
 
-from app import credits, database, payments, pricing, ratelimit  # noqa: E402
+from app import credits, database, logsafe, payments, pricing, ratelimit  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.email import _build_message, outbox  # noqa: E402
 from app.main import app  # noqa: E402
@@ -1599,6 +1599,32 @@ def main() -> int:
         r = client.post("/auth/verify-phone/resend", json={"mobile": "+14155550123"})
         check("a non-SMS country is never texted", sms_outbox == [], str(sms_outbox))
         check("and is answered the same way regardless", r.json()["message"] == unknown_body["message"], r.text)
+
+        # --- log sanitising --------------------------------------------------
+        # What these guard is a log that *reads* correctly to whoever parses it
+        # later, so the assertions are about the shape of the output, not about
+        # any endpoint. A forged newline is the whole attack.
+        forged = "victim@example.com\nERROR payment failed for order_123"
+        check("a newline cannot open a second log record",
+              "\n" not in logsafe.log_safe(forged), repr(logsafe.log_safe(forged)))
+        check("a carriage return cannot either",
+              "\r" not in logsafe.log_safe("a\r\nb"), repr(logsafe.log_safe("a\r\nb")))
+        check("the surviving text is still readable",
+              "victim@example.com" in logsafe.log_safe(forged), "")
+        # An escape sequence repaints a terminal, which is its own kind of lie.
+        check("terminal escapes and NULs are dropped",
+              "\x1b" not in logsafe.log_safe("a\x1b[31mb\x00c")
+              and "\x00" not in logsafe.log_safe("a\x1b[31mb\x00c"), "")
+        check("an over-long value cannot flood the line",
+              len(logsafe.log_safe("x" * 5000)) == 64, "")
+        check("a non-string is coerced rather than raising",
+              logsafe.log_safe(12345) == "12345", "")
+        # The console email backend keeps its newlines on purpose; indenting is
+        # what stops any of them starting where a new record would.
+        block = logsafe.log_block("line1\nline2\nline3")
+        check("a logged block keeps its lines", block.count("\n") == 2, repr(block))
+        check("but none of them start at column zero",
+              all(line.startswith("    ") for line in block.split("\n")[1:]), repr(block))
 
         # --- CORS ------------------------------------------------------------
         # The suite runs as `development`, so the loopback rule is live here.

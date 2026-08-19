@@ -26,6 +26,7 @@ from fastapi import HTTPException, Request, status
 
 from .config import get_settings
 from .database import rate_limits_collection
+from .logsafe import log_safe
 
 logger = logging.getLogger("chatbucket_b2b.ratelimit")
 
@@ -114,7 +115,12 @@ async def hit(scope: str, identifier: str, limit: Limit) -> Result:
         )
         count = int(doc.get("count", 1))
     except Exception as exc:
-        logger.error("rate limit store unavailable, allowing %s/%s: %s", scope, identifier, exc)
+        logger.error(
+            "rate limit store unavailable, allowing %s/%s: %s",
+            log_safe(scope),
+            log_safe(identifier),
+            exc,
+        )
         return Result(True, limit.requests, 0)
 
     return Result(
