@@ -859,9 +859,9 @@ is no captcha, so a determined submitter can still fill the CRM with noise.
 ## Email
 
 `app/email.py` is the only module that sends mail, the way `database.py` is the
-only one that touches Mongo. Transport is **SMTP**, which SendGrid, SES,
-Mailgun, Postmark and Gmail all speak — so changing provider is configuration,
-not code, and needs no extra dependency.
+only one that touches Mongo. Transport is **SMTP**, which every major mail
+provider speaks — so changing provider is configuration, not code, and needs no
+extra dependency.
 
 | `EMAIL_BACKEND` | Behaviour |
 | --- | --- |
@@ -1177,7 +1177,7 @@ payment gateway, both of which fail quietly rather than loudly).
 | `EMAIL_BACKEND` | `auto` | `auto` / `smtp` / `console` / `memory` / `disabled` — see **Email**. |
 | `SMTP_HOST` | – | Provider host. Required in production unless `EMAIL_BACKEND=disabled`. |
 | `SMTP_PORT` | `587` | `587` for STARTTLS, `465` for implicit TLS. |
-| `SMTP_USERNAME` / `SMTP_PASSWORD` | – | Provider credentials (SendGrid's username is literally `apikey`). |
+| `SMTP_USERNAME` / `SMTP_PASSWORD` | – | Provider credentials. Some providers want a fixed literal as the username rather than an address — check theirs. |
 | `SMTP_USE_SSL` | `false` | Set `true` (and `SMTP_STARTTLS=false`) for port 465. |
 | `SMTP_STARTTLS` | `true` | Upgrade a plaintext connection; correct for port 587. |
 | `SMTP_TIMEOUT_SECONDS` | `15` | Per-send socket timeout. |
