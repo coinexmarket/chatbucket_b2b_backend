@@ -42,6 +42,7 @@ from ..models.billing import (
     PaymentConfirmation,
     TopUpRequest,
 )
+from ..notifications import log_safe
 from ..plans import PURCHASABLE, get_plan
 from ..serialization import iso
 
@@ -603,7 +604,10 @@ async def payment_webhook(request: Request):
     if payment is None:
         # 200, not 404: an order we do not recognise is not something the gateway
         # can fix by retrying, and a 4xx would have it retry for days.
-        logger.warning("gateway webhook for unknown order %s", order_id)
+        # Sanitised even though the delivery is HMAC-verified above: a newline
+        # in a logged value forges a log line whatever its provenance, and the
+        # log site should not depend on a check twenty lines away.
+        logger.warning("gateway webhook for unknown order %s", log_safe(order_id))
         return {"status": True, "ignored": "unknown_order"}
 
     return await _settle(
