@@ -30,6 +30,7 @@ from decimal import Decimal
 
 from . import money
 from .database import credit_accounts_collection, credit_ledger_collection
+from .logsafe import log_safe
 from .serialization import iso
 
 logger = logging.getLogger("chatbucket_b2b.credits")
@@ -150,7 +151,7 @@ async def try_debit(user_id, units: int, description: str, ref=None) -> dict | N
         logger.error(
             "debited %s units from %s but failed to write the ledger entry: %s",
             units,
-            user_id,
+            log_safe(user_id),
             exc,
         )
         raise

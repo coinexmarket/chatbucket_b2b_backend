@@ -39,6 +39,7 @@ from starlette.concurrency import run_in_threadpool
 
 from . import emailtemplates
 from .config import get_settings
+from .logsafe import log_block, log_safe
 
 logger = logging.getLogger("chatbucket_b2b.email")
 
@@ -130,11 +131,11 @@ async def send_email(
     backend = settings.resolved_email_backend
 
     if backend == "disabled":
-        logger.debug("email backend disabled; dropping message to %s", to)
+        logger.debug("email backend disabled; dropping message to %s", log_safe(to))
         return False
 
     if not to:
-        logger.warning("refusing to send %r with no recipient", subject)
+        logger.warning("refusing to send %r with no recipient", log_safe(subject))
         return False
 
     if backend == "memory":
@@ -151,11 +152,13 @@ async def send_email(
         # The HTML is not printed: it is tens of kilobytes of table markup and
         # would bury every other line in the log. Its presence is noted instead.
         logger.warning(
-            "EMAIL (console backend, not delivered)\nTo: %s\nSubject: %s\nHTML: %s\n\n%s",
-            to,
-            subject,
+            "EMAIL (console backend, not delivered)\nTo: %s\nSubject: %s\nHTML: %s\n\n    %s",
+            log_safe(to),
+            log_safe(subject),
             f"{len(html)} bytes" if html else "none",
-            body,
+            # Kept multi-line — reading the message is the whole point of this
+            # backend — but indented, so no line of it can pose as a new record.
+            log_block(body),
         )
         return True
 
@@ -163,12 +166,12 @@ async def send_email(
         await run_in_threadpool(
             _send_smtp_blocking, _build_message(to, subject, body, html, reply_to)
         )
-        logger.info("sent %r to %s", subject, to)
+        logger.info("sent %r to %s", log_safe(subject), log_safe(to))
         return True
     except Exception as exc:
         # Includes auth failures, DNS/connect errors and timeouts. Logged with
         # the subject and recipient so a delivery gap is diagnosable.
-        logger.error("failed to send %r to %s: %s", subject, to, exc)
+        logger.error("failed to send %r to %s: %s", log_safe(subject), log_safe(to), exc)
         return False
 
 

@@ -39,6 +39,7 @@ from .database import (
     usage_collection,
     users_collection,
 )
+from .logsafe import log_safe
 
 logger = logging.getLogger("chatbucket_b2b.notifications")
 
@@ -165,19 +166,6 @@ async def _recipients(*, verified_only: bool, extra_query: dict | None = None) -
 
 
 # --- Broadcasts ------------------------------------------------------------
-
-def log_safe(value: str) -> str:
-    """Strip anything that could forge a log line.
-
-    The models already reject control characters in a reference id, but these
-    builders are callable directly — from a script, or a future job — so the
-    log site does not depend on the caller having come through the API.
-
-    Public because the billing webhook needs the same guarantee for the order id
-    it logs, and one implementation is better than a second copy that drifts.
-    """
-    return "".join(c for c in str(value) if c.isprintable())[:64]
-
 
 def build_announcement(
     *,
