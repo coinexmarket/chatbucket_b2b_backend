@@ -11,7 +11,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
-from .. import credits, money
+from .. import credits, money, verification
 from ..config import get_settings
 from ..database import api_keys_collection
 from ..deps import get_api_user, get_current_user
@@ -43,7 +43,10 @@ async def create_key(
     # live credential against it is a decision worth gating. Off by default:
     # switching it on would lock out every account created before verification
     # existed until they confirm.
-    if get_settings().require_email_verification and not user.get("email_verified"):
+    # `verification.is_verified` checks whichever channel applies to this
+    # account. Reading `email_verified` directly would permanently block an
+    # Indian account, which is never sent an email code at all.
+    if get_settings().require_email_verification and not verification.is_verified(user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Verify your email address before creating API keys.",

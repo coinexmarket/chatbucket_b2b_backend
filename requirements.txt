@@ -1,6 +1,6 @@
 # Versions chosen to ship prebuilt wheels for Python 3.12–3.14.
 fastapi==0.141.1
-uvicorn[standard]==0.52.0
+uvicorn[standard]==0.52.3
 motor==3.7.1
 pymongo==4.17.0
 # Required to resolve a `mongodb+srv://` URI, which is the only form DigitalOcean
@@ -9,7 +9,7 @@ pymongo==4.17.0
 # installed" — a fault that cannot appear until deploy.
 dnspython==2.8.0
 pydantic==2.13.4
-pydantic-settings==2.14.2
+pydantic-settings==2.15.0
 email-validator==2.3.0
 PyJWT==2.13.0
 # `zoneinfo` reads the operating system's tz database, which Windows does not
