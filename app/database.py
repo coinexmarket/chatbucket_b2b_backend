@@ -124,7 +124,7 @@ async def ensure_indexes() -> None:
     # Set by the gateway webhook; unique so a redelivered callback cannot
     # credit the same payment twice.
     # Webhooks arrive keyed by order id, so it must be indexed and unique —
-    # two local payments sharing one Razorpay order would be ambiguous.
+    # two local payments sharing one gateway order would be ambiguous.
     await payments_collection().create_index(
         "provider_order_id",
         unique=True,

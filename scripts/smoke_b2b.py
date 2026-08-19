@@ -1025,7 +1025,7 @@ def main() -> int:
             r = client.post("/billing/top-up", headers=auth, json={"amountInr": 500})
             j = r.json()
             pay_id = j["data"]["id"]
-            check("top-up returns Razorpay checkout params", j["checkout"]["provider"] == "razorpay" and j["checkout"]["order_id"] == "order_1", str(j.get("checkout")))
+            check("top-up returns gateway checkout params", j["checkout"]["provider"] == "razorpay" and j["checkout"]["order_id"] == "order_1", str(j.get("checkout")))
             check("checkout amount is in paise", j["checkout"]["amount"] == 50000, str(j["checkout"]))
             check("checkout exposes only the public key id", "key_id" in j["checkout"] and "key_secret" not in str(j["checkout"]), str(j["checkout"]))
             check("payment records the order id", j["data"]["provider_order_id"] == "order_1", r.text)
@@ -1073,7 +1073,7 @@ def main() -> int:
             get_settings.cache_clear()
 
         r = client.post("/billing/webhook/razorpay", content=b"{}", headers={"X-Razorpay-Signature": "x"})
-        check("webhook 503s when Razorpay is not configured", r.status_code == 503, r.text)
+        check("webhook 503s when the gateway is not configured", r.status_code == 503, r.text)
 
         # --- per-second audio billing ----------------------------------------
         flat_voip = pricing.SERVICES["voip_call"]

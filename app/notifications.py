@@ -166,12 +166,15 @@ async def _recipients(*, verified_only: bool, extra_query: dict | None = None) -
 
 # --- Broadcasts ------------------------------------------------------------
 
-def _log_safe(value: str) -> str:
+def log_safe(value: str) -> str:
     """Strip anything that could forge a log line.
 
     The models already reject control characters in a reference id, but these
     builders are callable directly — from a script, or a future job — so the
     log site does not depend on the caller having come through the API.
+
+    Public because the billing webhook needs the same guarantee for the order id
+    it logs, and one implementation is better than a second copy that drifts.
     """
     return "".join(c for c in str(value) if c.isprintable())[:64]
 
@@ -247,7 +250,7 @@ async def broadcast_announcement(
 
     result = await _run_batched(people, handle)
     result.truncated = truncated
-    logger.info("announcement %s: %s", _log_safe(announcement["reference_id"]), result.as_dict())
+    logger.info("announcement %s: %s", log_safe(announcement["reference_id"]), result.as_dict())
     return result
 
 
@@ -272,7 +275,7 @@ async def broadcast_maintenance(window: dict, *, verified_only: bool = False) ->
 
     result = await _run_batched(people, handle)
     result.truncated = truncated
-    logger.info("maintenance %s: %s", _log_safe(window["reference_id"]), result.as_dict())
+    logger.info("maintenance %s: %s", log_safe(window["reference_id"]), result.as_dict())
     return result
 
 

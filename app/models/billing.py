@@ -72,11 +72,15 @@ class PaymentConfirmation(BaseModel):
     provider_invoice_url: str | None = Field(default=None, max_length=500)
 
 
-class RazorpayCheckoutResult(BaseModel):
-    """What Razorpay Checkout hands back to the browser on success.
+class CheckoutCallback(BaseModel):
+    """What the gateway's checkout widget hands back to the browser on success.
 
     Every field is untrusted — it arrives via the customer's page — so the
     signature is verified server-side before anything is credited.
+
+    The field names are the widget's own and are echoed by the dashboard
+    verbatim, so they stay as the gateway spells them even though nothing else
+    here names it.
     """
 
     model_config = ConfigDict(

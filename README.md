@@ -665,8 +665,8 @@ Plans live in `app/plans.py`, the way rates live in `app/pricing.py`.
 | GET | `/billing/invoices/{id}` | Bearer JWT | One invoice, by id **or** by number (`INV-0001`). |
 | PUT | `/billing/auto-recharge` | Bearer JWT | `{enabled, threshold_credits?, amount_inr?}` |
 | POST | `/billing/top-up` | Bearer JWT | `{plan}` **or** `{amount_inr}` → a *pending* payment (201). |
-| POST | `/billing/payments/{id}/verify` | Bearer JWT | Razorpay Checkout callback — signature-verified, then settles. |
-| POST | `/billing/webhook/razorpay` | `X-Razorpay-Signature` | Razorpay webhook — the authoritative confirmation. |
+| POST | `/billing/payments/{id}/verify` | Bearer JWT | Checkout callback — signature-verified, then settles. |
+| POST | `/billing/webhook/razorpay` | `X-Razorpay-Signature` | Gateway webhook — the authoritative confirmation. |
 | POST | `/billing/payments/{id}/confirm` | `X-Billing-Secret` | Manual/no-gateway settlement: mark paid, grant credits, **issue the invoice**. |
 
 ### How credits are spent
@@ -736,10 +736,10 @@ in, so finance can chase the incomplete ones rather than discover them later.
 > gateway issue the GST-compliant document — those references are stored and
 > returned so the dashboard can link to the authoritative one.
 
-### Razorpay
+### Payment gateway
 
 Set `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` and `POST /billing/top-up` also
-creates a Razorpay order, returning a `checkout` block with everything the
+creates a gateway order, returning a `checkout` block with everything the
 browser needs (`key_id`, `order_id`, `amount` in paise). Leave them unset and
 the endpoint behaves exactly as before — a local pending payment settled by the
 shared-secret endpoint.
@@ -757,7 +757,7 @@ shared-secret endpoint.
 > secret is refused, precisely because mixing them is the usual mistake.
 
 The **webhook is authoritative**: a customer can close the browser before the
-callback fires, and Razorpay still delivers. The callback exists so the
+callback fires, and the gateway still delivers. The callback exists so the
 dashboard can show credits immediately rather than waiting. Whichever arrives
 first wins — settlement claims the order with a conditional update, so the
 other reports `replayed: true` and credits nothing.
@@ -773,7 +773,7 @@ Amounts are rounded to whole paise before the order is created: a gateway can
 only charge integer minor units, and the money taken must equal the money
 recorded. `money.to_paise` raises rather than rounding silently.
 
-If Razorpay is unreachable, `/billing/top-up` returns **502** and leaves a
+If the gateway is unreachable, `/billing/top-up` returns **502** and leaves a
 pending record to retry — never a charge with nothing pointing at it.
 
 ### What is *not* implemented
