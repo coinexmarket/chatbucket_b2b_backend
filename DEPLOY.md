@@ -87,10 +87,32 @@ needs `dnspython` — that is why it is pinned in `requirements.txt` even though
 nothing imports it. Drop it and the image still builds; it fails at connect
 time instead.
 
-The cluster currently has **no trusted sources configured**, which means it
-accepts connections from any address with a valid password. Restricting it to
-the app is a dashboard change (Databases → Settings → Trusted sources) and is
-worth doing.
+The cluster is **restricted to trusted sources**, so a valid password alone is
+not enough — the connection also has to come from an allowed origin. Two are
+allowed, both App Platform apps:
+
+| Source | App |
+| --- | --- |
+| `37f4ec6f-3fbf-4758-9d2e-e52bfefdbad2` | `chatbucket-b2b-backend` (Python) |
+| `779b0f28-1691-4bf1-b599-17995f615658` | `chatbucket-b2b-backend-node` |
+
+This is worth knowing before debugging a connection failure: a laptop with the
+correct URI still times out, and the error is a plain `ServerSelectionTimeout`
+that says nothing about being blocked. Anything new that needs the database —
+another app, a migration run from a workstation, a CI job — has to be added
+first:
+
+```bash
+doctl databases firewalls list edef470a-9fc5-4855-8ed0-6ba168185b8f
+doctl databases firewalls append edef470a-9fc5-4855-8ed0-6ba168185b8f --rule app:<app-uuid>
+# also accepts ip_addr:, droplet:, k8s: and tag: rules
+```
+
+Each service authenticates as its **own** user — `cb-b2b-app` for the Python
+service, `cb-b2b-node` for the Node one — so either credential can be rotated
+or revoked without touching the other. Note that DigitalOcean returns a
+MongoDB user's password **only at creation**; there is no API call that reads
+an existing one back, so a lost credential is replaced rather than recovered.
 
 ## What is deliberately unset
 
