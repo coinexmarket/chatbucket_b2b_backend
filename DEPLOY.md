@@ -195,6 +195,10 @@ a domain the sending account cannot authenticate for.
 
 ## Payments
 
+> This app no longer serves that hostname — see [The domain](#the-domain). The
+> registration below is unchanged and still correct, because the URL did not
+> move; only the service answering behind it did.
+
 The webhook is registered in the gateway's dashboard against
 `https://api.b2b.chatbucket.business/billing/webhook/razorpay`, subscribed to
 `payment.captured` and `payment.authorized` — the only two events the handler
@@ -213,8 +217,19 @@ anyone here.
 
 ## The domain
 
-`api.b2b.chatbucket.business` is the app's primary domain; the
-`*.ondigitalocean.app` hostname keeps working alongside it.
+**This app no longer has a domain.** On 19 August 2026 `api.b2b.chatbucket.business`
+was released from this app's spec and claimed by the Node service, which now
+serves it; the CNAME at the registrar was repointed to that app. This one stays
+deployed, reachable only on its `*.ondigitalocean.app` hostname, as the rollback.
+
+To take the domain back: remove it from the Node app's spec, add it here, and
+repoint the CNAME — in that order, since App Platform will not let two apps
+claim one hostname and will not issue a certificate before DNS points at the
+app. Expect a few minutes where the name serves nothing while the certificate
+is issued.
+
+The rest of this section describes how the domain works and still applies to
+whichever app holds it.
 
 DNS for `chatbucket.business` is at the registrar, **not** DigitalOcean, so App
 Platform cannot create records itself — the subdomain is a `CNAME` to the app's
