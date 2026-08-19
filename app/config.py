@@ -151,9 +151,9 @@ class Settings(BaseSettings):
     )
 
     # --- Email -------------------------------------------------------------
-    # SMTP rather than a vendor HTTP API on purpose: SendGrid, SES, Mailgun,
-    # Postmark and Gmail all speak it, so the provider is a config change
-    # instead of a code change, and it needs no extra dependency.
+    # SMTP rather than a vendor HTTP API on purpose: every major mail provider
+    # speaks it, so the provider is a config change instead of a code change,
+    # and it needs no extra dependency.
     email_backend: str = Field(
         default="auto",
         description=(

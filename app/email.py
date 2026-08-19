@@ -4,9 +4,9 @@ Mirrors the seam `database.py` provides for Mongo: nothing else in the app
 constructs a message or talks to a mail server, so the provider can change
 without touching a router.
 
-Transport is SMTP, which SendGrid, SES, Mailgun, Postmark and Gmail all speak,
-so switching provider is a config change rather than a code change and costs no
-extra dependency. `smtplib` is blocking, so the send runs in the threadpool for
+Transport is SMTP, which every major mail provider speaks, so switching
+provider is a config change rather than a code change and costs no extra
+dependency. `smtplib` is blocking, so the send runs in the threadpool for
 the same reason password hashing does (see `security.py`).
 
 Backends, chosen with ``EMAIL_BACKEND``:
