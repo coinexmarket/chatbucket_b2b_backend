@@ -14,9 +14,13 @@ driver can change without touching any router code.
 """
 from __future__ import annotations
 
+import logging
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .config import get_settings
+
+logger = logging.getLogger("chatbucket_b2b.database")
 
 
 class _Mongo:
@@ -70,6 +74,28 @@ async def ensure_indexes() -> None:
         "reset_token_hash",
         partialFilterExpression={"reset_token_hash": {"$exists": True}},
     )
+    # A mobile number identifies one account, the same way an email does.
+    # Without this, `verify-phone` cannot tell which account a texted code
+    # belongs to, and the signup bonus is farmable by re-registering the same
+    # number against new addresses. Partial, because accounts predating the
+    # signup form carry no phone at all and must not collide on null.
+    #
+    # Tolerated rather than fatal: a database that already contains duplicate
+    # numbers would otherwise abort this whole function and leave every later
+    # index uncreated. The explicit check in `register` covers the gap, exactly
+    # as it does while the email index is missing.
+    try:
+        await users_collection().create_index(
+            "phone",
+            unique=True,
+            partialFilterExpression={"phone": {"$type": "string"}},
+        )
+    except Exception as exc:
+        logger.error(
+            "could not create the unique phone index (duplicate numbers in the "
+            "data?): %s. Registration falls back to an explicit check; resolve "
+            "the duplicates and restart to enforce it in the database.", exc
+        )
     await api_keys_collection().create_index("key_hash", unique=True)
     await api_keys_collection().create_index("user_id")
     await usage_collection().create_index([("user_id", 1), ("created_at", -1)])
@@ -149,6 +175,16 @@ async def ensure_indexes() -> None:
     # workers that wake at the same moment, exactly one insert succeeds and the
     # other reads its own duplicate-key error as "somebody else has this".
     await job_runs_collection().create_index([("job", 1), ("period", 1)], unique=True)
+
+    # One live code per number, so a resend replaces the previous code rather
+    # than leaving two valid ones with one attempt counter between them.
+    await phone_verifications_collection().create_index("phone", unique=True)
+    # These records are worthless once spent, and they hold a code hash for a
+    # number belonging to somebody who never became a customer. Mongo expires
+    # them on `purge_at` so neither this app nor an operator has to remember to.
+    await phone_verifications_collection().create_index(
+        "purge_at", expireAfterSeconds=0
+    )
     _mongo.indexes_ready = True
 
 
@@ -280,6 +316,18 @@ def job_runs_collection():
     # them running the same monthly report — and it doubles as the record of
     # when each job last ran.
     return get_b2b_db()["job_runs"]
+
+
+def phone_verifications_collection():
+    # A mobile number proven **before** an account exists for it. The signup
+    # form asks for the number, texts a code and checks it while the customer is
+    # still filling the form in, so at that moment there is no user document to
+    # hang the code off — hence a collection keyed by the number itself.
+    #
+    # Deliberately separate from `users`: these are unauthenticated, cheap to
+    # create and expire quickly, and mixing them into `users` would mean
+    # half-real accounts that every other query has to learn to skip.
+    return get_b2b_db()["phone_verifications"]
 
 
 def blogs_collection():

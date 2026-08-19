@@ -254,6 +254,61 @@ class Settings(BaseSettings):
     # code is what someone types on a phone; it is short-lived because a
     # six-digit secret is only strong while the window to guess it is small.
     email_otp_expire_minutes: int = Field(default=10, ge=1, le=60)
+
+    # --- SMS / phone verification -------------------------------------------
+    # An Indian number verifies by SMS and skips the email code entirely; every
+    # other country verifies by email as before. `verification.channel_for`
+    # is the single place that decides, so nothing else has to know the rule.
+    #
+    # Vendor-neutral on purpose, exactly like the SMTP seam: a gateway is a
+    # config change, not a code change. Backends mirror EMAIL_BACKEND —
+    # `http` really sends, `console`/`memory` do not, `disabled` drops.
+    sms_backend: str = Field(
+        default="auto",
+        description=(
+            "auto (http when SMS_API_URL is set, else console) | http | console "
+            "| memory (tests) | disabled."
+        ),
+    )
+    sms_api_url: str = Field(default="")
+    sms_username: str = Field(default="")
+    sms_api_key: str = Field(default="")
+    # Numbers are stored E.164 (`+9199…`); this gateway wants bare local
+    # digits. A property of the gateway, not the number, so it is a setting.
+    sms_strip_country_code: bool = Field(default=True)
+    # The DLT-registered sender header and template id. India requires both to
+    # be pre-registered; an unregistered pair is rejected by the operator, not
+    # by the gateway, so a wrong value here looks like silent non-delivery.
+    sms_sender_id: str = Field(default="")
+    sms_template_id: str = Field(default="")
+    # The registered OTP template ends with a second variable. Its value is a
+    # property of that registration, not of this service, so it is configured
+    # rather than guessed. Empty is allowed; `render_otp_message` strips the
+    # trailing space so the delivered text stays clean.
+    sms_template_suffix: str = Field(default="")
+    sms_timeout_seconds: int = Field(default=15)
+    # Dial codes that verify by SMS. Anything else falls back to email.
+    sms_country_codes: str = Field(default="+91")
+    phone_otp_expire_minutes: int = Field(default=10, ge=1, le=60)
+    phone_otp_max_attempts: int = Field(default=5, ge=1, le=20)
+    # How long a number proven on the signup form stays usable for creating the
+    # account. Long enough to finish typing the rest of the form, short enough
+    # that the proof still means "somebody held that handset just now". Bounding
+    # it is what stops a verified number being attached to an account created
+    # hours later by somebody else.
+    phone_verification_grace_minutes: int = Field(default=30, ge=1, le=1440)
+
+    @property
+    def sms_country_code_list(self) -> list[str]:
+        return [c.strip() for c in self.sms_country_codes.split(",") if c.strip()]
+
+    @property
+    def resolved_sms_backend(self) -> str:
+        """The backend actually in use, with ``auto`` decided."""
+        backend = self.sms_backend.lower().strip()
+        if backend != "auto":
+            return backend
+        return "http" if self.sms_api_url.strip() else "console"
     # Wrong codes tolerated before the code is burned. Without a cap, six
     # digits is a million tries against a static value.
     email_otp_max_attempts: int = Field(default=5, ge=1, le=20)
