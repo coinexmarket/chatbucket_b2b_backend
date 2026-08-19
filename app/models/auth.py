@@ -109,6 +109,37 @@ class VerifyEmailRequest(BaseModel):
     token: str = Field(min_length=1)
 
 
+class VerifyPhoneRequest(BaseModel):
+    """The six digits texted to a mobile number, plus the number itself.
+
+    Takes the number rather than a session for the same reason the email OTP
+    takes an address: someone verifying on a phone may not be signed in. The
+    number must be in the same E.164 form it was registered with, so the
+    lookup is exact.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+
+    mobile: str = Field(description='International format, e.g. +919876543210.')
+    code: str = Field(min_length=6, max_length=6, pattern=r'^\d{6}$')
+
+    @field_validator('mobile')
+    @classmethod
+    def _check_mobile(cls, value: str) -> str:
+        return normalize_phone(value)
+
+
+class ResendPhoneCodeRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+
+    mobile: str = Field(description='International format, e.g. +919876543210.')
+
+    @field_validator('mobile')
+    @classmethod
+    def _check_mobile(cls, value: str) -> str:
+        return normalize_phone(value)
+
+
 class VerifyEmailOtpRequest(BaseModel):
     """The six digits from the verification email, plus who they belong to.
 

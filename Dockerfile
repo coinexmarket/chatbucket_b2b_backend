@@ -5,6 +5,19 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Debian security updates, applied before anything else.
+#
+# The base image is rebuilt on its own schedule, so a CVE patched upstream can
+# sit in it for days — CVE-2026-53615 (integer overflow in util-linux, nine
+# packages) arrived exactly that way and failed this repository's own Trivy gate
+# without a line of our code changing. Upgrading here fixes it in the image we
+# actually ship rather than waiting for someone else's rebuild.
+#
+# `upgrade`, not `dist-upgrade`: it takes the security fixes without allowing a
+# package to be removed to satisfy a dependency, which in a container is a
+# silent way to lose something the app needs at runtime.
+RUN apt-get update     && apt-get upgrade -y --no-install-recommends     && apt-get clean     && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 # pip is a build-time tool. Left in the runtime image it is both extra attack
 # surface and a standing source of CVE noise: its bundled `_vendor/vendor.txt`

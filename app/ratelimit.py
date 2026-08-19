@@ -58,6 +58,14 @@ LIMITS: dict[str, Limit] = {
     # how fast the resend-and-guess cycle can be repeated.
     "verify_otp_ip": Limit(30, 900),
     "verify_otp_email": Limit(10, 900),
+    # Checking a texted code: same shape as the email code above.
+    "verify_phone_ip": Limit(30, 900),
+    "verify_phone_number": Limit(10, 900),
+    # *Sending* one is different — every call costs money and rings
+    # somebody's phone. Three per number per hour is enough for a genuine
+    # retry and useless for running up a bill or harassing a stranger.
+    "verify_phone_send_ip": Limit(10, 3600),
+    "verify_phone_send_number": Limit(3, 3600),
 }
 
 

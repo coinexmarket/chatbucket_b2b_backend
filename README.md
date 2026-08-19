@@ -23,7 +23,8 @@ app/
   email.py           The ONLY module that sends mail (SMTP + dev/test backends)
   emailtemplates.py  Loads + renders the designed HTML emails; shared footer values
   reports.py         The monthly usage report's figures, from the usage records
-  verification.py    Email-verification credentials: minting, expiry, marking verified
+  verification.py    Verification credentials + the SMS/email channel rule
+  sms.py             The ONLY module that sends SMS (gateway + dev/test backends)
   notifications.py   Lifecycle email jobs: broadcasts, reports, reminders, nudges
   money.py           Exact INR amounts: Decimal -> Decimal128 -> float (JSON)
   pricing.py         Rate card + cost calculation (single source of truth)
@@ -62,7 +63,7 @@ scripts/
   seed.py            Sample blog data
   smoke_test.py      End-to-end test for the site endpoints (71 checks)
   set_status.py      Set every system's status by hand
-  smoke_b2b.py       End-to-end test for the B2B platform (440 checks)
+  smoke_b2b.py       End-to-end test for the B2B platform (473 checks)
 ```
 
 ## Billing model (usage-based, INR)
@@ -103,6 +104,8 @@ are unchanged: `cost` is still a plain JSON number like `2.275`.
 | POST | `/auth/verify-email` | – | `{token}` → confirm the address (single use) |
 | POST | `/auth/verify-email/otp` | – | `{email,code}` → confirm the address from the 6-digit code |
 | POST | `/auth/verify-email/resend` | Bearer JWT | Send a fresh link **and** code to the signed-in address |
+| POST | `/auth/verify-phone` | – | `{mobile,code}` → confirm a mobile number from the texted code |
+| POST | `/auth/verify-phone/resend` | – | `{mobile}` → text a fresh code. Heavily rate-limited; every call costs money |
 
 #### Verifying an email address
 
@@ -128,6 +131,73 @@ the same as storing the code. The key is in the environment, not the database.
 In development both the token and the code come back in the response body
 (`verification_token`, `verification_code`), because the console backend leaves
 no inbox to read them out of.
+
+#### Phone verification (Indian numbers)
+
+An **Indian number verifies by SMS and is sent no email code**; every other
+country verifies by email exactly as before. `verification.channel_for` is the
+single place that rule lives, so no router knows about dial codes, and the
+register response returns `verification_channel` (`sms` | `email`) so the
+frontend does not have to re-derive it and drift.
+
+    POST /auth/verify-phone          { mobile, code }
+    POST /auth/verify-phone/resend   { mobile }
+
+Both are public, like the email routes — someone reading the SMS on their phone
+may not have a session. The same three defences apply as for the email code: an
+attempt counter on the account that burns the code, plus per-IP *and* per-number
+rate limits. Codes are stored HMAC'd under `JWT_SECRET`.
+
+Sending is limited far harder than checking — **3 per number per hour** — because
+every call costs money and rings a real phone. An unthrottled endpoint that
+sends an SMS is someone else's phone bill.
+
+**The number is proven before the account exists.** The signup form asks for the
+mobile and verifies it while the rest of the form is still being filled in, so
+there is no user document to hang the code off. `phone_verifications` holds it,
+keyed by the number, and `POST /auth/register` reads the result: a number proven
+within `PHONE_VERIFICATION_GRACE_MINUTES` creates the account already
+`phone_verified` and **is not sent a second code**. The record is then consumed,
+so one proof cannot be spent on several accounts each collecting the signup
+bonus. Verifying first also means an account is only ever created for a number
+somebody can actually receive a text on, and the per-message cost is paid before
+the free credits are granted rather than after.
+
+That window is bounded rather than open-ended on purpose: the proof is that
+somebody held the handset *at that moment*, and a record left lying around for a
+day would let a number verified once be attached to an account created later by
+somebody else.
+
+`/verify-phone/resend` answers the same way whether or not the number is
+registered, with **one deliberate exception**: a number already registered *and
+verified* gets a `409`. Staying quiet there kept no secret — `POST /auth/register`
+already refuses a taken number with a `409` — while leaving somebody on the
+signup form waiting for a message that was never going to be sent.
+
+**Nothing is gated on the phone alone.** `REQUIRE_EMAIL_VERIFICATION` reads
+`verification.is_verified`, which is satisfied by **either** channel. That is
+deliberately either/or rather than "whichever channel applies now": the channel
+depends on the *current* phone number, so re-deriving it would mean an
+email-verified customer who edits their phone to an Indian one silently loses
+the ability to create an API key — punished for updating their profile. What was
+proven stays proven. Changing the number does clear `phone_verified`, because
+the new number is not the proven one.
+
+**India requires DLT registration.** TRAI mandates that the sender header
+(`SMS_SENDER_ID`) and the message template (`SMS_TEMPLATE_ID`) are pre-registered
+on a DLT platform. An unregistered pair is dropped by the *operator*, not the
+gateway, so the gateway still answers 200 and the message simply never arrives.
+If delivery stops for no visible reason, check that the wording in
+`sms.send_phone_verification` still matches the registered template — they must
+stay in step.
+
+`SMS_TEMPLATE_SUFFIX` exists for a registration whose template ends in a second
+variable, and **should be left empty unless it really does**. A trailing word the
+registration does not have makes the delivered text stop matching it, and the
+message is then dropped by the operator while the gateway reports success — the
+gateway's own delivery report says `Delivered` in that case too, so neither
+signal distinguishes it from working. This is not hypothetical: it is what a
+guessed suffix did here until it was emptied.
 
 #### Signup form fields
 
@@ -1047,7 +1117,7 @@ Interactive docs: <http://localhost:8000/docs>
 
 ```bash
 pip install -r requirements-dev.txt
-python -m scripts.smoke_b2b     # 440 checks: accounts, keys, usage, credits, billing, email
+python -m scripts.smoke_b2b     # 473 checks: accounts, keys, usage, credits, billing, email
 python -m scripts.smoke_test    # 71 checks: blogs, subscriptions, contest, demo, status
 ```
 
@@ -1125,6 +1195,12 @@ payment gateway, both of which fail quietly rather than loudly).
 | `DISPLAY_TIMEZONE` | `Asia/Kolkata` | Zone that dates and times in emails render in. Storage stays UTC. |
 | `EMAIL_OTP_EXPIRE_MINUTES` | `10` | Verification-code lifetime. |
 | `EMAIL_OTP_MAX_ATTEMPTS` | `5` | Wrong codes before the code is burned. |
+| `SMS_BACKEND` | `auto` | `auto` / `http` / `console` / `memory` / `disabled` — mirrors `EMAIL_BACKEND`. |
+| `SMS_API_URL` / `SMS_API_KEY` | – | Gateway endpoint and credential. Unset ⇒ `console`, nothing is sent. |
+| `SMS_SENDER_ID` / `SMS_TEMPLATE_ID` | – | **DLT-registered** header and template. An unregistered pair is dropped by the operator, not the gateway — indistinguishable from silent non-delivery. |
+| `SMS_COUNTRY_CODES` | `+91` | Dial codes that verify by SMS. Everything else verifies by email. |
+| `PHONE_OTP_EXPIRE_MINUTES` | `10` | Texted-code lifetime. |
+| `PHONE_OTP_MAX_ATTEMPTS` | `5` | Wrong texted codes before the code is burned. |
 | `FREE_CREDIT_VALIDITY_DAYS` | `30` | The window the welcome email states and the reminder counts down to. Nothing expires credits. |
 | `FREE_CREDIT_REMINDER_DAYS` | `7` | Send the reminder once this much of the window is left. |
 | `ONBOARDING_NUDGE_AFTER_DAYS` | `3` | Nudge accounts registered this long ago with no metered usage. |
