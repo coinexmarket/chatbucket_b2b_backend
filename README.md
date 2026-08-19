@@ -1216,6 +1216,9 @@ payment gateway, both of which fail quietly rather than loudly).
 ## Notes
 
 * **Password hashing** uses stdlib PBKDF2-HMAC-SHA256 (salted, 240k iterations) —
+
+
+changes
   no native/Rust build dependency, which matters on very new Python versions.
 * **Account enumeration**: `login` verifies against a throwaway hash when no
   user matches, so it takes the same time whether or not the email exists;
