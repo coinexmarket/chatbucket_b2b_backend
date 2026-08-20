@@ -1,5 +1,12 @@
 # ChatBucket B2B Backend
 
+> **This service has been retired.** It was destroyed on 20 August 2026 and
+> replaced by the Node port,
+> [chatbucket_b2b_backend_node](https://github.com/coinexmarket/chatbucket_b2b_backend_node),
+> which now serves `api.b2b.chatbucket.business` from the same database. This
+> repository stays as the reference implementation the port was verified
+> against — the behaviour documented below is what the Node service reproduces.
+
 Python (FastAPI + MongoDB) backend for the ChatBucket **B2B API platform**:
 customer accounts, API keys, and **usage-based billing** for the AI services
 (STT, TTS, translation, chat agent, voice/VoIP agents). It also serves the

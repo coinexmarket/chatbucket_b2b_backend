@@ -1,3 +1,13 @@
+# RETIRED — this app was destroyed on 20 August 2026.
+#
+# Applying this spec would create a SECOND service against the live database
+# that the Node port (chatbucket_b2b_backend_node) now serves alone. Two
+# services on one dataset would contend for the notification scheduler and
+# answer the same gateway webhook.
+#
+# Kept as the record of how the deployment was configured; the Node app's spec
+# inherited most of it.
+#
 # App Platform spec for chatbucket-b2b-backend.
 #
 # Secrets are redacted: this repository is public, and the live values

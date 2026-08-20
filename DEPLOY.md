@@ -1,5 +1,20 @@
 # Deploying
 
+> ## Retired — this service is no longer deployed
+>
+> The App Platform app described below was **destroyed on 20 August 2026**. Its
+> domain, `api.b2b.chatbucket.business`, is served by the Node port:
+> **[chatbucket_b2b_backend_node](https://github.com/coinexmarket/chatbucket_b2b_backend_node)**,
+> which reads the same `cb-db-mongodb-pord` cluster and the same collections.
+>
+> Do not follow these instructions to redeploy. Standing this app back up
+> against the live database would put two services on one dataset, and both
+> would try to own the notification scheduler and the same webhook.
+>
+> They are kept because they are still the accurate record of how the
+> deployment worked, and because most of it — the database, the domain, the
+> secrets, the gateway registration — is now inherited by the Node service.
+
 The service runs on **DigitalOcean App Platform**, built from the `Dockerfile`
 in this repo against the managed MongoDB cluster `cb-db-mongodb-pord` (blr1).
 
