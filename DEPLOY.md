@@ -5,7 +5,7 @@
 > The App Platform app described below was **destroyed on 20 August 2026**. Its
 > domain, `api.b2b.chatbucket.business`, is served by the Node port:
 > **[chatbucket_b2b_backend_node](https://github.com/coinexmarket/chatbucket_b2b_backend_node)**,
-> which reads the same `cb-db-mongodb-pord` cluster and the same collections.
+> which reads the same `cb-b2b-mongodb-pord` cluster and the same collections.
 >
 > Do not follow these instructions to redeploy. Standing this app back up
 > against the live database would put two services on one dataset, and both
@@ -16,7 +16,13 @@
 > secrets, the gateway registration — is now inherited by the Node service.
 
 The service runs on **DigitalOcean App Platform**, built from the `Dockerfile`
-in this repo against the managed MongoDB cluster `cb-db-mongodb-pord` (blr1).
+in this repo against the managed MongoDB cluster `cb-b2b-mongodb-pord` (blr1).
+
+> Named `cb-b2b-`, not `cb-db-`. The latter is the consumer app's cluster —
+> a different database, 66 collections, eleven thousand users, and nothing to
+> do with this service. This line said `cb-db-` for a long time after the move
+> described under [The database](#the-database), and one segment of a hostname
+> is a thin thing to be telling them apart by.
 
 | | |
 | --- | --- |
