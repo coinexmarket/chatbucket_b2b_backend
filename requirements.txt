@@ -1,6 +1,6 @@
 # Versions chosen to ship prebuilt wheels for Python 3.12–3.14.
 fastapi==0.141.1
-uvicorn[standard]==0.52.3
+uvicorn[standard]==0.52.4
 motor==3.7.1
 pymongo==4.17.0
 # Required to resolve a `mongodb+srv://` URI, which is the only form DigitalOcean
