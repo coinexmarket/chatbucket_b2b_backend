@@ -7,7 +7,7 @@ pymongo==4.17.0
 # hands out for a managed cluster. pymongo does not depend on it, so without this
 # the image builds and then fails at connect time with "dnspython must be
 # installed" — a fault that cannot appear until deploy.
-dnspython==2.8.0
+dnspython==2.9.0
 pydantic==2.13.4
 pydantic-settings==2.15.0
 email-validator==2.3.0
